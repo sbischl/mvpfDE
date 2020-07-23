@@ -1,0 +1,5 @@
+estimate,point_estimate,standard_error,t_statistic,p_value,p_value_low,p_value_high,ci95_low,ci95_high,correlation_direction,source,link,notes
+eti_1year,0.675,,14.88,,,,,,1,Doerrenberg et. al. (2017) JPE Table 3,https://ideas.repec.org/a/eee/pubeco/v151y2017icp41-55.html,
+eti_2year,0.548,,15.63,,,,,,1,Doerrenberg et. al. (2017) JPE Table 3,https://ideas.repec.org/a/eee/pubeco/v151y2017icp41-55.html,
+eti_3year,0.338,,9.28,,,,,,1,Doerrenberg et. al. (2015) CESifo Working Paper Table 3,https://ideas.repec.org/p/ces/ceswps/_5369.html,Working paper version of the paper above but the 3 year estimate disappeared in the JPE version
+pareto_coefficient_2002,2.07,0,,,,,,,2,Clementi and Gallegati (2005),https://ideas.repec.org/p/arx/papers/physics-0504217.html,

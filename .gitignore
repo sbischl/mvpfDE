@@ -1,0 +1,13 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+
+# IntelliJ Ideas Files
+/.idea/
+UnifiedWelfareGer.iml
+
+# CPI File from statistisches Bundesamt:
+/cpi/verbraucherpreisindex-lange-reihen-xlsx-5611103.xlsx
+
+# Bootstrap folder
+/bootstrap/*

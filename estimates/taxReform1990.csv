@@ -1,0 +1,3 @@
+estimate,point_estimate,standard_error,t_statistic,p_value,p_value_low,p_value_high,ci95_low,ci95_high,correlation_direction,source,link,notes
+elasticity_of_taxable_income,0.581,,,,0,0.0005,,,,Gottfried & Schellhorn (2004) Table 2,https://ideas.repec.org/p/iaw/iawdip/15.html,"Authors report a ""error probability"" of 0.000. This has to be the p-value. Any p value smaller than 0.0005 rounds to 0.000"
+pareto_coefficient_1989,1.71,0,,,,,,,,Atkinson & Piketty (2010) Table 13A.23,https://ideas.repec.org/b/oxp/obooks/9780199286898.html,
