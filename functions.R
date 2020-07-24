@@ -1,9 +1,9 @@
-drawBootstrap <- function(path_to_csv, number_of_replications) {
+drawBootstrap <- function(path_to_xlsx, number_of_replications) {
   # Set seed
   set.seed(bootstrap_seed)
 
   # Load Estimates
-  estimates <- read.csv(path_to_csv)
+  estimates <- as.data.frame(read_xlsx(path_to_xlsx))
 
   # Recoup standard error from t-statistic where standard error is missing
   estimates <- estimates %>%
@@ -59,7 +59,7 @@ drawBootstrap <- function(path_to_csv, number_of_replications) {
 
 getEstimates <- function(program, bootstrap_replication) {
   if (bootstrap_replication == 0) {
-    estimates <- read.csv(paste0("./estimates/", program, ".csv"))
+    estimates <- read_xlsx(paste0("./estimates/", program, ".xlsx"))
     point_estimates <- data.frame(t(estimates$point_estimate))
     colnames(point_estimates) <- estimates$estimate
     return(point_estimates)

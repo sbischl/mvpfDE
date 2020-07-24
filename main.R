@@ -43,12 +43,12 @@ source("functions.R")
 source("assumptions.R")
 
 #Prepare Bootstrap
-estimate_files <- list.files("./estimates", pattern =".csv")
+estimate_files <- list.files("./estimates", pattern = "^[^~$].*.xlsx")
 
 
 for (i in 1:length(estimate_files)) {
   write.csv(drawBootstrap(paste0("./estimates/", estimate_files[i]), bootstrap_replications),
-            file = paste0("./bootstrap/", sub(".csv", "", estimate_files[i]), "_bootstrap.csv"),
+            file = paste0("./bootstrap/", sub(".xlsx", "", estimate_files[i]), "_bootstrap.csv"),
             row.names=FALSE)
 }
 
@@ -57,9 +57,17 @@ for (i in 1:length(estimate_files)) {
 programs <- list.dirs("./programs", full.names = FALSE, recursive = FALSE)
 complete_programs <- c()
 for (i in 1:length(programs)) {
-  current_program_path <- paste0("./programs/", programs[i],  "/", programs[i], ".R")
+
+  # Check if *.xlsx file in estimates folder exists
+  if (!file.exists(paste0("./estimates/", programs[i], ".xlsx"))) {
+    warning(paste0("No correctly named .xlsx file for program \"", programs[i], "\" was found. ",
+                   "Make sure that for each program there exists a Excel (.xlsx) file in the \"estimates\" folder."))
+    next
+  }
+
 
   # Check if file .R file exists
+  current_program_path <- paste0("./programs/", programs[i],  "/", programs[i], ".R")
   if (!file.exists(current_program_path)) {
     warning(paste0("No correctly named .R file for program \"", programs[i], "\" was found. ",
                   "Make sure that for each directory there exists a .R file within this directory with the same name."))
