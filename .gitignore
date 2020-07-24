@@ -11,3 +11,6 @@ UnifiedWelfareGer.iml
 
 # Bootstrap folder
 /bootstrap/*
+
+# Temporary Excel files
+~$*
