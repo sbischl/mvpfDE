@@ -10,7 +10,8 @@ required_packages <- c("ggplot2",
                        "mvtnorm",
                        "dplyr",
                        "readxl",
-                       "showtext")
+                       "showtext",
+                       "ggrepel")
 
 not_installed_packages <- required_packages[!required_packages %in% installed.packages()[, 1]]
 
@@ -200,5 +201,5 @@ for (i in 1:length(programs)) {
 program_information <- as.data.frame(read_xlsx("programs.xlsx"))
 # Join the estimates and the additional information:
 plot_data <- left_join(mvpf_results, program_information, by = c("program" = "program_identifier"))
-plotResults(plot_data = plot_data, save ="test.pdf")
+plotResults(plot_data = plot_data, save ="test.pdf", confidence_intervalls = TRUE)
 

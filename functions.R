@@ -108,10 +108,9 @@ splitAndDiscount <- function(amount, periods, discount_rate) {
   return(sum(present_value_cash_flows))
 }
 
-plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_label = "Year", plot_data, save = "") {
-  # Settings:
-  # The highest MVPF to plot that is not infinity
-  infinity_cutoff <- 6
+plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_label = "Year",
+                        plot_data, save = "", lower_cutoff = -1, upper_cutoff = 6, confidence_intervalls = TRUE,
+                        text_labels = TRUE) {
 
   # Check if y_axis and x_axis actually exist in the plot_data
   if (!all(c(y_axis, x_axis) %in% colnames(plot_data))) {
@@ -119,27 +118,68 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
     return(-1)
   }
 
+  # Check if confidence intervalls exist for y_axis variable:
+  if (!all(c(paste0(y_axis,"_95ci_lower"), paste0(y_axis,"_95ci_upper")) %in% colnames(plot_data))) {
+    confidence_intervalls <- FALSE
+  }
+
   if (y_axis == "mvpf") {
     # Censor all values that are larger than the the infinity_cutoff and use infinity_cutoff + 1 as 'infinity'
     plot_data <- plot_data %>%
-      mutate(mvpf = replace(mvpf, mvpf > infinity_cutoff & mvpf != Inf, infinity_cutoff)) %>%
-      mutate(mvpf = replace(mvpf, mvpf == Inf, infinity_cutoff + 1))
+      mutate(mvpf = replace(mvpf, mvpf > upper_cutoff & mvpf != Inf, upper_cutoff)) %>%
+      mutate(mvpf = replace(mvpf, mvpf == Inf, upper_cutoff + 1))
+
+    if (confidence_intervalls) {
+      plot_data <- plot_data %>%
+        mutate(mvpf_95ci_upper = replace(mvpf_95ci_upper, mvpf_95ci_upper > upper_cutoff & mvpf_95ci_upper != Inf, upper_cutoff)) %>%
+        mutate(mvpf_95ci_upper = replace(mvpf_95ci_upper, mvpf_95ci_upper == Inf, upper_cutoff + 1)) %>%
+        mutate(mvpf_95ci_lower = replace(mvpf_95ci_lower, mvpf_95ci_lower > upper_cutoff & mvpf_95ci_lower != Inf, upper_cutoff)) %>%
+        mutate(mvpf_95ci_lower = replace(mvpf_95ci_lower, mvpf_95ci_lower == Inf, upper_cutoff + 1))
+    }
+  }
+  else if (!is.na(upper_cutoff)) {
+    plot_data <- plot_data %>%
+      mutate(!!y_axis := replace(get(y_axis), get(y_axis) > upper_cutoff, upper_cutoff)) %>%
+      mutate(!!paste0(y_axis, "_95ci_upper") := replace(get(paste0(y_axis, "_95ci_upper")), get(paste0(y_axis, "_95ci_upper")) > upper_cutoff, upper_cutoff)) %>%
+      mutate(!!paste0(y_axis, "_95ci_lower") := replace(get(paste0(y_axis, "_95ci_lower")), get(paste0(y_axis, "_95ci_lower")) > upper_cutoff, upper_cutoff))
   }
 
-  plot <- ggplot(aes_string(y = y_axis, x= x_axis, color = "category"), data = plot_data) +
+  if (!is.na(lower_cutoff)) {
+    plot_data <-  plot_data %>%
+      mutate(!!y_axis := replace(get(y_axis), get(y_axis) < lower_cutoff, lower_cutoff)) %>%
+      mutate(!!paste0(y_axis, "_95ci_upper") := replace(get(paste0(y_axis, "_95ci_upper")), get(paste0(y_axis, "_95ci_upper")) < lower_cutoff, lower_cutoff)) %>%
+      mutate(!!paste0(y_axis, "_95ci_lower") := replace(get(paste0(y_axis, "_95ci_lower")), get(paste0(y_axis, "_95ci_lower")) < lower_cutoff, lower_cutoff))
+  }
+
+  plot <- ggplot(aes_string(y = y_axis, x= x_axis), data = plot_data) +
     ylab(y_label) +
-    xlab(x_label) +
-    geom_point() +
-    theme_modified_minimal()
+    xlab(x_label)
+
+  if (confidence_intervalls) {
+    print(plot_data$mvpf_95ci_lower)
+    print(plot_data$mvpf_95ci_upper)
+    plot <- plot + geom_errorbar(aes_string(ymin = paste0(y_axis, "_95ci_lower"),
+                                            ymax = paste0(y_axis, "_95ci_upper"),
+                                            color = "category"),
+                                 width = 0.1)
+  }
+
+  if (text_labels) {
+    plot <- plot + geom_text_repel(aes(label = program_name), size = 2, color = "black")
+  }
 
   if (y_axis == "mvpf") {
-    plot <- plot + scale_y_continuous(breaks = floor(min(plot_data$mvpf)):(infinity_cutoff + 1),
-                                      labels = c(as.character(min(plot_data$mvpf)):(infinity_cutoff -1), paste("\u2265", infinity_cutoff), "\u221E"))
+    plot <- plot + scale_y_continuous(breaks = lower_cutoff:(upper_cutoff + 1),
+                                      labels = c(paste("\u2264", lower_cutoff),
+                                                 as.character((lower_cutoff + 1):(upper_cutoff -1)),
+                                                 paste("\u2265", upper_cutoff), "\u221E"))
   }
+
+  plot <- plot + geom_point(aes_string(y = y_axis, x= x_axis, color = "category")) +
+    theme_modified_minimal()
 
   print(plot)
   if (save != "") {
-    #This gives a lot of warnings in case the font is not available
     ggsave(plot, filename = save, device = pdf, path = "./plots/", width = 6, height = 4)
   }
 }
