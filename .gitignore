@@ -14,3 +14,6 @@ UnifiedWelfareGer.iml
 
 # Temporary Excel files
 ~$*
+
+#Plots folder
+/plots/*

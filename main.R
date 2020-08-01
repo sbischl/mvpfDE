@@ -2,11 +2,15 @@
 # Unified Welfare Analysis for Germany using MVPFs (Marginal Value of Public Funds)
 #----------------------------------------------------------------------------------------------------------------------#
 
+# Clear the environment:
+rm(list = ls())
+
 # Check if packages are installed
 required_packages <- c("ggplot2",
                        "mvtnorm",
                        "dplyr",
-                       "readxl")
+                       "readxl",
+                       "showtext")
 
 not_installed_packages <- required_packages[!required_packages %in% installed.packages()[, 1]]
 
@@ -30,8 +34,18 @@ if (length(not_installed_packages) > 0) {
 #Load libraries
 invisible(lapply(required_packages, FUN = library, character.only = TRUE))
 
-# Clear the environment:
-rm(list = ls())
+# Try to load the alternative font that is used in the pdf exports.
+# If this font is not installed / cannot be found, the standard one will be used
+tryCatch({
+           plot_font <<- "Open Sans"
+           font_add(plot_font, "OpenSans-Regular.ttf")
+         },
+         error = function(e) {
+           warning("Font is not installed. Plots are going to use the standard font instead.")
+           plot_font <<- "sans"
+})
+showtext_auto()
+
 
 # Working Directory:
 setwd("C:/Users/Simon/IdeaProjects/UnifiedWelfareGer")
@@ -180,17 +194,11 @@ for (i in 1:length(programs)) {
 }
 
 
-
-
-
 # Present results:
 
 # Load additional information about each policy from the excel file:
-
-
-
-
-
-
-
+program_information <- as.data.frame(read_xlsx("programs.xlsx"))
+# Join the estimates and the additional information:
+plot_data <- left_join(mvpf_results, program_information, by = c("program" = "program_identifier"))
+plotResults(plot_data = plot_data, save ="test.pdf")
 

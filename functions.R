@@ -108,5 +108,51 @@ splitAndDiscount <- function(amount, periods, discount_rate) {
   return(sum(present_value_cash_flows))
 }
 
+plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_label = "Year", plot_data, save = "") {
+  # Settings:
+  # The highest MVPF to plot that is not infinity
+  infinity_cutoff <- 6
 
+  # Check if y_axis and x_axis actually exist in the plot_data
+  if (!all(c(y_axis, x_axis) %in% colnames(plot_data))) {
+    warning("Either x or y axis variable is not in the dataset")
+    return(-1)
+  }
 
+  if (y_axis == "mvpf") {
+    # Censor all values that are larger than the the infinity_cutoff and use infinity_cutoff + 1 as 'infinity'
+    plot_data <- plot_data %>%
+      mutate(mvpf = replace(mvpf, mvpf > infinity_cutoff & mvpf != Inf, infinity_cutoff)) %>%
+      mutate(mvpf = replace(mvpf, mvpf == Inf, infinity_cutoff + 1))
+  }
+
+  plot <- ggplot(aes_string(y = y_axis, x= x_axis, color = "category"), data = plot_data) +
+    ylab(y_label) +
+    xlab(x_label) +
+    geom_point() +
+    theme_modified_minimal()
+
+  if (y_axis == "mvpf") {
+    plot <- plot + scale_y_continuous(breaks = floor(min(plot_data$mvpf)):(infinity_cutoff + 1),
+                                      labels = c(as.character(min(plot_data$mvpf)):(infinity_cutoff -1), paste("\u2265", infinity_cutoff), "\u221E"))
+  }
+
+  print(plot)
+  if (save != "") {
+    #This gives a lot of warnings in case the font is not available
+    ggsave(plot, filename = save, device = pdf, path = "./plots/", width = 6, height = 4)
+  }
+}
+
+# Define custom ggplot theme:
+theme_modified_minimal <- function() {
+  # Set the font here. This only works if the font is installed on the system and it is available in R.
+  # To make the font available use font_add("font name", "file name") and showtext_auto() from the 'showtext' package.
+  theme_minimal(base_size=12, base_family=plot_font) %+replace%
+    theme (
+      axis.line = element_line(color = "black"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank(),
+      axis.ticks = element_line()
+    )
+}
