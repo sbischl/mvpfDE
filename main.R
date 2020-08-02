@@ -201,5 +201,8 @@ for (i in 1:length(programs)) {
 program_information <- as.data.frame(read_xlsx("programs.xlsx"))
 # Join the estimates and the additional information:
 plot_data <- left_join(mvpf_results, program_information, by = c("program" = "program_identifier"))
-plotResults(plot_data = plot_data, save ="test.pdf", confidence_intervalls = TRUE)
-
+plotResults(plot_data = plot_data, save ="MVPF.pdf", confidence_intervalls = TRUE)
+plotResults(plot_data = plot_data, y_axis = "government_net_costs", y_label = "Government Net Costs", x_axis = "year", x_label = "Year",
+            save = "NetCosts.pdf", lower_cutoff = 0, upper_cutoff = 4, confidence_intervalls = TRUE, text_labels = TRUE)
+plotResults(plot_data = plot_data, y_axis = "willingness_to_pay", y_label = "Willingness to Pay", x_axis = "year", x_label = "Year",
+            save = "WTP.pdf", lower_cutoff = 0, upper_cutoff = 4, confidence_intervalls = TRUE, text_labels = TRUE)

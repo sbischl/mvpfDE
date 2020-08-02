@@ -110,7 +110,7 @@ splitAndDiscount <- function(amount, periods, discount_rate) {
 
 plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_label = "Year",
                         plot_data, save = "", lower_cutoff = -1, upper_cutoff = 6, confidence_intervalls = TRUE,
-                        text_labels = TRUE) {
+                        text_labels = TRUE, legend_label = "Category") {
 
   # Check if y_axis and x_axis actually exist in the plot_data
   if (!all(c(y_axis, x_axis) %in% colnames(plot_data))) {
@@ -153,7 +153,8 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
 
   plot <- ggplot(aes_string(y = y_axis, x= x_axis), data = plot_data) +
     ylab(y_label) +
-    xlab(x_label)
+    xlab(x_label) +
+    labs(color = legend_label)
 
   if (confidence_intervalls) {
     print(plot_data$mvpf_95ci_lower)
@@ -173,6 +174,12 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
                                       labels = c(paste("\u2264", lower_cutoff),
                                                  as.character((lower_cutoff + 1):(upper_cutoff -1)),
                                                  paste("\u2265", upper_cutoff), "\u221E"))
+  }
+  else {
+    plot <- plot + scale_y_continuous(breaks = lower_cutoff:upper_cutoff,
+                                      labels = c(paste("\u2264", lower_cutoff),
+                                                 as.character((lower_cutoff + 1):(upper_cutoff -1)),
+                                                 paste("\u2265", upper_cutoff)))
   }
 
   plot <- plot + geom_point(aes_string(y = y_axis, x= x_axis, color = "category")) +
