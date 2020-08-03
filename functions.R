@@ -203,3 +203,49 @@ theme_modified_minimal <- function() {
       axis.ticks = element_line()
     )
 }
+
+project_lifetime_impact <- function(impact_age, # the age at which the effect on income comes up for the first time
+                                    impact_magnitude, # the effect of treatment on income relative to the control group, i.e. effect / income control
+                                    relative_control_income, # the income of the control group relative to the average, i.e. control income / average income
+                                    start_projection_age, # the age at which the projection starts
+                                    end_projection_age = retirement_age, # the age at which the projection ends
+                                    start_projection_year, # the year at which the projection starts
+                                    prices_year, # the year whose prices are used
+                                    discount_rate = parent.frame()$discount_rate,
+                                    wage_growth_rate = parent.frame()$wage_growth_rate) {
+
+  # This function loads the assumptions specified in assumptions.R. But it is possible to override these if neccessary.
+  # This can be useful to conduct robustness. Maybe I'm going to remove this. Because the same can be achieved by just overriding
+  # the assumption in the code and then reloading the default assumptions again if required.
+
+  # Import age-income relation: This should be estimated from the data, but for testing purposes use the data from Hendren & Sprung-Keyser (2020)
+  age_income_table <- read.csv("./income_projection/age_income_cross_section.csv")
+
+  # Calculate the impact year as birth year + impact_age
+  impact_year <- (start_projection_year- start_projection_age) + impact_age
+
+  # Adjust for inflation, i.e., convert incomes to 'prices_year' euros.
+  age_income_table$income_price_adjusted <- age_income_table$income * deflate(from = 2015, to = prices_year)
+
+  # Calculate the average income trajectory(i.e. average income for each age) for the population that is 'impact_age' years old in the year 'impact_year'
+  # We have to take into accout that incomes are observed for only one year, incomes that are realized after (before) this
+  # year grow (fall) by the growth rate. From the birth year (start_projection_year - start_projection_age) it is possible to infer the year when they are x years old.
+  age_income_table$year <- (start_projection_year - start_projection_age) + age_income_table$age
+
+  # Grow wages by (1+g)^(the number of years the income accrues after the year we have data for) / Or shrink if the exponent is negative
+  age_income_table$income_fully_adjusted <- age_income_table$income_price_adjusted * (1 + wage_growth_rate)^(age_income_table$year - 2015)
+
+  # Limit the dataset the relevant region for the projection:
+  age_income_table <- age_income_table %>% filter(age >= start_projection_age & age <= end_projection_age)
+  age_income_table$earnings_impact <- age_income_table$income_fully_adjusted * relative_control_income * impact_magnitude
+
+  # Discount all earning impacts to the start of the projection
+  age_income_table$earnings_impact_discounted <- age_income_table$earnings_impact *
+    (1/(1 + discount_rate))^(0:(end_projection_age - start_projection_age))
+
+  # Sum discounted earning impacts to get the net-present value of the earnings effect:
+  net_present_value <- sum(age_income_table$earnings_impact_discounted)
+
+  # We could return more results here but the NPV is what households care about and enough for now.
+  return(net_present_value)
+}
