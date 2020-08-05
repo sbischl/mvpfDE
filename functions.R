@@ -249,3 +249,227 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
   # We could return more results here but the NPV is what households care about and enough for now.
   return(net_present_value)
 }
+
+getNetIncome <- function(gross_income) {
+  # adapted from:
+  # 'Identifying Laffer Bounds: A Sufficient-Statistics Approach with an Application to Germany' by Sachs and Lorenz (2015) Appendix A
+  # and their supplementary excel file
+
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Assumptions
+  #--------------------------------------------------------------------------------------------------------------------#
+
+  # Contribution to pension fund (= Rentenversicherungsbeitrag)
+  pension_contribution_rate_total <- 0.186 # 2020
+  pension_contribution_rate_employer <- 0.093 # 2020
+  pension_contribution_rate_employee <- pension_contribution_rate_total - pension_contribution_rate_employer
+
+  # Contribution to health insurance (= Krankenversicherungsbeitrag)
+  health_insurance_contribution_rate_total <- 0.146 # 2020 Does not include the insurance-specific mark-up of ~ 1 percentage point
+  health_insurance_contribution_rate_employer <- 0.073 # 2020
+  health_insurance_contribution_rate_employee <- health_insurance_contribution_rate_total - health_insurance_contribution_rate_employer
+
+  # Contribution to long term care fund (= Pflegeversicherung)
+  long_term_care_contribution_rate_total <- 0.0305 # 2020
+  long_term_care_contribution_rate_employer <- 0.01525 # 2020
+  long_term_care_contribution_rate_employee <- long_term_care_contribution_rate_total -  long_term_care_contribution_rate_employer
+
+  # Contribution to unemployment insurance (= Arbeitslosenversicherung)
+  unemployment_insurance_contribution_rate_total <- 0.024 # 2020
+  unemployment_insurance_contribution_rate_employer <- 0.012 # 2020
+  unemployment_insurance_contribution_rate_employee <- unemployment_insurance_contribution_rate_total -  unemployment_insurance_contribution_rate_employer
+
+  # Earnings ceiling: For (monthly) incomes above this threshold the marginal contribution to the respective social insurance is zero (=Beitragsbemessungsgrenze)
+  pension_earnings_ceiling <- 6900 #2020
+  health_insurance_earnings_ceiling <- 4687.50 #2020
+  long_term_care_earnings_ceiling <- 4687.50 #2020
+  unemployment_insurance_earnings_ceiling <- 6900 #2020
+
+  # Transitional region cut-offs:
+  lower_cutoff <- 450 #2020
+  upper_cutoff <- 1300 #2020
+
+  # Deductibles:
+  standard_deduction_employee <- 1000 # Arbeitnehmerpauschbetrag
+  extraordinary_deduction_employee <- 36 # Sonderausgabenpauschbetrag
+  correction_factor <- 0.8 # Correction factor that is applied on the pension fund contribution deduction. Increases by 0.04 every year until 1 is reached in 2025
+
+  # Welfare Benefits:
+  welfare_benefit_monthly <- 700 # The amount of welfare if the personal income is 0 (= average Wohngeld + Hartz IV Regelsatz?)
+  personal_exemption <- 100 # Grundfreibetrag
+
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Calculation
+  #--------------------------------------------------------------------------------------------------------------------#
+
+  # For the calculation it is convenient to transform the yearly income to monthly income
+  gross_income <- gross_income / 12
+
+
+  # These cut-offs were recently changed
+  if (gross_income <= lower_cutoff) {
+    pension_contribution <- 0
+    health_insurance_contribution <- 0
+    long_term_care_contribution <- 0
+    unemployment_insurance_contribution <- 0
+  }
+  else if (gross_income > lower_cutoff &&  gross_income < upper_cutoff) {
+    # The total social insurance rate is the sum of the individiual contribution rates of:
+    # 1) pension fund 2) unemployment insurance 3) health insurance 4) long-term care insurance (=Plegeversicherung)
+    total_social_insurance_rate <- 0.3975
+
+    # In this transitional region, a fictitious income is used to calculate the individual contributions
+    # The forumla for this income involves a factor often called F, which is defined as:
+    F <- 0.3 / total_social_insurance_rate
+    # This formula was changed after 2012: Sachs and Lorenz (2015) use F * lower_cutoff + (2 - F) * (gross_income - lower_cutoff)
+    fictitious_income <- F * lower_cutoff + (upper_cutoff / (upper_cutoff - lower_cutoff) - (lower_cutoff / (upper_cutoff - lower_cutoff)) * F) * (gross_income - lower_cutoff)
+
+    # The contributions to all of the social insurance systems are given by the total contribution times the fictitious income
+    # minus the full employer contribution
+    pension_contribution <- pension_contribution_rate_total * fictitious_income - pension_contribution_rate_employer * gross_income
+    health_insurance_contribution <- health_insurance_contribution_rate_total * fictitious_income - health_insurance_contribution_rate_employer * gross_income
+    long_term_care_contribution <- long_term_care_contribution_rate_total * fictitious_income - long_term_care_contribution_rate_employer * gross_income
+    unemployment_insurance_contribution <- unemployment_insurance_contribution_rate_total * fictitious_income - unemployment_insurance_contribution_rate_employer * gross_income
+  }
+  else {
+    pension_contribution <- pension_contribution_rate_employee * min(gross_income, pension_earnings_ceiling)
+    health_insurance_contribution <- health_insurance_contribution_rate_employee * min(gross_income, health_insurance_earnings_ceiling)
+    long_term_care_contribution <- long_term_care_contribution_rate_employee * min(gross_income, long_term_care_earnings_ceiling)
+    unemployment_insurance_contribution <- unemployment_insurance_contribution_rate_employee * min(gross_income, unemployment_insurance_earnings_ceiling)
+  }
+
+  # Sum of social security contributions
+  social_security_contributions <- pension_contribution + long_term_care_contribution +
+    unemployment_insurance_contribution + long_term_care_contribution
+
+  # Deductibles:
+  deductibles <- 0
+
+  # Standard deduction (Arbeitnehmerpauschbetrag)
+  deductibles <- deductibles + standard_deduction_employee / 12
+
+  # Extraordinary expenses deduction (Sonderausgabenpauschbetrag)
+  deductibles <- deductibles + extraordinary_deduction_employee  / 12
+
+  # Deduction of social insurance contribution:
+  # 1) Dedudctable share of pension fund contributions:
+  deductibles <- deductibles + 0.5 * pension_contribution * correction_factor
+  # 2) Health insurance and long term care contributions can be fully deducted. Until 2019 a alternative calculation method was
+  # available (12% of gross income, at most 1900€). If this alternative method was favorable for the tax payer, it was used instead.
+  deductibles <- deductibles + health_insurance_contribution + long_term_care_contribution
+
+  taxable_income_monthly <- max(0, gross_income - deductibles)
+  taxable_income_yearly <- 12 * taxable_income_monthly
+
+  income_tax_yearly <- incomeTax(taxable_income_yearly)
+  solidarity_charge_yearly <- solidarityCharge(taxable_income_yearly)
+
+  income_tax_monthly <- income_tax_yearly / 12
+  solidarity_charge_monthly <- solidarity_charge_yearly / 12
+
+  # Net income, social security contributions not yet deducted
+  income_minus_income_tax_yearly <- gross_income * 12 - income_tax_yearly - solidarity_charge_yearly
+  income_minus_income_tax_monthly <- income_minus_income_tax_yearly / 12
+
+  # Welfare Benefits (=Arbeitslosengeld II)
+  # Everyone is entitled to a minimum income. If an individual earns an income above the minimum income, they might
+  # still receive welfare benefits because their own wage income is not fully counted towards the minimum income.
+  # If this were the case, the marginal rate would be 100% for all incomes below the the minimum income.
+
+  # Everyone get's the personal excemption of currently 100€.
+  excemptions <- personal_exemption
+  # All social security contributions and the income tax are excempted:
+  excemptions <- excemptions + social_security_contributions
+  # 20 percent of the income between 100 and 1000 are excempted:
+  if (gross_income >= 100) {
+    excemptions <- excemptions + min(0.2*(gross_income - 100), 180)
+  }
+  # 10 Percent of the income between 1000 and 1200 are excempted:
+  if (gross_income >= 1000) {
+    excemptions <- excemptions + min(0.1*(gross_income - 1000), 20)
+  }
+
+  # The income relevant for the receipt of welfare benefits
+  income_minus_excemptions <- max(gross_income - excemptions, 0)
+
+  # The individual welfare benefit depending on personal income
+  welfare_benefit <- max(welfare_benefit_monthly - income_minus_excemptions, 0)
+
+  # Net income defined as gross income MINUS social security contributions, income tax, solidarity chage PLUS welfare benefit
+  net_income <- gross_income - social_security_contributions - income_tax_monthly - solidarity_charge_monthly + welfare_benefit
+
+  net_income_yearly <- net_income * 12
+
+  return(net_income_yearly)
+}
+
+getAverageTaxRate <- function(gross_income) {
+  return(1 - getNetIncome(gross_income) / gross_income)
+}
+
+getTaxPayment <- function(gross_income) {
+  return(gross_income - getNetIncome(gross_income))
+}
+
+getMarginalTaxRate <- function(gross_income) {
+  return(1 - (getNetIncome(gross_income + 1) - getNetIncome(gross_income)))
+}
+
+incomeTax <- function(taxable_income) {
+  # There income tax is a piece-wise defined function. There are 4 cut-off points. These cut-offs are regularly adjusted.
+  personal_exemption <- 9408 # also known as "Grundfreibetrag", i.e. the income below which no tax has to be payed
+  section_2 <- 14532
+  section_3 <- 57051
+  section_4 <- 270500
+
+  if (taxable_income <= personal_exemption) {
+    return(0)
+  }
+  else if (taxable_income <= section_2) {
+    return((0.14 + (taxable_income- 9408) * 972.87 * 10^-8) * (taxable_income - 9408))
+  }
+  else if (taxable_income <= section_3) {
+    return((0.2397 + (taxable_income- 14532) * 212.02 * 10^-8) * (taxable_income - 14532) + 972.79)
+  }
+  else if (taxable_income <= section_4) {
+    return(0.42 * taxable_income - 8963.74)
+  }
+  else {
+    return(0.45 * taxable_income - 17078.74)
+  }
+}
+
+marginalIncomeTaxRate <- function(taxable_income) {
+  return(incomeTax(taxable_income + 1) - incomeTax(taxable_income))
+}
+
+averageIncomeTaxRate <- function(taxable_income) {
+  return(incomeTax(taxable_income) / taxable_income)
+}
+
+solidarityCharge <- function(taxable_income) {
+  excemption_limit <- 972 # Will be raised to 16956 in 2021
+  solidarity_charge <- 0.055
+
+  # This "tax" is payed on top of the income tax if it exceeds the excemption limit
+  income_tax <- incomeTax(taxable_income)
+  if (income_tax <= excemption_limit) {
+    return(0)
+  }
+  else {
+    # The Soli cannot exceed 20% of the income tax above the excemption limit. Without this limit there would be a discontinous.
+    # This way, the "marginal soli" is 20 percent in the region above and close to the excemption limit.
+    return(min(solidarity_charge * income_tax, 0.2 * (income_tax - excemption_limit)))
+  }
+}
+
+plotTaxRates <- function() {
+  income_vs_tax_rate <- data.frame(income = (1:2000)*100,
+                                   marginal_tax_rate =  sapply((1:2000)*100, getMarginalTaxRate),
+                                   average_tax_rate = sapply((1:2000)*100, getAverageTaxRate))
+
+  ggplot(aes(x = income), data = income_vs_tax_rate) +
+    geom_line(aes(y = average_tax_rate)) +
+    geom_line(aes(y = marginal_tax_rate)) +
+    scale_y_continuous(limits = c(0, 2))
+}
