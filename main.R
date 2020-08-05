@@ -11,7 +11,8 @@ required_packages <- c("ggplot2",
                        "dplyr",
                        "readxl",
                        "showtext",
-                       "ggrepel")
+                       "ggrepel",
+                       "tidyr")
 
 not_installed_packages <- required_packages[!required_packages %in% installed.packages()[, 1]]
 

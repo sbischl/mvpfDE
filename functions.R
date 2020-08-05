@@ -251,6 +251,10 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
 }
 
 getNetIncome <- function(gross_income) {
+  return(getTaxSystemEffects(gross_income)$net_income_yearly)
+}
+
+getTaxSystemEffects <- function(gross_income) {
   # adapted from:
   # 'Identifying Laffer Bounds: A Sufficient-Statistics Approach with an Application to Germany' by Sachs and Lorenz (2015) Appendix A
   # and their supplementary excel file
@@ -396,11 +400,27 @@ getNetIncome <- function(gross_income) {
   welfare_benefit <- max(welfare_benefit_monthly - income_minus_excemptions, 0)
 
   # Net income defined as gross income MINUS social security contributions, income tax, solidarity chage PLUS welfare benefit
-  net_income <- gross_income - social_security_contributions - income_tax_monthly - solidarity_charge_monthly + welfare_benefit
+  net_income_monthly <- gross_income - social_security_contributions - income_tax_monthly - solidarity_charge_monthly + welfare_benefit
 
-  net_income_yearly <- net_income * 12
+  net_income_yearly <- net_income_monthly * 12
 
-  return(net_income_yearly)
+  return_df <- data.frame(net_income_monthly = net_income_monthly,
+                          net_income_yearly = net_income_yearly,
+                          gross_income_monthly = gross_income,
+                          gross_income_yearly = gross_income * 12,
+                          taxable_income_monthly = taxable_income_monthly,
+                          taxable_income_yearly = taxable_income_yearly,
+                          income_tax_monthly = income_tax_monthly,
+                          welfare_benefit = welfare_benefit,
+                          solidarity_charge_monthly = solidarity_charge_monthly,
+                          social_security_contributions = social_security_contributions,
+                          pension_contribution = pension_contribution,
+                          health_insurance_contribution = health_insurance_contribution,
+                          unemployment_insurance_contribution = unemployment_insurance_contribution,
+                          long_term_care_contribution = long_term_care_contribution,
+                          deductibles = deductibles)
+
+  return(return_df)
 }
 
 getAverageTaxRate <- function(gross_income) {
@@ -464,12 +484,46 @@ solidarityCharge <- function(taxable_income) {
 }
 
 plotTaxRates <- function() {
-  income_vs_tax_rate <- data.frame(income = (1:2000)*100,
-                                   marginal_tax_rate =  sapply((1:2000)*100, getMarginalTaxRate),
-                                   average_tax_rate = sapply((1:2000)*100, getAverageTaxRate))
+  library(ggplot2)
+  # Calculate all the Tax Payment, Net incomes, social insurance contributions etc. for a wide range of incomes
+  # Income Range
+  income_range <- 0:2000*100
+  # Initialize dataframe by calculating the first row
+  taxes_and_transfers <- getTaxSystemEffects(income_range[1])
+  # Complete the dataframe by iterating over range of incomes
+  for (i in 2:length(income_range)) {
+    taxes_and_transfers[i, ] <- getTaxSystemEffects(income_range[i])
+  }
 
-  ggplot(aes(x = income), data = income_vs_tax_rate) +
-    geom_line(aes(y = average_tax_rate)) +
-    geom_line(aes(y = marginal_tax_rate)) +
+  # Keep the relevant information for each of the Figures:
+  figure_net_income_data <- taxes_and_transfers %>% select(gross_income_monthly, net_income_monthly, income_tax_monthly,
+                                                           solidarity_charge_monthly, taxable_income_monthly, deductibles,
+                                                           social_security_contributions, welfare_benefit)
+
+  figure_net_income_data <- gather(data = figure_net_income_data, key = "tax_income_deductible_contribution", value = "Euro", -gross_income_monthly)
+
+  figure_net_income <- ggplot(aes(x = gross_income_monthly, y = Euro, color = tax_income_deductible_contribution), data = figure_net_income_data) +
+      geom_line() +
+      theme_modified_minimal() +
+      scale_x_continuous(limits = c(0, 5000)) +
+      scale_y_continuous(limits = c(0, 5000))
+
+  print(figure_net_income)
+
+  figure_averge_marginal_tax_data <- taxes_and_transfers %>% select(gross_income_monthly, net_income_monthly)
+  figure_averge_marginal_tax_data$average_tax_rate <- 1 - figure_averge_marginal_tax_data$net_income_monthly /
+    figure_averge_marginal_tax_data$gross_income_monthly
+  figure_averge_marginal_tax_data$marginal_tax_rate <- sapply(figure_averge_marginal_tax_data$gross_income_monthly * 12, getMarginalTaxRate)
+  figure_averge_marginal_tax_data <- figure_averge_marginal_tax_data %>% select(-net_income_monthly)
+
+  figure_averge_marginal_tax_data <- gather(data = figure_averge_marginal_tax_data, key = "marginal_average", value = "tax_rate", -gross_income_monthly)
+
+  figure_averge_marginal_tax <- ggplot(aes(x = gross_income_monthly, y = tax_rate, color = marginal_average), data = figure_averge_marginal_tax_data) +
+    geom_line() +
+    theme_modified_minimal() +
+    scale_x_continuous(limits = c(0, 5000)) +
     scale_y_continuous(limits = c(0, 2))
+
+  print(figure_averge_marginal_tax)
+
 }
