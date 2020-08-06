@@ -207,3 +207,6 @@ plotResults(plot_data = plot_data, y_axis = "government_net_costs", y_label = "G
             save = "NetCosts.pdf", lower_cutoff = 0, upper_cutoff = 4, confidence_intervalls = TRUE, text_labels = TRUE)
 plotResults(plot_data = plot_data, y_axis = "willingness_to_pay", y_label = "Willingness to Pay", x_axis = "year", x_label = "Year",
             save = "WTP.pdf", lower_cutoff = 0, upper_cutoff = 4, confidence_intervalls = TRUE, text_labels = TRUE)
+
+# Tax and Transfer System
+plotTaxRates()

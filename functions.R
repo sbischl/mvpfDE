@@ -186,8 +186,9 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
     theme_modified_minimal()
 
   print(plot)
+
   if (save != "") {
-    ggsave(plot, filename = save, device = pdf, path = "./plots/", width = 6, height = 4)
+    ggsave(plot, filename = save, device = pdf, path = "./plots/", width = 7.6, height = 5)
   }
 }
 
@@ -198,11 +199,13 @@ theme_modified_minimal <- function() {
   theme_minimal(base_size=12, base_family=plot_font) %+replace%
     theme (
       axis.line = element_line(color = "black"),
-      panel.grid.minor = element_blank(),
+      panel.grid.minor.x = element_blank(),
       panel.grid.major.x = element_blank(),
       axis.ticks = element_line()
     )
 }
+
+
 
 project_lifetime_impact <- function(impact_age, # the age at which the effect on income comes up for the first time
                                     impact_magnitude, # the effect of treatment on income relative to the control group, i.e. effect / income control
@@ -250,14 +253,26 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
   return(net_present_value)
 }
 
-getNetIncome <- function(gross_income) {
-  return(getTaxSystemEffects(gross_income)$net_income_yearly)
+getNetIncome <- function(gross_income,
+                         inculde_welfare_benefits_fraction = 1,
+                         income_fraction_of_pension_contribution = 0.5) {
+  return(getTaxSystemEffects(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution)$net_income_yearly)
 }
 
-getTaxSystemEffects <- function(gross_income) {
+getTaxSystemEffects <- function(gross_income,
+                                inculde_welfare_benefits_fraction = 1,
+                                income_fraction_of_pension_contribution = 0.5) {
+
+  # inculde_welfare_benefits_fraction is the fraction of welfare benefits (i.e. Hartz IV) that are considered net income.
+  # A value < 1 represents the fact that not everyone who receives low income is entitled to Hartz IV
+  # income_fraction_of_pension_contribution denotes the fraction of pension contributions that are considered net income.
+  # Higher pension contributions result in higher pension payments but due to demographics the return is probably quite low.
+
   # adapted from:
   # 'Identifying Laffer Bounds: A Sufficient-Statistics Approach with an Application to Germany' by Sachs and Lorenz (2015) Appendix A
   # and their supplementary excel file
+
+  # Calculations are for a single household without children
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Assumptions
@@ -302,6 +317,10 @@ getTaxSystemEffects <- function(gross_income) {
   welfare_benefit_monthly <- 700 # The amount of welfare if the personal income is 0 (= average Wohngeld + Hartz IV Regelsatz?)
   personal_exemption <- 100 # Grundfreibetrag
 
+  # Fraction of pension fund contribution that is considered income:
+  # Sachs and Lorenz (2015) assume 0.5
+  income_fraction_of_pension_contribution <- 0.5
+
   #--------------------------------------------------------------------------------------------------------------------#
   # Calculation
   #--------------------------------------------------------------------------------------------------------------------#
@@ -344,7 +363,7 @@ getTaxSystemEffects <- function(gross_income) {
 
   # Sum of social security contributions
   social_security_contributions <- pension_contribution + long_term_care_contribution +
-    unemployment_insurance_contribution + long_term_care_contribution
+    unemployment_insurance_contribution + health_insurance_contribution
 
   # Deductibles:
   deductibles <- 0
@@ -400,14 +419,23 @@ getTaxSystemEffects <- function(gross_income) {
   welfare_benefit <- max(welfare_benefit_monthly - income_minus_excemptions, 0)
 
   # Net income defined as gross income MINUS social security contributions, income tax, solidarity chage PLUS welfare benefit
-  net_income_monthly <- gross_income - social_security_contributions - income_tax_monthly - solidarity_charge_monthly + welfare_benefit
+  net_income_monthly <- gross_income - social_security_contributions - income_tax_monthly - solidarity_charge_monthly +
+    welfare_benefit * inculde_welfare_benefits_fraction +
+    pension_contribution * income_fraction_of_pension_contribution
 
   net_income_yearly <- net_income_monthly * 12
+
+  # Tax defined as gross income MINUS net income
+  tax_monthly <- gross_income - net_income_monthly
+  tax_yearly <- tax_monthly * 12
+
 
   return_df <- data.frame(net_income_monthly = net_income_monthly,
                           net_income_yearly = net_income_yearly,
                           gross_income_monthly = gross_income,
                           gross_income_yearly = gross_income * 12,
+                          tax_monthly = tax_monthly,
+                          tax_yearly = tax_yearly,
                           taxable_income_monthly = taxable_income_monthly,
                           taxable_income_yearly = taxable_income_yearly,
                           income_tax_monthly = income_tax_monthly,
@@ -423,16 +451,29 @@ getTaxSystemEffects <- function(gross_income) {
   return(return_df)
 }
 
-getAverageTaxRate <- function(gross_income) {
-  return(1 - getNetIncome(gross_income) / gross_income)
+getAverageTaxRate <- function(gross_income,
+                              inculde_welfare_benefits_fraction = 1,
+                              income_fraction_of_pension_contribution = 0.5) {
+
+  # Average Tax Rate = 1 - NetIncome(gross income) / gross income)
+  return(1 - getNetIncome(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution) / gross_income)
 }
 
-getTaxPayment <- function(gross_income) {
-  return(gross_income - getNetIncome(gross_income))
+getTaxPayment <- function(gross_income,
+                          inculde_welfare_benefits_fraction = 1,
+                          income_fraction_of_pension_contribution = 0.5) {
+
+  # Tax Payment = gross income - NetIncome(gross income)
+  return(gross_income - getNetIncome(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution))
 }
 
-getMarginalTaxRate <- function(gross_income) {
-  return(1 - (getNetIncome(gross_income + 1) - getNetIncome(gross_income)))
+getMarginalTaxRate <- function(gross_income,
+                               inculde_welfare_benefits_fraction = 1,
+                               income_fraction_of_pension_contribution = 0.5) {
+
+  # Marginal Tax Rate = 1 - (NetIncome(gross income + 1) - NetIncome(gross income))
+  return(1 - (getNetIncome(gross_income + 1, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution) -
+    getNetIncome(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution)))
 }
 
 incomeTax <- function(taxable_income) {
@@ -484,15 +525,23 @@ solidarityCharge <- function(taxable_income) {
 }
 
 plotTaxRates <- function() {
-  library(ggplot2)
+  # Assumptions for the plots:
+  inculde_welfare_benefits_fraction = 1
+  income_fraction_of_pension_contribution = 0.5
+
   # Calculate all the Tax Payment, Net incomes, social insurance contributions etc. for a wide range of incomes
   # Income Range
   income_range <- 0:2000*100
   # Initialize dataframe by calculating the first row
-  taxes_and_transfers <- getTaxSystemEffects(income_range[1])
+  taxes_and_transfers <- getTaxSystemEffects(income_range[1],
+                                             inculde_welfare_benefits_fraction,
+                                             income_fraction_of_pension_contribution)
+
   # Complete the dataframe by iterating over range of incomes
   for (i in 2:length(income_range)) {
-    taxes_and_transfers[i, ] <- getTaxSystemEffects(income_range[i])
+    taxes_and_transfers[i, ] <- getTaxSystemEffects(income_range[i],
+                                                    inculde_welfare_benefits_fraction,
+                                                    income_fraction_of_pension_contribution)
   }
 
   # Keep the relevant information for each of the Figures:
@@ -502,18 +551,46 @@ plotTaxRates <- function() {
 
   figure_net_income_data <- gather(data = figure_net_income_data, key = "tax_income_deductible_contribution", value = "Euro", -gross_income_monthly)
 
+  #This figure is mainly a sanity-check to make sure that the tax schedule is correctly modelled
   figure_net_income <- ggplot(aes(x = gross_income_monthly, y = Euro, color = tax_income_deductible_contribution), data = figure_net_income_data) +
-      geom_line() +
-      theme_modified_minimal() +
-      scale_x_continuous(limits = c(0, 5000)) +
-      scale_y_continuous(limits = c(0, 5000))
-
+    geom_line() +
+    theme_modified_minimal() +
+    xlab("Gross Income per Month") +
+    ylab("Euro per Month") +
+    scale_x_continuous(limits = c(0, 7000)) +
+    scale_y_continuous(limits = c(0, 4000)) +
+    scale_colour_discrete(name = "Legend:", labels = c("Deductibles", "Income Tax", "Net Income", "Social Security Contributions",
+                                              "Solidarity Charge", "Taxable Income", "Welfare Benefit"))
   print(figure_net_income)
+  ggsave(figure_net_income, filename = "net_income_components.pdf", device = pdf, path = "./plots/",  width = 7.6, height = 5)
 
+  #Plot gross income against net income and tax payed:
+  figure_net_income_data_reduced <- taxes_and_transfers %>% select(gross_income_monthly, net_income_monthly, tax_monthly)
+  figure_net_income_data_reduced <- gather(data = figure_net_income_data_reduced, key = "net_income_tax", value = "Euro", -gross_income_monthly)
+
+  figure_net_income_reduced <- ggplot(aes(x = gross_income_monthly, y = Euro, color = net_income_tax), data = figure_net_income_data_reduced) +
+    geom_line() +
+    theme_modified_minimal() +
+    xlab("Gross Income per Month") +
+    ylab("Euro per Month") +
+    scale_x_continuous(limits = c(0, 7000)) +
+    scale_y_continuous(limits = c(-1000, 4000)) +
+    scale_colour_discrete(name = "Legend:", labels = c("Net Income", "Tax Net of Transfers"))
+
+  print(figure_net_income_reduced)
+  ggsave(figure_net_income_reduced, filename = "figure_net_income_reduced.pdf", device = pdf, path = "./plots/",  width = 7.6, height = 5)
+
+
+
+  # Keep the relevant information for each of the Figures:
   figure_averge_marginal_tax_data <- taxes_and_transfers %>% select(gross_income_monthly, net_income_monthly)
   figure_averge_marginal_tax_data$average_tax_rate <- 1 - figure_averge_marginal_tax_data$net_income_monthly /
     figure_averge_marginal_tax_data$gross_income_monthly
-  figure_averge_marginal_tax_data$marginal_tax_rate <- sapply(figure_averge_marginal_tax_data$gross_income_monthly * 12, getMarginalTaxRate)
+  figure_averge_marginal_tax_data$marginal_tax_rate <- sapply(figure_averge_marginal_tax_data$gross_income_monthly * 12,
+                                                              getMarginalTaxRate,
+                                                              inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction,
+                                                              income_fraction_of_pension_contribution = income_fraction_of_pension_contribution)
+
   figure_averge_marginal_tax_data <- figure_averge_marginal_tax_data %>% select(-net_income_monthly)
 
   figure_averge_marginal_tax_data <- gather(data = figure_averge_marginal_tax_data, key = "marginal_average", value = "tax_rate", -gross_income_monthly)
@@ -521,9 +598,15 @@ plotTaxRates <- function() {
   figure_averge_marginal_tax <- ggplot(aes(x = gross_income_monthly, y = tax_rate, color = marginal_average), data = figure_averge_marginal_tax_data) +
     geom_line() +
     theme_modified_minimal() +
-    scale_x_continuous(limits = c(0, 5000)) +
-    scale_y_continuous(limits = c(0, 2))
+    scale_x_continuous(limits = c(0, 7000)) +
+    scale_y_continuous(limits = c(0, 1.2)) +
+    scale_colour_discrete(name = "Legend:", labels = c("Average Tax Rate", "Marginal Tax Rate")) +
+    xlab("Gross Income per Month") +
+    ylab("Tax Rate")
+
+
 
   print(figure_averge_marginal_tax)
+  ggsave(figure_averge_marginal_tax, filename = "marginal_and_average_taxrate.pdf", device = pdf, path = "./plots/", width = 7.6, height = 5)
 
 }
