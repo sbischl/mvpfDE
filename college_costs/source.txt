@@ -1,0 +1,4 @@
+compiled from:
+Fachserie 11, Destatis, "Monetäre Hochschulstatistische Kennzahlen" Table 1.1
+https://www.statistischebibliothek.de/mir/receive/DESerie_mods_00000117
+2002, 2003 and 2004 only contain information about total spending on universities and not specifically on teaching.

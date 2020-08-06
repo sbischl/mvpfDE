@@ -94,8 +94,18 @@ deflate <- function(from, to) {
     # Load consumer price index into the global environment
     cpi <<- read.csv("./cpi/cpi.csv")
   }
+
+  if (from == to) {
+    return(1)
+  }
+
   index_from <- cpi[cpi$year == from, "index"]
   index_to <- cpi[cpi$year == to, "index"]
+
+  if(length(index_from) == 0 | length(index_to) == 0) {
+    warning("You are trying to deflate to or from a year for which there is no data available")
+  }
+
   return(index_to / index_from)
 }
 
@@ -316,10 +326,6 @@ getTaxSystemEffects <- function(gross_income,
   # Welfare Benefits:
   welfare_benefit_monthly <- 700 # The amount of welfare if the personal income is 0 (= average Wohngeld + Hartz IV Regelsatz?)
   personal_exemption <- 100 # Grundfreibetrag
-
-  # Fraction of pension fund contribution that is considered income:
-  # Sachs and Lorenz (2015) assume 0.5
-  income_fraction_of_pension_contribution <- 0.5
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Calculation
@@ -609,4 +615,48 @@ plotTaxRates <- function() {
   print(figure_averge_marginal_tax)
   ggsave(figure_averge_marginal_tax, filename = "marginal_and_average_taxrate.pdf", device = pdf, path = "./plots/", width = 7.6, height = 5)
 
+}
+
+discountVector <- function(periods) {
+  # Returns a vector that contains the discount factor for all periods
+  return((1/(1 + discount_rate))^(0:(periods-1)))
+}
+
+costOfCollege <- function(duration_of_study, year, state_token = "DE") {
+  # Years in which the student studies:
+  years_at_college <- year:(year + duration_of_study -1)
+  # Cost for each of the years:
+  cost <- sapply(years_at_college,
+                 getCollegeCostInformation,
+                 state_token = state_token,
+                 prices_year = year)
+
+  discounted_cost <- cost * discountVector(duration_of_study)
+
+  return(sum(discounted_cost))
+}
+
+getCollegeCostInformation <- function(year, state_token, prices_year) {
+  # Returns the average cost per student for a given year and a given state
+  # prices_year can be set to return the college cost in 'prices_year' dollar. By default the prices are in 'year' euro.
+
+  if (missing(prices_year)) {
+    prices_year <- year
+  }
+
+  if(!exists("college_costs")) {
+    college_costs <<- read.csv(file = "./college_costs/college_costs_per_state.csv")
+  }
+
+  available_years <- as.numeric(substring(colnames(college_costs)[3:ncol(college_costs)],2))
+  relevant_row <- college_costs %>% filter(grepl(state_token, token))
+
+  if (year %in% available_years) {
+    return(deflate(from = year, to = prices_year) * unlist(relevant_row[3:ncol(college_costs)][year == available_years]))
+  }
+  else {
+    # If no data is available for a given year return the closest year adjusted for prices to the year of interest
+    closest_year <- available_years[which(abs(available_years - year) == min(abs(available_years - year)))]
+    return(deflate(from = closest_year,to = prices_year) * unlist(relevant_row[3:ncol(college_costs)][closest_year == available_years]))
+  }
 }
