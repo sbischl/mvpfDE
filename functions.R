@@ -524,7 +524,8 @@ solidarityCharge <- function(taxable_income) {
     return(0)
   }
   else {
-    # The Soli cannot exceed 20% of the income tax above the excemption limit. Without this limit there would be a discontinous.
+    # The Soli cannot exceed 20% of the income tax above the excemption limit.
+    # Without this limit there would be a discontinous jump at the excemption limit.
     # This way, the "marginal soli" is 20 percent in the region above and close to the excemption limit.
     return(min(solidarity_charge * income_tax, 0.2 * (income_tax - excemption_limit)))
   }
@@ -658,5 +659,59 @@ getCollegeCostInformation <- function(year, state_token, prices_year) {
     # If no data is available for a given year return the closest year adjusted for prices to the year of interest
     closest_year <- available_years[which(abs(available_years - year) == min(abs(available_years - year)))]
     return(deflate(from = closest_year,to = prices_year) * unlist(relevant_row[3:ncol(college_costs)][closest_year == available_years]))
+  }
+}
+
+costOfSchool <- function(duration_of_schooling, year, school_type = "all_schools") {
+  # Years in which the student studies:
+  years_at_school <- year:(year + duration_of_schooling -1)
+
+  # Cost for each of the years:
+  cost <- sapply(years_at_school,
+                 getSchoolCostInformation,
+                 school_type = school_type,
+                 prices_year = year)
+
+  discounted_cost <- cost * discountVector(duration_of_schooling)
+
+  return(sum(discounted_cost))
+}
+
+getSchoolCostInformation <- function(year, school_type , prices_year) {
+  # Possible values for school_type are elementary_school, hauptschule, various_tracks, realschule, gymnasium,
+  # gesamtschule, allgemeinbildende_schulen, berufsschule, berufsschule_dual, all_schools
+
+  if (missing(prices_year)) {
+    prices_year <- year
+  }
+
+  if(!exists("school_costs")) {
+    school_costs <<- read.csv(file = "./school_costs/school_cost.csv")
+    # There are some years for which we only have information on the average cost over all school tracks
+    # Replace the missing values by the average ratio of cost for this specific school type / average cost:
+
+    mean_ratios <- colMeans(school_costs[complete.cases(school_costs), ] / school_costs[complete.cases(school_costs), "all_schools"])
+
+    # This solution is not pretty, but it replaces the missing values as described above
+    school_costs[!complete.cases(school_costs), -which(names(school_costs) == "year")] <-
+      (bind_rows(replicate(sum(!complete.cases(school_costs)), mean_ratios, simplify = FALSE)) *
+        school_costs[!complete.cases(school_costs), "all_schools"]) %>% select(-year)
+  }
+
+  available_years <- school_costs$year
+
+  if (year %in% available_years) {
+    return(deflate(from = year, to = prices_year) * school_costs %>%
+      filter(year == !!year) %>%
+      select(!!school_type))  %>%
+      unlist()
+  }
+  else {
+    # If no data is available for a given year return the closest year adjusted for prices to the year of interest
+    closest_year <- available_years[which(abs(available_years - year) == min(abs(available_years - year)))]
+    return(deflate(from = closest_year,to = prices_year) * school_costs %>%
+      filter(year == closest_year) %>%
+      select(!!school_type))  %>%
+      unlist()
   }
 }
