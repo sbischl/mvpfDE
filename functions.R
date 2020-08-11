@@ -219,13 +219,13 @@ theme_modified_minimal <- function() {
 
 project_lifetime_impact <- function(impact_age, # the age at which the effect on income comes up for the first time
                                     impact_magnitude, # the effect of treatment on income relative to the control group, i.e. effect / income control
+                                    impact_magnitude_matrix, # alllows to specify different impact magnitude for each age, see begin of function
                                     relative_control_income, # the income of the control group relative to the average, i.e. control income / average income
                                     start_projection_age, # the age at which the projection starts
                                     end_projection_age = retirement_age, # the age at which the projection ends
                                     start_projection_year, # the year at which the projection starts
-                                    prices_year, # the year whose prices are used
-                                    discount_rate = parent.frame()$discount_rate,
-                                    wage_growth_rate = parent.frame()$wage_growth_rate) {
+                                    prices_year # the year whose prices are used
+                                    ) {
 
   # This function loads the assumptions specified in assumptions.R. But it is possible to override these if neccessary.
   # This can be useful to conduct robustness. Maybe I'm going to remove this. Because the same can be achieved by just overriding
@@ -234,11 +234,56 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
   # Import age-income relation: This should be estimated from the data, but for testing purposes use the data from Hendren & Sprung-Keyser (2020)
   age_income_table <- read.csv("./income_projection/age_income_cross_section.csv")
 
+  # Handlde impact magnitude:
+
+  # There are two options to specifiy the impact magnitude.
+  # 1) impact_magnitude -> constant impact of policy at all projection years
+  # 2) impact_magnitude_matrix -> a matrix / data.frame that contains a "age" and "impact_magnitude" column which specifies the impact
+  # for a given age. This matrix need not cover all ages the projection covers. Missing ages are replaced by the closest, we have
+  # information for.
+
+  if (missing(impact_magnitude) & missing(impact_magnitude_matrix)) {
+    warning("Need to specify either impact_magnitude or impact_magnitude_matrix")
+    return(-1)
+  }
+  if (!missing(impact_magnitude)) {
+    # constant policy impact at all ages
+    age_income_table$impact_magnitude <- impact_magnitude
+  }
+  else {
+    # Select relevant ages from impact_magnitude_matrix
+    impact_magnitude_matrix <- impact_magnitude_matrix %>% filter(age >= start_projection_age & age <= end_projection_age)
+
+    # Add age_specific impact_magnitude to age_income_table by iterating over all ages
+    for (i in 1:nrow(age_income_table)) {
+      if (age_income_table[i , "age"] %in% impact_magnitude_matrix$age) {
+        # Impact for the age that is currently being iterated over is available:
+        age_income_table[i, "impact_magnitude"] <-
+          impact_magnitude_matrix[age_income_table[i , "age"] == impact_magnitude_matrix$age, "impact_magnitude"]
+      }
+      else {
+        # Impact for current age is not available. Choose closest available impact:
+        closest_available_impact <- impact_magnitude_matrix$impact_magnitude[
+          which(abs(impact_magnitude_matrix$age - age_income_table[i , "age"]) ==
+                  min(abs(impact_magnitude_matrix$age - age_income_table[i , "age"])))]
+
+        # In case there are two closest ages, use average:
+        if (length(closest_available_impact) > 1) {
+          age_income_table[i, "impact_magnitude"] <- (closest_available_impact[1] + closest_available_impact[2]) / 2
+        }
+        else {
+          age_income_table[i, "impact_magnitude"] <- closest_available_impact
+        }
+      }
+    }
+  }
+
   # Calculate the impact year as birth year + impact_age
   impact_year <- (start_projection_year- start_projection_age) + impact_age
 
   # Adjust for inflation, i.e., convert incomes to 'prices_year' euros.
   age_income_table$income_price_adjusted <- age_income_table$income * deflate(from = 2015, to = prices_year)
+
 
   # Calculate the average income trajectory(i.e. average income for each age) for the population that is 'impact_age' years old in the year 'impact_year'
   # We have to take into accout that incomes are observed for only one year, incomes that are realized after (before) this
@@ -250,7 +295,7 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
 
   # Limit the dataset the relevant region for the projection:
   age_income_table <- age_income_table %>% filter(age >= start_projection_age & age <= end_projection_age)
-  age_income_table$earnings_impact <- age_income_table$income_fully_adjusted * relative_control_income * impact_magnitude
+  age_income_table$earnings_impact <- age_income_table$income_fully_adjusted * relative_control_income * age_income_table$impact_magnitude
 
   # Discount all earning impacts to the start of the projection
   age_income_table$earnings_impact_discounted <- age_income_table$earnings_impact *
@@ -714,4 +759,53 @@ getSchoolCostInformation <- function(year, school_type , prices_year) {
       select(!!school_type))  %>%
       unlist()
   }
+}
+
+EducationDecisionImpact <- function(education_decision = "university_degree",
+                                    alternative = "vocational_educ",
+                                    start_age, #age at which projection starts cannot be lower than 18
+                                    end_age, #age at which projection ends
+                                    assume_constant_effect_from,
+                                    year) {
+
+  # Asseses the impact of education decision based on data from IAB (2014) http://doku.iab.de/kurzber/2014/kb0114.pdf
+  # possible values for education decision and alternatives are:
+  # university_degree
+  # applied_sciences_degree
+  # abitur : includes everyone with abitur but without university degree / or applied sciences university degree
+  # vocational_educ : vocational_educ implies no abitur
+  # no_vocational_educ : no_vocational_educ implies no abitur
+  # assume_constant_effect_from can be used to set an age above which the impact of the considered education path remains
+  # constant. This is similar to the approach by Hendren & Sprung-Keyser (2019) who extrapolate the average effect from
+  # years 7 to 14 after college enrollment into the future.
+
+  age_income_degree_table <- read.csv("./college_costs/age_income_degree.csv")
+
+  # Construct the impact for all ages:
+  impact_magnitude_matrix <- data.frame(age = age_income_degree_table$age)
+  impact_magnitude_matrix$impact_magnitude <- age_income_degree_table[, education_decision] / age_income_degree_table[, alternative] -1
+  # Remove ages where both education paths have zero income, i.e. there is a 0 by 0 divison.
+  impact_magnitude_matrix <- impact_magnitude_matrix %>% filter(!is.nan(impact_magnitude))
+
+  project_lifetime_impact (impact_age = start_age,
+                           impact_magnitude_matrix = impact_magnitude_matrix,
+                           relative_control_income = 1,
+                           start_projection_age = start_age,
+                           end_projection_age = end_age, # the age at which the projection ends
+                           start_projection_year = year, # the year at which the projection starts
+                           prices_year = year)
+}
+
+
+returnsToSchool <- function(effect, schooltrack = "all") {
+  # Returns the value of an additional year of schooling.
+  # Estimates:
+  # Estimating returns to schooling is difficult. OLS is likely biased. The direction is not clear. IV Studies find vastly different
+  # results depending on the instrument.
+  # Pischke and von Wachter (OLS) estimate a slightly modified Mincerian Equation using Mikrozensus ~939736 observations:
+  # p. 595 Table 2. It is not clear whether this is a particularly good estimate but it falls in the region where most estimates are in.
+  # (7% - 10%)
+  pischke_von_wachter_estimate <- 0.074
+
+
 }
