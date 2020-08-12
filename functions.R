@@ -224,7 +224,8 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
                                     start_projection_age, # the age at which the projection starts
                                     end_projection_age = retirement_age, # the age at which the projection ends
                                     start_projection_year, # the year at which the projection starts
-                                    prices_year # the year whose prices are used
+                                    prices_year, # the year whose prices are used
+                                    inculde_welfare_benefits_fraction = 1 # The fraction of welfare benefits the beneficiaries receive
                                     ) {
 
   # This function loads the assumptions specified in assumptions.R. But it is possible to override these if neccessary.
@@ -295,17 +296,60 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
 
   # Limit the dataset the relevant region for the projection:
   age_income_table <- age_income_table %>% filter(age >= start_projection_age & age <= end_projection_age)
+
   age_income_table$earnings_impact <- age_income_table$income_fully_adjusted * relative_control_income * age_income_table$impact_magnitude
 
+  # The earnings impact is sufficient to calculate the net-present value of the reform in terms of gross income.
+  # However, individuals care about net income (part of numerator of MVPF).
+  # The government cares about tax revenue (part of denominator of MVPF)
+  # -> We need to estimate how the considered reform affects tax payments.
+  # The fact that the German tax system is non-linear causes two problems:
+  # 1) Changes in earnings are not enough to calculate the tax, we need the level of earnings
+  # 2) Tax payments depend not only on the average income, but also on the distribution
+  #
+  # 1) can be fixed by calculating the level of earnings with and without the reform
+  # 2) cannot be easily solved as we would need some assumption about the control group's distribution of income
+
+  age_income_table$earnings_no_reform <- age_income_table$income_fully_adjusted * relative_control_income
+  age_income_table$earnings_reform <- age_income_table$earnings_no_reform + age_income_table$earnings_impact
+
+  age_income_table$tax_payment_no_reform <- sapply(age_income_table$earnings_no_reform,
+                                                   getTaxPayment,
+                                                   prices_year = prices_year,
+                                                   inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction)
+  age_income_table$tax_payment_reform <- sapply(age_income_table$earnings_reform,
+                                                getTaxPayment,
+                                                prices_year = prices_year,
+                                                inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction)
+
+  age_income_table$net_earnings_no_reform <- age_income_table$earnings_no_reform - age_income_table$tax_payment_no_reform
+  age_income_table$net_earings_reform <- age_income_table$earnings_reform - age_income_table$tax_payment_reform
+
+  age_income_table$net_earnings_impact <- age_income_table$net_earings_reform - age_income_table$net_earnings_no_reform
+  age_income_table$tax_payment_impact <- age_income_table$tax_payment_reform - age_income_table$tax_payment_no_reform
+
   # Discount all earning impacts to the start of the projection
-  age_income_table$earnings_impact_discounted <- age_income_table$earnings_impact *
-    (1/(1 + discount_rate))^(0:(end_projection_age - start_projection_age))
+  age_income_table$earnings_impact_discounted <-
+    age_income_table$earnings_impact * discountVector(end_projection_age - start_projection_age + 1)
 
-  # Sum discounted earning impacts to get the net-present value of the earnings effect:
-  net_present_value <- sum(age_income_table$earnings_impact_discounted)
+  # Discount effect on net incomes:
+  age_income_table$net_earnings_impact_discounted <-
+    age_income_table$net_earnings_impact * discountVector(end_projection_age - start_projection_age + 1)
 
-  # We could return more results here but the NPV is what households care about and enough for now.
-  return(net_present_value)
+  # Discount effect on tax_payments:
+  age_income_table$tax_payment_impact_discounted <-
+    age_income_table$tax_payment_impact * discountVector(end_projection_age - start_projection_age + 1)
+
+
+  # Sum discounted impact on earnings, net earnings and tax payments
+  present_value_earnings_impact <- sum(age_income_table$earnings_impact_discounted)
+  present_value_tax_payment_impact <- sum(age_income_table$tax_payment_impact_discounted)
+  present_value_net_earnings_impact <- sum(age_income_table$net_earnings_impact_discounted)
+
+
+  return(list(present_value_earnings_impact = present_value_earnings_impact,
+              present_value_tax_payment_impact = present_value_tax_payment_impact,
+              present_value_net_earnings_impact = present_value_net_earnings_impact))
 }
 
 getNetIncome <- function(gross_income,
@@ -512,10 +556,22 @@ getAverageTaxRate <- function(gross_income,
 
 getTaxPayment <- function(gross_income,
                           inculde_welfare_benefits_fraction = 1,
-                          income_fraction_of_pension_contribution = 0.5) {
+                          income_fraction_of_pension_contribution = 1,
+                          prices_year = 2019) {
+  # gross_income should be in prices_year euros. This assumes that the tax system is regularly adjusted to make it independent
+  # from prices. I.e. there are no inflation incuded tax increases ("Kalte Progression")
 
-  # Tax Payment = gross income - NetIncome(gross income)
-  return(gross_income - getNetIncome(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution))
+  # Inflate gross income to the year for which the tax system is modeled
+  gross_income_inflated <- deflate(prices_year, 2019) * gross_income
+
+  tax_payment <- getTaxSystemEffects(gross_income_inflated,
+                                     inculde_welfare_benefits_fraction,
+                                     income_fraction_of_pension_contribution)$tax_yearly
+
+  # Deflate tax_payment back to initial year:
+  tax_payment_deflated <-  deflate(2019, prices_year) * tax_payment
+
+  return(tax_payment_deflated)
 }
 
 getMarginalTaxRate <- function(gross_income,
@@ -722,6 +778,21 @@ costOfSchool <- function(duration_of_schooling, year, school_type = "all_schools
   return(sum(discounted_cost))
 }
 
+costOfSchool <- function(duration_of_schooling, year, school_type = "all_schools") {
+  # Years in which the student studies:
+  years_at_school <- year:(year + duration_of_schooling -1)
+
+  # Cost for each of the years:
+  cost <- sapply(years_at_school,
+                 getSchoolCostInformation,
+                 school_type = school_type,
+                 prices_year = year)
+
+  discounted_cost <- cost * discountVector(duration_of_schooling)
+
+  return(sum(discounted_cost))
+}
+
 getSchoolCostInformation <- function(year, school_type , prices_year) {
   # Possible values for school_type are elementary_school, hauptschule, various_tracks, realschule, gymnasium,
   # gesamtschule, allgemeinbildende_schulen, berufsschule, berufsschule_dual, all_schools
@@ -771,7 +842,7 @@ EducationDecisionImpact <- function(education_decision = "university_degree",
   # Asseses the impact of education decision based on data from IAB (2014) http://doku.iab.de/kurzber/2014/kb0114.pdf
   # possible values for education decision and alternatives are:
   # university_degree
-  # applied_sciences_degree
+  # applied_sciences_degree : Fachhochschule
   # abitur : includes everyone with abitur but without university degree / or applied sciences university degree
   # vocational_educ : vocational_educ implies no abitur
   # no_vocational_educ : no_vocational_educ implies no abitur
@@ -784,16 +855,27 @@ EducationDecisionImpact <- function(education_decision = "university_degree",
   # Construct the impact for all ages:
   impact_magnitude_matrix <- data.frame(age = age_income_degree_table$age)
   impact_magnitude_matrix$impact_magnitude <- age_income_degree_table[, education_decision] / age_income_degree_table[, alternative] -1
+
+  if (!missing(assume_constant_effect_from)) {
+    impact_magnitude_matrix <- impact_magnitude_matrix %>% filter(age <= assume_constant_effect_from)
+  }
+
   # Remove ages where both education paths have zero income, i.e. there is a 0 by 0 divison.
   impact_magnitude_matrix <- impact_magnitude_matrix %>% filter(!is.nan(impact_magnitude))
 
-  project_lifetime_impact (impact_age = start_age,
-                           impact_magnitude_matrix = impact_magnitude_matrix,
-                           relative_control_income = 1,
-                           start_projection_age = start_age,
-                           end_projection_age = end_age, # the age at which the projection ends
-                           start_projection_year = year, # the year at which the projection starts
-                           prices_year = year)
+
+
+  lifetime_impacts <- project_lifetime_impact(impact_age = start_age,
+                                              impact_magnitude_matrix = impact_magnitude_matrix,
+                                              relative_control_income = 0.9,
+                                              start_projection_age = start_age,
+                                              end_projection_age = end_age,
+                                              start_projection_year = year,
+                                              prices_year = year,
+                                              inculde_welfare_benefits_fraction = 0)
+
+  lifetime_impacts
+
 }
 
 
@@ -806,6 +888,4 @@ returnsToSchool <- function(effect, schooltrack = "all") {
   # p. 595 Table 2. It is not clear whether this is a particularly good estimate but it falls in the region where most estimates are in.
   # (7% - 10%)
   pischke_von_wachter_estimate <- 0.074
-
-
 }
