@@ -1,6 +1,6 @@
 G8 <- function (bootstrap_replication = 0) {
   program_name <- toString(match.call()[1])
-  estimatates <- getEstimates(program_name, bootstrap_replication)
+  estimates <- getEstimates(program_name, bootstrap_replication)
   # Assumptions:
   # The natural number would be one since students spend one year less in school. Marcus & Zambre (2019) estimate that
   # that G8 graduates start to study 10 months earlier compared to G9 students.

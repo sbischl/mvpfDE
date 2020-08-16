@@ -1,6 +1,6 @@
 taxReform1990 <- function (bootstrap_replication = 0) {
   program_name <- toString(match.call()[1])
-  estimatates <- getEstimates(program_name, bootstrap_replication)
+  estimates <- getEstimates(program_name, bootstrap_replication)
 
   # Tax rates before and after the reform:
   marginal_top_tax_rate_before <- 0.56
@@ -11,10 +11,10 @@ taxReform1990 <- function (bootstrap_replication = 0) {
 
   # Calculate the fiscal externality given the tax rate before the reform and after the reform
   fiscal_externality_before <-
-    marginal_top_tax_rate_before / (1 - marginal_top_tax_rate_before) * estimatates$pareto_coefficient_1989 * estimatates$elasticity_of_taxable_income
+    marginal_top_tax_rate_before / (1 - marginal_top_tax_rate_before) * estimates$pareto_coefficient_1989 * estimates$elasticity_of_taxable_income
 
   fiscal_externality_after <-
-    marginal_top_tax_rate_after / (1 - marginal_top_tax_rate_after) * estimatates$pareto_coefficient_1989 * estimatates$elasticity_of_taxable_income
+    marginal_top_tax_rate_after / (1 - marginal_top_tax_rate_after) * estimates$pareto_coefficient_1989 * estimates$elasticity_of_taxable_income
 
   # Follow Hendren and Sprung-Keyser (2020) by taking the average of the fiscal externality before and after the reform
   average_fiscal_externality <- (fiscal_externality_before + fiscal_externality_after) / 2

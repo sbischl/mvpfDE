@@ -120,7 +120,7 @@ splitAndDiscount <- function(amount, periods, discount_rate) {
 
 plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_label = "Year",
                         plot_data, save = "", lower_cutoff = -1, upper_cutoff = 6, confidence_intervalls = TRUE,
-                        text_labels = TRUE, legend_label = "Category") {
+                        text_labels = TRUE, legend_label = "Category", vertical_x_axis_labels = FALSE) {
 
   # Check if y_axis and x_axis actually exist in the plot_data
   if (!all(c(y_axis, x_axis) %in% colnames(plot_data))) {
@@ -161,6 +161,12 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
       mutate(!!paste0(y_axis, "_95ci_lower") := replace(get(paste0(y_axis, "_95ci_lower")), get(paste0(y_axis, "_95ci_lower")) < lower_cutoff, lower_cutoff))
   }
 
+  # Generate Category 'Other' which contains all programs that have no Category specified:
+  plot_data$category <- coalesce(plot_data$category, "Other")
+  # Assign the Program program identifier (folder name) as program name, if none is specified:
+  plot_data$program_name <- coalesce(plot_data$program_name, plot_data$program)
+
+
   plot <- ggplot(aes_string(y = y_axis, x= x_axis), data = plot_data) +
     ylab(y_label) +
     xlab(x_label) +
@@ -181,6 +187,7 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
 
   if (y_axis == "mvpf") {
     plot <- plot + scale_y_continuous(breaks = lower_cutoff:(upper_cutoff + 1),
+                                      minor_breaks = (lower_cutoff:(upper_cutoff - 1)) + 0.5,
                                       labels = c(paste("\u2264", lower_cutoff),
                                                  as.character((lower_cutoff + 1):(upper_cutoff -1)),
                                                  paste("\u2265", upper_cutoff), "\u221E"))
@@ -194,6 +201,11 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
 
   plot <- plot + geom_point(aes_string(y = y_axis, x= x_axis, color = "category")) +
     theme_modified_minimal()
+
+  if (vertical_x_axis_labels) {
+    plot <- plot + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5),
+                         axis.title.x = element_blank())
+  }
 
   print(plot)
 
@@ -231,6 +243,14 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
   # This function loads the assumptions specified in assumptions.R. But it is possible to override these if neccessary.
   # This can be useful to conduct robustness. Maybe I'm going to remove this. Because the same can be achieved by just overriding
   # the assumption in the code and then reloading the default assumptions again if required.
+
+  # prices_year and start_projection age are optional:
+  if (missing(start_projection_age)) {
+    start_projection_age = impact_age
+  }
+  if (missing(prices_year)) {
+    prices_year = start_projection_year
+  }
 
   # Import age-income relation: This should be estimated from the data, but for testing purposes use the data from Hendren & Sprung-Keyser (2020)
   age_income_table <- read.csv("./income_projection/age_income_cross_section.csv")
@@ -653,24 +673,42 @@ plotTaxRates <- function() {
   }
 
   # Keep the relevant information for each of the Figures:
-  figure_net_income_data <- taxes_and_transfers %>% select(gross_income_monthly, net_income_monthly, income_tax_monthly,
-                                                           solidarity_charge_monthly, taxable_income_monthly, deductibles,
-                                                           social_security_contributions, welfare_benefit)
+  figure_net_income_data <- taxes_and_transfers %>% select(gross_income_monthly, solidarity_charge_monthly, income_tax_monthly,
+                                                           long_term_care_contribution , health_insurance_contribution,
+                                                           unemployment_insurance_contribution, pension_contribution,
+                                                           welfare_benefit)
+  # Welfare Benefit is a negative tax
+  figure_net_income_data$welfare_benefit <- -figure_net_income_data$welfare_benefit
 
-  figure_net_income_data <- gather(data = figure_net_income_data, key = "tax_income_deductible_contribution", value = "Euro", -gross_income_monthly)
+  figure_net_income_data <- gather(data = figure_net_income_data, key = "tax_group", value = "Euro",
+                                   -gross_income_monthly)
 
-  #This figure is mainly a sanity-check to make sure that the tax schedule is correctly modelled
-  figure_net_income <- ggplot(aes(x = gross_income_monthly, y = Euro, color = tax_income_deductible_contribution), data = figure_net_income_data) +
-    geom_line() +
+  # Order Plot:
+  figure_net_income_data$tax_group <- factor(figure_net_income_data$tax_group,
+                                             levels = c("solidarity_charge_monthly",
+                                                        "income_tax_monthly",
+                                                        "long_term_care_contribution",
+                                                        "health_insurance_contribution",
+                                                        "unemployment_insurance_contribution",
+                                                        "pension_contribution",
+                                                        "welfare_benefit"))
+
+
+  #This figure depicts the composition of the tax system
+  figure_net_income <- ggplot(aes(x = gross_income_monthly, y = Euro, fill = tax_group), data = figure_net_income_data) +
+    geom_area() +
     theme_modified_minimal() +
+    coord_equal() +
     xlab("Gross Income per Month") +
     ylab("Euro per Month") +
-    scale_x_continuous(limits = c(0, 7000)) +
-    scale_y_continuous(limits = c(0, 4000)) +
-    scale_colour_discrete(name = "Legend:", labels = c("Deductibles", "Income Tax", "Net Income", "Social Security Contributions",
-                                              "Solidarity Charge", "Taxable Income", "Welfare Benefit"))
+    scale_x_continuous(limits = c(0, 10000)) +
+    scale_y_continuous(limits = c(-1000, 9000)) +
+    scale_fill_discrete(name = "Legend:", labels = c("Solidarity Charge", "Income Tax",
+                                                     "Long Term Care Insurance", "Health Insurance",
+                                                     "Unemployment Insurance",  "Pension Contribution",
+                                                     "Welfare Benefit"))
   print(figure_net_income)
-  ggsave(figure_net_income, filename = "net_income_components.pdf", device = pdf, path = "./plots/",  width = 7.6, height = 5)
+  ggsave(figure_net_income, filename = "tax_components.pdf", device = pdf, path = "./plots/",  width = 7.6, height = 5)
 
   #Plot gross income against net income and tax payed:
   figure_net_income_data_reduced <- taxes_and_transfers %>% select(gross_income_monthly, net_income_monthly, tax_monthly)
@@ -683,7 +721,8 @@ plotTaxRates <- function() {
     ylab("Euro per Month") +
     scale_x_continuous(limits = c(0, 7000)) +
     scale_y_continuous(limits = c(-1000, 4000)) +
-    scale_colour_discrete(name = "Legend:", labels = c("Net Income", "Tax Net of Transfers"))
+    scale_colour_discrete(name = "Legend:",
+                          labels = c("Net Income", "Tax Net of Transfers"))
 
   print(figure_net_income_reduced)
   ggsave(figure_net_income_reduced, filename = "figure_net_income_reduced.pdf", device = pdf, path = "./plots/",  width = 7.6, height = 5)
@@ -724,14 +763,21 @@ discountVector <- function(periods) {
   return((1/(1 + discount_rate))^(0:(periods-1)))
 }
 
-costOfCollege <- function(duration_of_study, year, state_token = "DE") {
+costOfCollege <- function(duration_of_study,
+                          year,
+                          state_token = "DE",
+                          prices_year) {
+  if (missing(prices_year)) {
+    prices_year = year
+  }
+
   # Years in which the student studies:
   years_at_college <- year:(year + duration_of_study -1)
   # Cost for each of the years:
   cost <- sapply(years_at_college,
                  getCollegeCostInformation,
                  state_token = state_token,
-                 prices_year = year)
+                 prices_year = prices_year)
 
   discounted_cost <- cost * discountVector(duration_of_study)
 
@@ -763,7 +809,15 @@ getCollegeCostInformation <- function(year, state_token, prices_year) {
   }
 }
 
-costOfSchool <- function(duration_of_schooling, year, school_type = "all_schools") {
+costOfSchool <- function(duration_of_schooling,
+                         year,
+                         school_type = "all_schools",
+                         prices_year) {
+
+  if (missing(prices_year)) {
+    prices_year = year
+  }
+
   # Years in which the student studies:
   years_at_school <- year:(year + duration_of_schooling -1)
 
@@ -771,22 +825,8 @@ costOfSchool <- function(duration_of_schooling, year, school_type = "all_schools
   cost <- sapply(years_at_school,
                  getSchoolCostInformation,
                  school_type = school_type,
-                 prices_year = year)
+                 prices_year = prices_year)
 
-  discounted_cost <- cost * discountVector(duration_of_schooling)
-
-  return(sum(discounted_cost))
-}
-
-costOfSchool <- function(duration_of_schooling, year, school_type = "all_schools") {
-  # Years in which the student studies:
-  years_at_school <- year:(year + duration_of_schooling -1)
-
-  # Cost for each of the years:
-  cost <- sapply(years_at_school,
-                 getSchoolCostInformation,
-                 school_type = school_type,
-                 prices_year = year)
 
   discounted_cost <- cost * discountVector(duration_of_schooling)
 
@@ -832,25 +872,31 @@ getSchoolCostInformation <- function(year, school_type , prices_year) {
   }
 }
 
-EducationDecisionImpact <- function(education_decision = "university_degree",
-                                    alternative = "vocational_educ",
-                                    start_age, #age at which projection starts cannot be lower than 18
-                                    end_age, #age at which projection ends
-                                    assume_constant_effect_from,
-                                    year) {
+getEducationEffectOnEarnings <- function(education_decision = "university_degree",
+                                         alternative = "vocational_educ",
+                                         assume_constant_effect_from) {
 
-  # Asseses the impact of education decision based on data from IAB (2014) http://doku.iab.de/kurzber/2014/kb0114.pdf
-  # possible values for education decision and alternatives are:
+  # Returns a matrix which contains the relative earnings differences between education_decision  and alternative.
+  # To be used in conjunction with project_lifetime_impact and the impact_magnitude_matrix option.
+
+  # The Impact of education decisions is based on data from IAB (2014) http://doku.iab.de/kurzber/2014/kb0114.pdf
+  #
+  # Possible values for education decision and alternatives are:
   # university_degree
   # applied_sciences_degree : Fachhochschule
   # abitur : includes everyone with abitur but without university degree / or applied sciences university degree
   # vocational_educ : vocational_educ implies no abitur
   # no_vocational_educ : no_vocational_educ implies no abitur
+
   # assume_constant_effect_from can be used to set an age above which the impact of the considered education path remains
   # constant. This is similar to the approach by Hendren & Sprung-Keyser (2019) who extrapolate the average effect from
   # years 7 to 14 after college enrollment into the future.
 
-  age_income_degree_table <- read.csv("./college_costs/age_income_degree.csv")
+  # Effect
+
+  if (!exists("age_income_degree_table")) {
+    age_income_degree_table <<- read.csv("./college_costs/age_income_degree.csv")
+  }
 
   # Construct the impact for all ages:
   impact_magnitude_matrix <- data.frame(age = age_income_degree_table$age)
@@ -863,21 +909,8 @@ EducationDecisionImpact <- function(education_decision = "university_degree",
   # Remove ages where both education paths have zero income, i.e. there is a 0 by 0 divison.
   impact_magnitude_matrix <- impact_magnitude_matrix %>% filter(!is.nan(impact_magnitude))
 
-
-
-  lifetime_impacts <- project_lifetime_impact(impact_age = start_age,
-                                              impact_magnitude_matrix = impact_magnitude_matrix,
-                                              relative_control_income = 0.9,
-                                              start_projection_age = start_age,
-                                              end_projection_age = end_age,
-                                              start_projection_year = year,
-                                              prices_year = year,
-                                              inculde_welfare_benefits_fraction = 0)
-
-  lifetime_impacts
-
+  return(impact_magnitude_matrix)
 }
-
 
 returnsToSchool <- function(effect, schooltrack = "all") {
   # Returns the value of an additional year of schooling.
