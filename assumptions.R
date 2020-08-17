@@ -7,4 +7,4 @@ yearly_returns_to_schooling <- 0.074
 
 # Bootstrap Settings
 bootstrap_seed <- 24135693
-bootstrap_replications <- 10
+bootstrap_replications <- 250

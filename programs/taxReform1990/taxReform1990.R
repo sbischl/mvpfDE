@@ -1,3 +1,11 @@
+#----------------------------------------------------------------------------------------------------------------------#
+# Top Tax Reform 1990
+#----------------------------------------------------------------------------------------------------------------------#
+
+# Relevant Literature:
+# Atkinson & Piketty (2010)
+# Gottfried & Schellhorn (2004)
+
 taxReform1990 <- function (bootstrap_replication = 0) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)

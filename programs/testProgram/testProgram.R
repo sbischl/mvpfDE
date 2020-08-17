@@ -1,3 +1,10 @@
+#----------------------------------------------------------------------------------------------------------------------#
+# Test Program
+#----------------------------------------------------------------------------------------------------------------------#
+
+# Relevant Literature:
+# Nothing Really
+
 testProgram <- function (bootstrap_replication = 0) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)

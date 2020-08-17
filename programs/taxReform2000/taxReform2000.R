@@ -1,3 +1,11 @@
+#----------------------------------------------------------------------------------------------------------------------#
+# Top Tax Reform 2000
+#----------------------------------------------------------------------------------------------------------------------#
+
+# Relevant Literature:
+# Doerrenberg et. al. (2017) and Working Paper Version from 2015
+# Clementi and Gallegati (2005)
+
 taxReform2000 <- function (bootstrap_replication = 0, year_difference = 3) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)
@@ -25,11 +33,6 @@ taxReform2000 <- function (bootstrap_replication = 0, year_difference = 3) {
 
   # Substract the fiscal externality from the initial government cost of 1:
   government_net_costs <- 1 - average_fiscal_externality
-
-
-
-
-
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs)

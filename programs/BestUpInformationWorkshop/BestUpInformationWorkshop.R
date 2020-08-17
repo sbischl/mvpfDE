@@ -1,10 +1,17 @@
+#----------------------------------------------------------------------------------------------------------------------#
+# Best Up College Information Workshop
+#----------------------------------------------------------------------------------------------------------------------#
+
+# Relevant Literature:
+# Peter et. al. (2018)
+
 BestUpInformationWorkshop <- function (bootstrap_replication = 0,
                                        use_constant_ols_return_to_schooling = FALSE) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)
 
   #--------------------------------------------------------------------------------------------------------------------#
-  # Relevant Assumptions:
+  # Assumptions:
   #--------------------------------------------------------------------------------------------------------------------#
 
   # Implementation cost (per student), see Table A4 :
@@ -28,6 +35,7 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
   #--------------------------------------------------------------------------------------------------------------------#
   # Program Implementation Cost
   #--------------------------------------------------------------------------------------------------------------------#
+
   government_net_costs <- total_cost
 
   #--------------------------------------------------------------------------------------------------------------------#
@@ -61,10 +69,10 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
                                                      relative_control_income = 1,
                                                      start_projection_year = 2016,
                                                      prices_year = prices_year,
+                                                     discount_to = 2014,
                                                      inculde_welfare_benefits_fraction = 0)
-
-    # This adds the impact_longer_schooling and impact_more_education. Since these are lists, a simply + does not suffice.
-    lifetime_impacts <- Map("+",impact_longer_schooling, impact_more_education)
+    # Add impact_longer_schooling and impact_more_education.
+    lifetime_impacts <- impact_longer_schooling + impact_more_education
   }
 
   # Peter et. al. (2018) measure the effect of their information workshop on the probability of college enrollment using

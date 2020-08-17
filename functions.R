@@ -233,16 +233,15 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
                                     impact_magnitude, # the effect of treatment on income relative to the control group, i.e. effect / income control
                                     impact_magnitude_matrix, # alllows to specify different impact magnitude for each age, see begin of function
                                     relative_control_income, # the income of the control group relative to the average, i.e. control income / average income
-                                    start_projection_age, # the age at which the projection starts
-                                    end_projection_age = retirement_age, # the age at which the projection ends
+                                    start_projection_age, # the age at which the projection starts (optional)
+                                    end_projection_age = retirement_age, # the age at which the projection ends (optional)
                                     start_projection_year, # the year at which the projection starts
-                                    prices_year, # the year whose prices are used
+                                    prices_year, # the year whose prices are used (optional)
+                                    discount_to, # the year to which the impacts should be discounted to (optional)
                                     inculde_welfare_benefits_fraction = 1 # The fraction of welfare benefits the beneficiaries receive
                                     ) {
 
-  # This function loads the assumptions specified in assumptions.R. But it is possible to override these if neccessary.
-  # This can be useful to conduct robustness. Maybe I'm going to remove this. Because the same can be achieved by just overriding
-  # the assumption in the code and then reloading the default assumptions again if required.
+
 
   # prices_year and start_projection age are optional:
   if (missing(start_projection_age)) {
@@ -366,8 +365,18 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
   present_value_tax_payment_impact <- sum(age_income_table$tax_payment_impact_discounted)
   present_value_net_earnings_impact <- sum(age_income_table$net_earnings_impact_discounted)
 
+  # Discount to specified year if discount_to is set.
+  if (!missing(discount_to)) {
+    present_value_earnings_impact <- discount(from = start_projection_year, to = discount_to) *
+      present_value_earnings_impact
+    present_value_tax_payment_impact <- discount(from = start_projection_year, to = discount_to) *
+      present_value_tax_payment_impact
+    present_value_net_earnings_impact <- discount(from = start_projection_year, to = discount_to) *
+      present_value_net_earnings_impact
+  }
 
-  return(list(present_value_earnings_impact = present_value_earnings_impact,
+
+  return(data.frame(present_value_earnings_impact = present_value_earnings_impact,
               present_value_tax_payment_impact = present_value_tax_payment_impact,
               present_value_net_earnings_impact = present_value_net_earnings_impact))
 }
@@ -761,6 +770,11 @@ plotTaxRates <- function() {
 discountVector <- function(periods) {
   # Returns a vector that contains the discount factor for all periods
   return((1/(1 + discount_rate))^(0:(periods-1)))
+}
+
+discount <- function(from, to) {
+  # Returns the factor that some cash flow in year "from" has to be multiplied by to get the discounted value in year "to"
+  return(1/(1+discount_rate)^(from - to))
 }
 
 costOfCollege <- function(duration_of_study,
