@@ -71,7 +71,7 @@ for (i in 1:length(estimate_files)) {
 
 # Get List of all programs
 programs <- list.dirs("./programs", full.names = FALSE, recursive = FALSE)
-complete_programs <- c()
+complete_programs <- NULL
 for (i in 1:length(programs)) {
 
   # Check if *.xlsx file in estimates folder exists

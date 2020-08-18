@@ -42,7 +42,7 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
   # Project and discount earnings / tax payments when enrolling in college compared to a vocational degree.
   #--------------------------------------------------------------------------------------------------------------------#
 
-  impact_magnitude_matrix = getEducationEffectOnEarnings(education_decision = "university_degree",
+  impact_magnitude_matrix <- getEducationEffectOnEarnings(education_decision = "university_degree",
                                                          alternative = "abitur")
 
   if (!use_constant_ols_return_to_schooling) {

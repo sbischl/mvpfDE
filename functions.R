@@ -916,6 +916,7 @@ getEducationEffectOnEarnings <- function(education_decision = "university_degree
   impact_magnitude_matrix <- data.frame(age = age_income_degree_table$age)
   impact_magnitude_matrix$impact_magnitude <- age_income_degree_table[, education_decision] / age_income_degree_table[, alternative] -1
 
+
   if (!missing(assume_constant_effect_from)) {
     impact_magnitude_matrix <- impact_magnitude_matrix %>% filter(age <= assume_constant_effect_from)
   }
@@ -923,7 +924,28 @@ getEducationEffectOnEarnings <- function(education_decision = "university_degree
   # Remove ages where both education paths have zero income, i.e. there is a 0 by 0 divison.
   impact_magnitude_matrix <- impact_magnitude_matrix %>% filter(!is.nan(impact_magnitude))
 
+  # If the education decision results is zero income, and the alternative implies a positive income, the impact_magnitude
+  # would be infinity. But what this acutally means is that the alternative gets a zero income and and the education
+  # decision gets income as in the data. -> The impact should be 1.
+  # Maybe it is wise to avoid this problem. And
+  #impact_magnitude_matrix[impact_magnitude_matrix$impact_magnitude == Inf, "impact_magnitude"] <- 1
+
+
   return(impact_magnitude_matrix)
+}
+
+getAverageIncome <- function(age, education) {
+  if (!exists("age_income_degree_table")) {
+    age_income_degree_table <<- read.csv("./college_costs/age_income_degree.csv")
+  }
+  if (missing(age)) {
+    # average over all ages
+    return(mean(age_income_degree_table[, education]))
+  }
+  if (missing(education)) {
+    # average income for a given age, currently not possible
+  }
+  return(age_income_degree_table[age, education])
 }
 
 returnsToSchool <- function(effect, schooltrack = "all") {

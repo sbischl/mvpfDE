@@ -1,14 +1,89 @@
+#----------------------------------------------------------------------------------------------------------------------#
+# G8
+#----------------------------------------------------------------------------------------------------------------------#
+
+# Relevant Literature:
+# Marcus & Zambre (2019)
+
 G8 <- function (bootstrap_replication = 0) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)
-  # Assumptions:
-  # The natural number would be one since students spend one year less in school. Marcus & Zambre (2019) estimate that
-  # that G8 graduates start to study 10 months earlier compared to G9 students.
-  earlier_labor_force_participation <- 10 / 12 #in years
-  first_year_income <- 25000
 
-  willingness_to_pay <- 1
-  government_net_costs <- 1
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Assumptions:
+  #--------------------------------------------------------------------------------------------------------------------#
+
+  # G8 reduces shortens high school from 9 to 8 years. As a result, students may start studying one year earlier and can
+  # join the labor force earlier:
+  # Marcus & Zambre (2019) estimate that students
+  earlier_labor_force_participation <- 0.709
+
+  # The shortening of high school prolongs the time frame in which relevant incomes can be earned by
+  # earlier_labor_force_participation. It is unclear what the income should be in this additional period.
+  # With G8 all incomes are earned one year earlier which is equivalent to receiving the lifetime income one year earlier.
+  # This would generate huge gains because of lower discounting.
+
+  # Assume that the value of working one year earlier is given by the income at age 30 without discounting:
+  income_during_additional_period_no_college <- getAverageIncome(age = 30, education = "abitur")
+  income_during_additional_period_college <- getAverageIncome(age = 30, education = "university_degree")
+
+  # College Share with G8, see Footnote 36 Marcus & Zambre (2019)
+  share_college_g8 <- 0.68
+
+  # Effect of G8 on university enrollment
+  enrollmentrate_change_pp <- estimates$enrollment_rate_change_pp
+  # Effect of G8 on university drop out
+  drop_out_pp <- estimates$drop_out_pp
+
+  # The Paper looks at G8 enactment which was spread over almost ten years.
+  # Since there are no cost estimates in the paper, it does not really matter which prices are used.
+  prices_year <- 2011
+
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Program Implementation Cost
+  #--------------------------------------------------------------------------------------------------------------------#
+
+  # The number of hours taught at high school remains roughly unchanged. Cost of schooling remains unchanged
+
+  # The fact that less students enroll at university reduces costs:
+  # Cost Difference College / Vocational Degree:
+  cost_difference <- costOfCollege(duration_of_study = 5, year = 2011, prices_year = prices_year) -
+    costOfSchool(duration_of_schooling = 3, year = 2011, prices_year = prices_year, school_type = "berufsschule_dual")
+
+  government_net_costs <- cost_difference * enrollmentrate_change_pp
+
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Effects of earlier Employment
+  #--------------------------------------------------------------------------------------------------------------------#
+
+  willingness_to_pay <- share_college_g8 * (income_during_additional_period_college - getTaxPayment(income_during_additional_period_college,
+                                                                                                    prices_year = prices_year)) +
+    (1 - share_college_g8) * (income_during_additional_period_no_college - getTaxPayment(income_during_additional_period_college,
+                                                                                         prices_year = prices_year))
+  government_net_costs <- government_net_costs - share_college_g8 * getTaxPayment(income_during_additional_period_college,
+                                                                prices_year = prices_year) +
+    (1 - share_college_g8) * getTaxPayment(income_during_additional_period_college,
+                                           prices_year = prices_year)
+
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Effects of lower enrollment rate and higher drop out
+  #--------------------------------------------------------------------------------------------------------------------#
+
+  impact_magnitude_matrix <- getEducationEffectOnEarnings(education_decision = "university_degree",
+                                                          alternative = "abitur")
+
+  lifetime_impacts <- project_lifetime_impact(impact_age = 21,
+                                              impact_magnitude_matrix = impact_magnitude_matrix,
+                                              relative_control_income = 1,
+                                              start_projection_year = 2014,
+                                              prices_year = prices_year,
+                                              inculde_welfare_benefits_fraction = 0)
+
+  # Students value higher net-income
+  willingness_to_pay <- willingness_to_pay + lifetime_impacts$present_value_net_earnings_impact * (enrollmentrate_change_pp - drop_out_pp)
+  # Government costs are reduced by the increase in tax revenue
+  government_net_costs <- government_net_costs - lifetime_impacts$present_value_tax_payment_impact * (enrollmentrate_change_pp - drop_out_pp)
+
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs)
   return(return_values)
