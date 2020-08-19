@@ -55,15 +55,23 @@ G8 <- function (bootstrap_replication = 0) {
   #--------------------------------------------------------------------------------------------------------------------#
   # Effects of earlier Employment
   #--------------------------------------------------------------------------------------------------------------------#
+  one_additional_year_net_income <-
+    share_college_g8 * (income_during_additional_period_college - getTaxPayment(income_during_additional_period_college,
+                                                                                prices_year = prices_year)) +
+      (1 - share_college_g8) * (income_during_additional_period_no_college - getTaxPayment(income_during_additional_period_college,
+                                                                                           prices_year = prices_year))
 
-  willingness_to_pay <- share_college_g8 * (income_during_additional_period_college - getTaxPayment(income_during_additional_period_college,
-                                                                                                    prices_year = prices_year)) +
-    (1 - share_college_g8) * (income_during_additional_period_no_college - getTaxPayment(income_during_additional_period_college,
-                                                                                         prices_year = prices_year))
-  government_net_costs <- government_net_costs - share_college_g8 * getTaxPayment(income_during_additional_period_college,
-                                                                prices_year = prices_year) +
+  one_additional_year_tax_payment <- share_college_g8 * getTaxPayment(income_during_additional_period_college,
+                                                                      prices_year = prices_year) +
     (1 - share_college_g8) * getTaxPayment(income_during_additional_period_college,
                                            prices_year = prices_year)
+
+
+
+  willingness_to_pay <- one_additional_year_net_income * earlier_labor_force_participation
+  government_net_costs <- government_net_costs - one_additional_year_tax_payment * earlier_labor_force_participation
+
+
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Effects of lower enrollment rate and higher drop out
@@ -77,6 +85,7 @@ G8 <- function (bootstrap_replication = 0) {
                                               relative_control_income = 1,
                                               start_projection_year = 2014,
                                               prices_year = prices_year,
+                                              discount_to = 2011,
                                               inculde_welfare_benefits_fraction = 0)
 
   # Students value higher net-income

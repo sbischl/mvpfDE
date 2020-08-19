@@ -928,13 +928,13 @@ getEducationEffectOnEarnings <- function(education_decision = "university_degree
   # would be infinity. But what this acutally means is that the alternative gets a zero income and and the education
   # decision gets income as in the data. -> The impact should be 1.
   # Maybe it is wise to avoid this problem. And
-  #impact_magnitude_matrix[impact_magnitude_matrix$impact_magnitude == Inf, "impact_magnitude"] <- 1
+  impact_magnitude_matrix[impact_magnitude_matrix$impact_magnitude == Inf, "impact_magnitude"] <- 1
 
 
   return(impact_magnitude_matrix)
 }
 
-getAverageIncome <- function(age, education) {
+getAverageIncome <- function(age, education, year) {
   if (!exists("age_income_degree_table")) {
     age_income_degree_table <<- read.csv("./college_costs/age_income_degree.csv")
   }
@@ -945,7 +945,7 @@ getAverageIncome <- function(age, education) {
   if (missing(education)) {
     # average income for a given age, currently not possible
   }
-  return(age_income_degree_table[age, education])
+  return(age_income_degree_table[age_income_degree_table$age == age, education])
 }
 
 returnsToSchool <- function(effect, schooltrack = "all") {

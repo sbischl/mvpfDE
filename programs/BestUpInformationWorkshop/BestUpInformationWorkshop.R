@@ -29,9 +29,6 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
   program_year <- 2013 # The workshop took place in 2013, one year prior to graduation.
   prices_year <- 2013
 
-  duration_of_study <- 5
-  duration_of_berufsschule <- 3
-
   #--------------------------------------------------------------------------------------------------------------------#
   # Program Implementation Cost
   #--------------------------------------------------------------------------------------------------------------------#
@@ -65,7 +62,7 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
                                                        inculde_welfare_benefits_fraction = 0)
 
     impact_more_education <- project_lifetime_impact(impact_age = 22,
-                                                     impact_magnitude = 2* yearly_returns_to_schooling,
+                                                     impact_magnitude = 2* yearly_return_to_schooling,
                                                      relative_control_income = 1,
                                                      start_projection_year = 2016,
                                                      prices_year = prices_year,

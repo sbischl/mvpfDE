@@ -120,6 +120,8 @@ for (i in 1:length(programs)) {
 
 # Bootstrap
 for (i in 1:length(programs)) {
+  message(paste("Running", bootstrap_replications, "bootstrap replications for", programs[i] ))
+
   # Preallocate data.frame with number of replications rows
   bootstrapped_mvpf_results <- data.frame(replication = 1:bootstrap_replications)
 

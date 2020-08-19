@@ -58,7 +58,7 @@ mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to
                                                        inculde_welfare_benefits_fraction = 1)
 
     impact_more_education <- project_lifetime_impact(impact_age = 21,
-                                                     impact_magnitude = 2 * yearly_returns_to_schooling,
+                                                     impact_magnitude = 2 * yearly_return_to_schooling,
                                                      relative_control_income = 1,
                                                      start_projection_year = 2024, # 2024 since students are 10 in 2013
                                                      prices_year = prices_year,
