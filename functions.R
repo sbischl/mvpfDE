@@ -429,14 +429,14 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
 }
 
 getNetIncome <- function(gross_income,
-                         inculde_welfare_benefits_fraction = 1,
-                         income_fraction_of_pension_contribution = 0.5) {
+                         inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
+                         income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution) {
   return(getTaxSystemEffects(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution)$net_income_yearly)
 }
 
 getTaxSystemEffects <- function(gross_income,
-                                inculde_welfare_benefits_fraction = 1,
-                                income_fraction_of_pension_contribution = 0) {
+                                inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
+                                income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution) {
 
   # inculde_welfare_benefits_fraction is the fraction of welfare benefits (i.e. Hartz IV) that are considered net income.
   # A value < 1 represents the fact that not everyone who receives low income is entitled to Hartz IV
@@ -623,19 +623,25 @@ getTaxSystemEffects <- function(gross_income,
 }
 
 getAverageTaxRate <- function(gross_income,
-                              inculde_welfare_benefits_fraction = 1,
-                              income_fraction_of_pension_contribution = 0.5) {
+                              inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
+                              income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution) {
 
   # Average Tax Rate = 1 - NetIncome(gross income) / gross income)
   return(1 - getNetIncome(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution) / gross_income)
 }
 
 getTaxPayment <- function(gross_income,
-                          inculde_welfare_benefits_fraction = 1,
-                          income_fraction_of_pension_contribution = 1,
-                          prices_year = 2019) {
+                          inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
+                          income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
+                          prices_year = 2019,
+                          flat_tax = global_flat_tax,
+                          assume_flat_tax = global_assume_flat_tax) {
   # gross_income should be in prices_year euros. This assumes that the tax system is regularly adjusted to make it independent
   # from prices. I.e. there are no inflation incuded tax increases ("Kalte Progression")
+
+  if(assume_flat_tax) {
+    return(flat_tax * gross_income)
+  }
 
   # Inflate gross income to the year for which the tax system is modeled
   gross_income_inflated <- deflate(prices_year, 2019) * gross_income
@@ -651,8 +657,8 @@ getTaxPayment <- function(gross_income,
 }
 
 getMarginalTaxRate <- function(gross_income,
-                               inculde_welfare_benefits_fraction = 1,
-                               income_fraction_of_pension_contribution = 0.5) {
+                               inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
+                               income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution) {
 
   # Marginal Tax Rate = 1 - (NetIncome(gross income + 1) - NetIncome(gross income))
   return(1 - (getNetIncome(gross_income + 1, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution) -
@@ -710,8 +716,8 @@ solidarityCharge <- function(taxable_income) {
 
 plotTaxRates <- function() {
   # Assumptions for the plots:
-  inculde_welfare_benefits_fraction = 1
-  income_fraction_of_pension_contribution = 0.5
+  inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction
+  income_fraction_of_pension_contribution = income_fraction_of_pension_contribution
 
   # Calculate all the Tax Payment, Net incomes, social insurance contributions etc. for a wide range of incomes
   # Income Range
