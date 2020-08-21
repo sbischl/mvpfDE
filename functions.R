@@ -173,8 +173,6 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
     labs(color = legend_label)
 
   if (confidence_intervalls) {
-    print(plot_data$mvpf_95ci_lower)
-    print(plot_data$mvpf_95ci_upper)
     plot <- plot + geom_errorbar(aes_string(ymin = paste0(y_axis, "_95ci_lower"),
                                             ymax = paste0(y_axis, "_95ci_upper"),
                                             color = "category"),
@@ -233,6 +231,7 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
                                     impact_magnitude, # the effect of treatment on income relative to the control group, i.e. effect / income control
                                     impact_magnitude_matrix, # alllows to specify different impact magnitude for each age, see begin of function
                                     relative_control_income, # the income of the control group relative to the average, i.e. control income / average income
+                                    control_income, # the income of the control group. Either this or relative_control_income has to be set
                                     start_projection_age, # the age at which the projection starts (optional)
                                     end_projection_age = retirement_age, # the age at which the projection ends (optional)
                                     start_projection_year, # the year at which the projection starts
@@ -298,6 +297,8 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
     }
   }
 
+
+
   # Calculate the impact year as birth year + impact_age
   impact_year <- (start_projection_year- start_projection_age) + impact_age
 
@@ -312,6 +313,12 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
 
   # Grow wages by (1+g)^(the number of years the income accrues after the year we have data for) / Or shrink if the exponent is negative
   age_income_table$income_fully_adjusted <- age_income_table$income_price_adjusted * (1 + wage_growth_rate)^(age_income_table$year - 2015)
+
+  # If the income of the control group rather than the relative income is given, we need to calculate the relative
+  # income.
+  if (missing(relative_control_income)) {
+    relative_control_income <- control_income / age_income_table[age_income_table$age == impact_age , "income_fully_adjusted"]
+  }
 
   # Limit the dataset the relevant region for the projection:
   age_income_table <- age_income_table %>% filter(age >= start_projection_age & age <= end_projection_age)
@@ -716,7 +723,6 @@ plotTaxRates <- function() {
                                                      "Long Term Care Insurance", "Health Insurance",
                                                      "Unemployment Insurance",  "Pension Contribution",
                                                      "Welfare Benefit"))
-  print(figure_net_income)
   ggsave(figure_net_income, filename = "tax_components.pdf", device = pdf, path = "./plots/",  width = 7.6, height = 5)
 
   #Plot gross income against net income and tax payed:
@@ -958,3 +964,4 @@ returnsToSchool <- function(effect, schooltrack = "all") {
   # (7% - 10%)
   pischke_von_wachter_estimate <- 0.074
 }
+

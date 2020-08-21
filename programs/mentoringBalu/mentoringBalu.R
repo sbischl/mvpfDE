@@ -30,7 +30,7 @@ mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to
   # Project and discount earnings / tax payments when attending higher track instead of one of the lower tracks
   #--------------------------------------------------------------------------------------------------------------------#
 
-  impact_magnitude_matrix = getEducationEffectOnEarnings(education_decision = "abitur",
+  impact_magnitude_matrix <- getEducationEffectOnEarnings(education_decision = "abitur",
                                                          alternative = "vocational_educ")
 
 
