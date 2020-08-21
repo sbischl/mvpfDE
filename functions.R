@@ -225,6 +225,46 @@ theme_modified_minimal <- function() {
     )
 }
 
+project_medium_run_impact <- function(impact_magnitude,
+                                     absolute_impact_magnitude,
+                                     control_income,
+                                     number_of_periods,
+                                     prices_year
+                                     ) {
+  # This function returns the dataframe as project_lifetime_impact but is simpler and requires less assumptions.
+  # It is intened for reforms for reforms whose beneficiaries vary greatly.
+  # Also this method does not assume wage growth
+
+  if (missing(impact_magnitude)) {
+    impact_magnitude <- absolute_impact_magnitude / control_income
+  }
+  gross_earnings_no_reform <- rep(control_income, number_of_periods)
+  gross_earnings_reform <- rep(control_income * (1 + impact_magnitude), number_of_periods)
+
+  tax_payment_no_reform <- sapply(gross_earnings_no_reform,
+                                  getTaxPayment,
+                                  prices_year = prices_year)
+
+  tax_payment_reform <- sapply(gross_earnings_reform,
+                               getTaxPayment,
+                               prices_year = prices_year)
+
+  net_earnings_no_reform <- gross_earnings_no_reform - tax_payment_no_reform
+  net_earnings_refrom <- gross_earnings_reform - tax_payment_reform
+
+  earnings_difference <- gross_earnings_reform - gross_earnings_no_reform
+  tax_payment_difference <- tax_payment_reform - tax_payment_no_reform
+  net_earnings_difference <- net_earnings_refrom - net_earnings_no_reform
+
+  present_value_earnings_impact <- sum(earnings_difference * discountVector(number_of_periods))
+  present_value_tax_payment_impact <- sum(tax_payment_difference * discountVector(number_of_periods))
+  present_value_net_earnings_impact <- sum(net_earnings_difference * discountVector(number_of_periods))
+
+  return(data.frame(present_value_earnings_impact = present_value_earnings_impact,
+                    present_value_tax_payment_impact = present_value_tax_payment_impact,
+                    present_value_net_earnings_impact = present_value_net_earnings_impact))
+}
+
 
 
 project_lifetime_impact <- function(impact_age, # the age at which the effect on income comes up for the first time
@@ -396,7 +436,7 @@ getNetIncome <- function(gross_income,
 
 getTaxSystemEffects <- function(gross_income,
                                 inculde_welfare_benefits_fraction = 1,
-                                income_fraction_of_pension_contribution = 0.5) {
+                                income_fraction_of_pension_contribution = 0) {
 
   # inculde_welfare_benefits_fraction is the fraction of welfare benefits (i.e. Hartz IV) that are considered net income.
   # A value < 1 represents the fact that not everyone who receives low income is entitled to Hartz IV

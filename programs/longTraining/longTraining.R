@@ -5,7 +5,7 @@
 # Relevant Literature:
 # Lechner et. al. (2011)
 
-longTraining <- function (bootstrap_replication = 0, use_constant_ols_return_to_schooling = FALSE) {
+longTraining <- function (bootstrap_replication = 0, extend_effect = 0) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)
 
@@ -41,24 +41,18 @@ longTraining <- function (bootstrap_replication = 0, use_constant_ols_return_to_
 
   # Simple earnings projection by evenly splitting the cumulative earnings gain over 8 years and adding
   # the gain to the control group average income
-  yearly_earnings_training <- (earnings_effect / 8) + 12 * earnings_control_group * employment_rate
-  yearly_earnings_no_training <- 12 * earnings_control_group * employment_rate
 
-  yearly_tax_training <- getTaxPayment(yearly_earnings_training, prices_year = prices_year)
-  yearly_net_earnings_training <- yearly_earnings_training - yearly_tax_training
-
-  yearly_tax_no_training <- getTaxPayment(yearly_earnings_no_training, prices_year = prices_year)
-  yearly_net_earnings_no_training <- yearly_earnings_no_training - yearly_tax_no_training
-
-  government_net_costs <- - sum(rep(yearly_tax_training - yearly_tax_no_training, 8) * discountVector(8))
-  willingness_to_pay <- sum(rep(yearly_net_earnings_training - yearly_net_earnings_no_training, 8) * discountVector(8))
+  reform_impact <- project_medium_run_impact(absolute_impact_magnitude = earnings_effect / 8,
+                                              control_income = employment_rate * earnings_control_group * 12,
+                                              number_of_periods = 8 + extend_effect,
+                                              prices_year = prices_year)
 
   # Alternative: Use the income projection which assumes changing wages (because of economic growth and increasing age)
   # Since wages grow, but the impact magnitude is calculated from the control group wage in the first period, the
-  # total effec is overestimated.
+  # total effect is overestimated.
 
   relative_earnings_impact <- (earnings_effect / 8) / (12 * earnings_control_group * employment_rate)
-  lifetime_impact <- project_lifetime_impact(impact_age = average_age,
+  reform_impact <- project_lifetime_impact(impact_age = average_age,
                                              impact_magnitude = relative_earnings_impact,
                                              control_income = earnings_control_group * employment_rate * 12,
                                              start_projection_year = 1993,
@@ -72,7 +66,7 @@ longTraining <- function (bootstrap_replication = 0, use_constant_ols_return_to_
   # Training cost
   #--------------------------------------------------------------------------------------------------------------------#
 
-  government_net_costs <- government_net_costs + training_cost
+  #government_net_costs <- government_net_costs + training_cost
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs)
