@@ -106,6 +106,7 @@ programs <- complete_programs
 # Run each program with default settings to get the point estimates
 mvpf_results <- data.frame(program = programs)
 for (i in 1:length(programs)) {
+  message(paste("Running ", programs[i], "once to get the point estimate."))
   return_values <- do.call(programs[i], list())
   # Check if return_values include the necessary "willingness_to_pay" and "government_net_costs"
   if (!all(c("willingness_to_pay", "government_net_costs") %in% names(return_values))) {

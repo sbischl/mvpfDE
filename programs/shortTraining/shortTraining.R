@@ -1,11 +1,11 @@
 #----------------------------------------------------------------------------------------------------------------------#
-# Long Training (Active Labor Market Policy):
+# Short Training (Active Labor Market Policy):
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Relevant Literature:
 # Lechner et. al. (2011)
 
-longTraining <- function (bootstrap_replication = 0, extend_effect = 0) {
+shortTraining <- function (bootstrap_replication = 0, extend_effect = 0) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)
 
@@ -18,9 +18,9 @@ longTraining <- function (bootstrap_replication = 0, extend_effect = 0) {
 
   # Unfortunaltely, the paper does not report the earnings change for each year / month after training. Instead only
   # the cumulated earnigs change is reported. The earnings_effect denotes how much more euro an individual who participated in
-  # long training earned on average over the following 8 years compared to the matched individuals who did not participate
+  # short training earned on average over the following 8 years compared to the matched individuals who did not participate
   # in any training program.
-  earnings_effect <- estimates$earnings_effect_8years_long_training
+  earnings_effect <- estimates$earnings_effect_8years_short_training
 
   # Earnings of control group conditional on being employed.
   earnings_control_group <- 1396 # Lechner et. al. (2011) Table 5.
@@ -29,10 +29,10 @@ longTraining <- function (bootstrap_replication = 0, extend_effect = 0) {
   employment_rate <- 0.9 # This can be inferred from Figure 2 depicting the share of unemployed over time in Lechner et. al. (2011)
 
   # Average age of training participants:
-  average_age <- 35.2 # Lechner et. al. (2011) Appendix Table B.1
+  average_age <- 34.8 # Lechner et. al. (2011) Appendix Table B.1
 
   # Training cost:
-  training_cost <- 9930 # Lechner et. al. (2011) Appendix Table 6
+  training_cost <- 4439 # Lechner et. al. (2011) Appendix Table 6
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Effect of Earnings Change on WTP and Government Cost
