@@ -30,7 +30,7 @@ longTraining <- function (bootstrap_replication = 0, extend_effect = 0) {
   employment_rate <- 0.9 # This can be inferred from Figure 2 depicting the share of unemployed over time in Lechner et. al. (2011)
 
   # Average age of training participants:
-  average_age <- round(35.2) # Lechner et. al. (2011) Appendix Table B.1
+  average_age <- 35.2 # Lechner et. al. (2011) Appendix Table B.1
 
   # Training cost:
   training_cost <- 9930 # Lechner et. al. (2011) Appendix Table 6
@@ -47,26 +47,11 @@ longTraining <- function (bootstrap_replication = 0, extend_effect = 0) {
                                               number_of_periods = 8 + extend_effect,
                                               prices_year = prices_year)
 
-  # Alternative: Use the income projection which assumes changing wages (because of economic growth and increasing age)
-  # Since wages grow, but the impact magnitude is calculated from the control group wage in the first period, the
-  # total effect is overestimated.
-
-  relative_earnings_impact <- (earnings_effect / 8) / (12 * earnings_control_group * employment_rate)
-  reform_impact <- project_lifetime_impact(impact_age = average_age,
-                                             impact_magnitude = relative_earnings_impact,
-                                             control_income = earnings_control_group * employment_rate * 12,
-                                             start_projection_year = 1993,
-                                             end_projection_age = average_age + 7,
-                                             prices_year = prices_year)
-
-  #willingness_to_pay <- lifetime_impact$present_value_net_earnings_impact
-  #government_net_costs <- - lifetime_impact$present_value_tax_payment_impact
-
   #--------------------------------------------------------------------------------------------------------------------#
   # Training cost
   #--------------------------------------------------------------------------------------------------------------------#
 
-  #government_net_costs <- government_net_costs + training_cost
+  government_net_costs <- government_net_costs + training_cost
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs)
