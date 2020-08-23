@@ -225,8 +225,8 @@ theme_modified_minimal <- function() {
     )
 }
 
-project_medium_run_impact <- function(impact_magnitude,
-                                     absolute_impact_magnitude,
+project_medium_run_impact <- function(impact_magnitude, # can be either scalar or a vector containing the effect for each period
+                                     absolute_impact_magnitude, #can be either scalar or a vector containing the effect for each period
                                      control_income,
                                      number_of_periods,
                                      prices_year
@@ -238,8 +238,22 @@ project_medium_run_impact <- function(impact_magnitude,
   if (missing(impact_magnitude)) {
     impact_magnitude <- absolute_impact_magnitude / control_income
   }
+
+  if(length(impact_magnitude) > 1 & length(impact_magnitude) != number_of_periods) {
+    # Length of the impact magnitude vector does not match the number of periods of the projection.
+    # In this case it is assumed that impact in the last period persists:
+    if (length(impact_magnitude) < number_of_periods) {
+      impact_magnitude <- c(impact_magnitude, rep(impact_magnitude[length(impact_magnitude)], number_of_periods - length(impact_magnitude)))
+    }
+    else {
+      # If the impact_magnitude vector is too long, the irrelevant periods will be ignored
+      impact_magnitude <- impact_magnitude[1:number_of_periods]
+    }
+  }
+
+
   gross_earnings_no_reform <- rep(control_income, number_of_periods)
-  gross_earnings_reform <- rep(control_income * (1 + impact_magnitude), number_of_periods)
+  gross_earnings_reform <- rep(control_income, number_of_periods) *  (1 + impact_magnitude)
 
   tax_payment_no_reform <- sapply(gross_earnings_no_reform,
                                   getTaxPayment,
@@ -489,7 +503,7 @@ getTaxSystemEffects <- function(gross_income,
   correction_factor <- 0.8 # Correction factor that is applied on the pension fund contribution deduction. Increases by 0.04 every year until 1 is reached in 2025
 
   # Welfare Benefits:
-  welfare_benefit_monthly <- 700 # The amount of welfare if the personal income is 0 (= average Wohngeld + Hartz IV Regelsatz?)
+  welfare_benefit_monthly <- global_welfare_benefit_monthly # The amount of welfare if the personal income is 0 (= average Wohngeld + Hartz IV Regelsatz?)
   personal_exemption <- 100 # Grundfreibetrag
 
   #--------------------------------------------------------------------------------------------------------------------#
@@ -717,7 +731,7 @@ solidarityCharge <- function(taxable_income) {
 plotTaxRates <- function() {
   # Assumptions for the plots:
   inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction
-  income_fraction_of_pension_contribution = income_fraction_of_pension_contribution
+  income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution
 
   # Calculate all the Tax Payment, Net incomes, social insurance contributions etc. for a wide range of incomes
   # Income Range
@@ -1009,5 +1023,43 @@ returnsToSchool <- function(effect, schooltrack = "all") {
   # p. 595 Table 2. It is not clear whether this is a particularly good estimate but it falls in the region where most estimates are in.
   # (7% - 10%)
   pischke_von_wachter_estimate <- 0.074
+}
+
+getGrossIncome <- function(net_income,
+                           flat_tax = global_flat_tax,
+                           assume_flat_tax = global_assume_flat_tax,
+                           inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
+                           welfare_benefit = global_welfare_benefit_monthly,
+                           income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution) {
+  # This function aims to infer the gross income from the net_income:
+
+  # If the relevant tax is flat, this is rather simple:
+  if (assume_flat_tax) {
+    return(net_income / (1- flat_tax))
+  }
+
+  # If the non-linear German tax system is assumed, the function that maps from gross income to net income has to be reversed.
+  # This is equal to solving f = getNetIncome(gross_income) - net_income = 0
+  # A problem that might arise is that if the tax system generates income regions where the marginal tax rate is > 1, the
+  # the function cannot be uniquely inverted.
+
+  # Define f as above:
+  f <- function(gross_income) {
+    getNetIncome(gross_income = gross_income,
+                 inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction,
+                 income_fraction_of_pension_contribution = income_fraction_of_pension_contribution) - net_income
+  }
+
+  # Net incomes below the welfare benefit do not make sense. In this case the root finding below
+  # would fail.
+  if (inculde_welfare_benefits_fraction > 0 & net_income < inculde_welfare_benefits_fraction * welfare_benefit * 12) {
+    warning("Net income cannot be lower than the yearly welfare benefit. Assuming 0 gross income")
+    return(0)
+  }
+
+  # Find the root of the f function (see above)
+  gross_income <- uniroot(f = f, interval = c(0, 2*net_income))$root
+
+  return(gross_income)
 }
 

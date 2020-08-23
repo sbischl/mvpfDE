@@ -210,12 +210,12 @@ program_information <- as.data.frame(read_xlsx("programs.xlsx"))
 # Join the estimates and the additional information:
 plot_data <- left_join(mvpf_results, program_information, by = c("program" = "program_identifier"))
 # Plot MVPF
-plotResults(plot_data = plot_data, x_axis = "program_name", x_label = "Program Name", save = "mvpf_overview.pdf",
-            confidence_intervalls = TRUE, text_labels = FALSE, vertical_x_axis_labels =  TRUE)
 plotResults(plot_data = plot_data, save ="mvpf_against_year.pdf", confidence_intervalls = FALSE)
 plotResults(plot_data = plot_data, y_axis = "government_net_costs", y_label = "Government Net Costs", x_axis = "year", x_label = "Year",
             save = "government_net_costs_against_year.pdf", lower_cutoff = 0, upper_cutoff = 4, confidence_intervalls = FALSE, text_labels = TRUE)
 plotResults(plot_data = plot_data, y_axis = "willingness_to_pay", y_label = "Willingness to Pay", x_axis = "year", x_label = "Year",
             save = "willingness_to_pay_against_year.pdf", lower_cutoff = 0, upper_cutoff = 4, confidence_intervalls = FALSE, text_labels = TRUE)
+plotResults(plot_data = plot_data, x_axis = "program_name", x_label = "Program Name", save = "mvpf_overview.pdf",
+            confidence_intervalls = TRUE, text_labels = FALSE, vertical_x_axis_labels =  TRUE)
 
 
