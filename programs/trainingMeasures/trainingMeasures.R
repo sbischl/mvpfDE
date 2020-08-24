@@ -5,7 +5,7 @@
 # Relevant Literature:
 # Biewen et. al. (2014)
 
-shortTrainingPost1998 <- function (bootstrap_replication = 0, extend_effect = 6) {
+trainingMeasures <- function (bootstrap_replication = 0, extend_effect = 6) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)
 
