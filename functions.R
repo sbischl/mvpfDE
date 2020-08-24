@@ -226,17 +226,17 @@ theme_modified_minimal <- function() {
 }
 
 project_medium_run_impact <- function(impact_magnitude, # can be either scalar or a vector containing the effect for each period
-                                     absolute_impact_magnitude, #can be either scalar or a vector containing the effect for each period
-                                     control_income,
-                                     number_of_periods,
-                                     prices_year
-                                     ) {
+                                      absolute_impact_magnitude, #can be either scalar or a vector containing the effect for each period (change in yearly earnings)
+                                      yearly_control_income,
+                                      number_of_periods,
+                                      prices_year) {
+
   # This function returns the dataframe as project_lifetime_impact but is simpler and requires less assumptions.
   # It is intened for reforms for reforms whose beneficiaries vary greatly.
   # Also this method does not assume wage growth
 
   if (missing(impact_magnitude)) {
-    impact_magnitude <- absolute_impact_magnitude / control_income
+    impact_magnitude <- absolute_impact_magnitude / yearly_control_income
   }
 
   if(length(impact_magnitude) > 1 & length(impact_magnitude) != number_of_periods) {
@@ -252,8 +252,8 @@ project_medium_run_impact <- function(impact_magnitude, # can be either scalar o
   }
 
 
-  gross_earnings_no_reform <- rep(control_income, number_of_periods)
-  gross_earnings_reform <- rep(control_income, number_of_periods) *  (1 + impact_magnitude)
+  gross_earnings_no_reform <- rep(yearly_control_income, number_of_periods)
+  gross_earnings_reform <- rep(yearly_control_income, number_of_periods) *  (1 + impact_magnitude)
 
   tax_payment_no_reform <- sapply(gross_earnings_no_reform,
                                   getTaxPayment,
@@ -285,7 +285,7 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
                                     impact_magnitude, # the effect of treatment on income relative to the control group, i.e. effect / income control
                                     impact_magnitude_matrix, # alllows to specify different impact magnitude for each age, see begin of function
                                     relative_control_income, # the income of the control group relative to the average, i.e. control income / average income
-                                    control_income, # the income of the control group. Either this or relative_control_income has to be set
+                                    control_income, # the income of the control group per year. Either this or relative_control_income has to be set
                                     start_projection_age, # the age at which the projection starts (optional)
                                     end_projection_age = retirement_age, # the age at which the projection ends (optional)
                                     start_projection_year, # the year at which the projection starts

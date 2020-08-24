@@ -42,9 +42,9 @@ shortTraining <- function (bootstrap_replication = 0, extend_effect = 0) {
   # the gain to the control group average income
 
   reform_impact <- project_medium_run_impact(absolute_impact_magnitude = earnings_effect / 8,
-                                              control_income = employment_rate * earnings_control_group * 12,
-                                              number_of_periods = 8 + extend_effect,
-                                              prices_year = prices_year)
+                                             yearly_control_income = employment_rate * earnings_control_group * 12,
+                                             number_of_periods = 8 + extend_effect,
+                                             prices_year = prices_year)
 
   government_net_costs <- - reform_impact$present_value_tax_payment_impact
   willingness_to_pay <- reform_impact$present_value_net_earnings_impact

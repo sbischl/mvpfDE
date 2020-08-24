@@ -81,7 +81,7 @@ shortTrainingPost1998 <- function (bootstrap_replication = 0, extend_effect = 6)
     earnings_effect_2year_women_strat3 * (number_women_stratum_3 / total_number_class_room_training)
 
   reform_impact <- project_medium_run_impact(absolute_impact_magnitude = c(impact_magnitude_year_1, impact_magnitude_year_2),
-                                             control_income = control_income,
+                                             yearly_control_income = control_income,
                                              number_of_periods = 2 + extend_effect,
                                              prices_year = prices_year)
 
