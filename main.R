@@ -82,7 +82,7 @@ for (i in 1:length(programs)) {
   }
 
 
-  # Check if file .R file exists
+  # Check if .R file exists
   current_program_path <- paste0("./programs/", programs[i],  "/", programs[i], ".R")
   if (!file.exists(current_program_path)) {
     warning(paste0("No correctly named .R file for program \"", programs[i], "\" was found. ",
