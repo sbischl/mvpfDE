@@ -103,8 +103,6 @@ tuitionFees <- function (bootstrap_replication = 0, use_constant_ols_return_to_s
   # Government costs are reduced by the increase in tax revenue
   government_net_costs <- government_net_costs - lifetime_impacts$present_value_tax_payment_impact * enrollment_effect
 
-
-
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs)
   return(return_values)

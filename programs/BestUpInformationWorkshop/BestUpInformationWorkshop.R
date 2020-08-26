@@ -116,6 +116,8 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs,
+                        increased_net_income = lifetime_impacts$present_value_net_earnings_impact,
+                        increased_tax_revenue = lifetime_impacts$present_value_tax_payment_impact,
                         cost_difference_between_college_and_vocational_degree = cost_difference)
   return(return_values)
 }

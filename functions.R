@@ -1062,4 +1062,3 @@ getGrossIncome <- function(net_income,
 
   return(gross_income)
 }
-

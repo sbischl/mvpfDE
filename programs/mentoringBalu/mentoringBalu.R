@@ -75,7 +75,6 @@ mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to
   # Government costs are reduced by the increase in tax revenue
   government_net_costs <- government_net_costs - lifetime_impacts$present_value_tax_payment_impact * high_track_attendence_10th
 
-
   #--------------------------------------------------------------------------------------------------------------------#
   # Cost of Schooling
   #--------------------------------------------------------------------------------------------------------------------#
@@ -87,7 +86,7 @@ mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to
   cost_difference <- cost_of_schooling_high_track - cost_of_schooling_low_track
   government_net_costs <- government_net_costs + cost_difference * high_track_attendence_10th
 
-    return_values <- list(willingness_to_pay =  willingness_to_pay,
+  return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs)
   return(return_values)
 }

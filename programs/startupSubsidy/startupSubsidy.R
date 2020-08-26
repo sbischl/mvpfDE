@@ -22,7 +22,7 @@ startupSubsidy <- function (bootstrap_replication = 0,
   monthly_subsidy_year_2 <- 360
   monthly_subsidy_year_3 <- 240
 
-  # Average age of training participants:
+  # Average age of subsidy receivers:
   average_age <- 38.86 # Caliendo & Künn (2011)  Table A1
 
   prices_year <- 2003 # Caliendo & Künn (2011) study entries into the start up subsidy program in the third quarter of 2003.
