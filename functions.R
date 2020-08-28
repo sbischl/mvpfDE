@@ -118,6 +118,15 @@ splitAndDiscount <- function(amount, periods, discount_rate) {
   return(sum(present_value_cash_flows))
 }
 
+discountMonthlyCashFlow <- function(amount, months) {
+  full_years <- months %/% 12
+  remaining_months <- months %% 12
+  if (remaining_months > 0) {
+    return(sum(c(rep(amount*12, full_years), remaining_months*amount) * discountVector(full_years + 1)))
+  }
+  return(sum(rep(amount*12, full_years) * discountVector(full_years)))
+}
+
 plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_label = "Year",
                         plot_data, save = "", lower_cutoff = -1, upper_cutoff = 6, confidence_intervalls = TRUE,
                         text_labels = TRUE, legend_label = "Category", vertical_x_axis_labels = FALSE) {
