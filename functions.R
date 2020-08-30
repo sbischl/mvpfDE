@@ -5,6 +5,11 @@ drawBootstrap <- function(path_to_xlsx, number_of_replications) {
   # Load Estimates
   estimates <- as.data.frame(read_xlsx(path_to_xlsx))
 
+  if(nrow(estimates) == 0) {
+    # If estimates are empty, the code below wont work.
+    return(data.frame())
+  }
+
   # Recoup standard error from t-statistic where standard error is missing
   estimates <- estimates %>%
     mutate(standard_error = coalesce(standard_error,
@@ -58,19 +63,23 @@ drawBootstrap <- function(path_to_xlsx, number_of_replications) {
 }
 
 getEstimates <- function(program, bootstrap_replication) {
-  if (bootstrap_replication == 0) {
+
+      if (bootstrap_replication == 0) {
     estimates <- read_xlsx(paste0("./estimates/", program, ".xlsx"))
     point_estimates <- data.frame(t(estimates$point_estimate))
     colnames(point_estimates) <- estimates$estimate
     return(point_estimates)
   }
 
-  # Reading only the two required lines, this should be faster than reading the whole csv everytime
-  bootstrap_estimates <- read.csv(paste0("./bootstrap/", program, "_bootstrap.csv"),
-                                  header = FALSE, nrows = 1, skip = bootstrap_replication)
-  colnames(bootstrap_estimates) <- read.csv(paste0("./bootstrap/", program, "_bootstrap.csv"),
-                                            header = FALSE, nrows = 1)
-  return(bootstrap_estimates)
+  tryCatch({
+    # Try to read the csv file. This returns an error if the csv file is empty. But I want to allow empty csv files,
+    # as there might be programs which do not have any estimates that can be bootstrapped.
+    bootstrap_estimates <- read.csv(paste0("./bootstrap/", program, "_bootstrap.csv"))
+    return(bootstrap_estimates[bootstrap_replication, , drop = FALSE])
+  },
+    error = function(e) {
+      # No data in csv file and nothing or "NULL" is returned
+    })
 }
 
 correlationToCovarianceMatrix <- function(correlation_matrix, standard_error_vector) {
