@@ -68,120 +68,14 @@ for (i in 1:length(estimate_files)) {
             row.names=FALSE)
 }
 
-
-# Get List of all programs
-programs <- list.dirs("./programs", full.names = FALSE, recursive = FALSE)
-complete_programs <- NULL
-for (i in 1:length(programs)) {
-
-  # Check if *.xlsx file in estimates folder exists
-  if (!file.exists(paste0("./estimates/", programs[i], ".xlsx"))) {
-    warning(paste0("No correctly named .xlsx file for program \"", programs[i], "\" was found. ",
-                   "Make sure that for each program there exists a Excel (.xlsx) file in the \"estimates\" folder."))
-    next
-  }
-
-
-  # Check if .R file exists
-  current_program_path <- paste0("./programs/", programs[i],  "/", programs[i], ".R")
-  if (!file.exists(current_program_path)) {
-    warning(paste0("No correctly named .R file for program \"", programs[i], "\" was found. ",
-                  "Make sure that for each directory there exists a .R file within this directory with the same name."))
-    next
-  }
-
-  # Check if the required function exists
-  source(current_program_path)
-  if (!exists(programs[i])) {
-    warning(paste0("The file \"", programs[i], ".R\" does not contain a function named \"", programs[i],
-                  "\". Make sure that the function that should be called to calculate the MVPF is correctly named."))
-    next
-  }
-  complete_programs <- c(complete_programs, programs[i])
-}
-programs <- complete_programs
-
-
+# Get all programs that are complete in the sense that a correctly named R file, function and estimates file exists
+programs <- getCompletePrograms()
 
 # Run each program with default settings to get the point estimates
-mvpf_results <- data.frame(program = programs)
-for (i in 1:length(programs)) {
-  message(paste("Running ", programs[i], "once to get the point estimate."))
-  return_values <- do.call(programs[i], list())
-  # Check if return_values include the necessary "willingness_to_pay" and "government_net_costs"
-  if (!all(c("willingness_to_pay", "government_net_costs") %in% names(return_values))) {
-    warning(paste0(programs[i], "does not include willingness_to_pay and / or government_net_costs. Cannot calculate MVPF"))
-    mvpf_results[names(return_values), ] <- unlist(return_values)
-    next
-  }
-  mvpf_results[i, names(return_values)] <- unlist(return_values)
-  mvpf_results[i, "mvpf"] <- calculateMVPF(mvpf_results[i, "willingness_to_pay"], mvpf_results[i, "government_net_costs"])
-}
-
+mvpf_results <- getPointEstimates(programs)
 
 # Bootstrap
-for (i in 1:length(programs)) {
-  message(paste("Running", bootstrap_replications, "bootstrap replications for", programs[i] ))
-
-  # Preallocate data.frame with number of replications rows
-  bootstrapped_mvpf_results <- data.frame(replication = 1:bootstrap_replications)
-
-  # Run 'number of replications' bootstrap replications
-  for (j in 1:bootstrap_replications) {
-    return_values <- do.call(programs[i], list(bootstrap_replication = j))
-    bootstrapped_mvpf_results[j, names(return_values)] <- unlist(return_values)
-    bootstrapped_mvpf_results[j, "mvpf"] <-
-    calculateMVPF(bootstrapped_mvpf_results[j, "willingness_to_pay"], bootstrapped_mvpf_results[j, "government_net_costs"])
-  }
-
-  # Calculate confidence intervall for all return values
-  for (k in 1:length(return_values)) {
-    mvpf_results[i, paste0(names(return_values)[k], "_95ci_lower")] <-
-      quantile(bootstrapped_mvpf_results[, names(return_values)[k]], 0.025)
-    mvpf_results[i, paste0(names(return_values)[k], "_95ci_upper")] <-
-      quantile(bootstrapped_mvpf_results[, names(return_values)[k]], 0.975)
-  }
-
-  # The interpretation of the MVPF changes when the willingsness to pay and the government net costs are both negative.
-  # Although the sign of the MVPF is also positive. Example: Consider MVPF = 0.5
-  # This means that either
-  # (1) Willingness to pay and goverment net costs are positive. In this case one dollar spent by the government is valued
-  # with 0.5 dollar by the beneficiaries of the reform (higher value better)
-  # (2) Willingness to pay and goverment net costs are negative. In this case the MVPF measures how much WTP is lost
-  # per tax revenue increase. (lower value better)
-  # If the point estimate is either (1), and one of the bootstrapped estimates is (2) (or vice versa)
-  # the bootstrapped estimate is out of the sensible range and is thus not defined.
-  # When running the bootstrap, this possibility has to be acconted for by removing the replications where the MVPF is
-  # not defined, and adjusting the confidence intervall.
-
-  replication_defined <- rep (TRUE, bootstrap_replications)
-  for (j in 1:bootstrap_replications) {
-    if (all(mvpf_results[i, c("willingness_to_pay", "government_net_costs")] >= 0) &
-      all(bootstrapped_mvpf_results[j, c("willingness_to_pay", "government_net_costs")] < 0)) {
-      replication_defined[j] <- FALSE
-    }
-    else if (all(mvpf_results[i, c("willingness_to_pay", "government_net_costs")] < 0) &
-      all(bootstrapped_mvpf_results[j, c("willingness_to_pay", "government_net_costs")] < 0)) {
-      replication_defined[j] <- FALSE
-    }
-  }
-
-  # Adjust the confindence intervall to account for the fact that the non-defined estimates have been removed.
-  # Note that the 95% confidence intervall can reach into the non-defined region of the mvpf. In this case,
-  # the confidence intervall spans -Inf to +Inf.
-  upper_percentile_95ci <- 1 - (0.05 - sum(!replication_defined) / bootstrap_replications) / 2
-  lower_percentile_95ci <- (0.05 - sum(!replication_defined) / bootstrap_replications) / 2
-
-
-  if (lower_percentile_95ci  <= 0 & upper_percentile_95ci >= 1) {
-    mvpf_results$mvpf_95ci_lower[i] <- -Inf
-    mvpf_results$mvpf_95ci_upper[i] <- Inf
-  }
-  else {
-    mvpf_results$mvpf_95ci_lower[i] <- quantile(bootstrapped_mvpf_results[replication_defined, "mvpf"], lower_percentile_95ci)
-    mvpf_results$mvpf_95ci_upper[i] <- quantile(bootstrapped_mvpf_results[replication_defined, "mvpf"], upper_percentile_95ci)
-  }
-}
+mvpf_results <- addBootstrappedConfidenceIntervalls(mvpf_results)
 
 # Print results:
 for (i in 1:length(programs)) {
@@ -205,10 +99,9 @@ for (i in 1:length(programs)) {
 # Tax and Transfer System
 plotTaxRates()
 
-# Load additional information about each policy from the excel file:
-program_information <- as.data.frame(read_xlsx("programs.xlsx"))
-# Join the estimates and the additional information:
-plot_data <- left_join(mvpf_results, program_information, by = c("program" = "program_identifier"))
+# Augment results with additional information for plotting
+plot_data <- getPlotData(mvpf_results)
+
 # Plot MVPF
 plotResults(plot_data = plot_data, save ="mvpf_against_year.pdf", confidence_intervalls = FALSE)
 plotResults(plot_data = plot_data, y_axis = "government_net_costs", y_label = "Government Net Costs", x_axis = "year", x_label = "Year",
