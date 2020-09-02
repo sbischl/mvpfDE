@@ -1092,12 +1092,43 @@ getPlotData <- function(mvpf_results) {
   return(left_join(mvpf_results, program_information, by = c("program" = "program_identifier")))
 }
 
-exportPlotCSV <- function(assumption_list) {
+exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE) {
   # assumption list is a list that specifies all the possible assumptions for which the code should be run.
   # Example:
   # assumption_list = list(tax_rate = c(0.5,0.3), discount_rate = c(0.1,0.2))
   # Would export csvs for all possible combinations of the tax_rate assumption and the discount_rate assumption
 
+  # Run with default assumption and save the csv file:
+  source("assumptions.R")
+  results <- quietelyRunPrograms(programs, bootstrap)
+  write.csv(x = getPlotData(results),
+            file = "./csv_export/default.csv",
+            row.names = FALSE)
+
+  if (missing(assumption_list)) {
+    return()
+  }
+
+  possible_assumption_combinations <- expand.grid(assumption_list)
+  for (i in 1:nrow(possible_assumption_combinations)) {
+    # Iterate over all possible assumption combinations
+    assumptions <- colnames(possible_assumption_combinations)
+    for (j in 1:length(assumptions)) {
+      # Iterate over all assumptions:
+      assign(assumptions[j], possible_assumption_combinations[i,j], envir = .GlobalEnv)
+    }
+    # Generate a string that summarizes the assumptions:
+    assumptions_string <- paste0(assumptions, possible_assumption_combinations[i,], collapse = "")
+
+    # Now that the assumptions have been set, we can run the estimation
+    results <- quietelyRunPrograms(programs, bootstrap)
+    write.csv(x = getPlotData(results),
+              file = paste0("./csv_export/", assumptions_string, ".csv"),
+              row.names = FALSE)
+  }
+
+  # Reset the assumptions. This appears to work:
+  source("assumptions.R")
 }
 
 getCompletePrograms <- function() {
@@ -1132,6 +1163,14 @@ getCompletePrograms <- function() {
     complete_programs <- c(complete_programs, programs[i])
   }
   return(complete_programs)
+}
+
+quietelyRunPrograms <- function(programs, bootstrap = FALSE) {
+  results <- suppressMessages(getPointEstimates(programs))
+  if (bootstrap) {
+    results <- suppressMessages(addBootstrappedConfidenceIntervalls(results))
+  }
+  return(results)
 }
 
 getPointEstimates <- function(programs) {

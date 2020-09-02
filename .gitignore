@@ -17,3 +17,6 @@ UnifiedWelfareGer.iml
 
 # Plots folder
 /plots/*
+
+# CSV export folder
+/plots/*
