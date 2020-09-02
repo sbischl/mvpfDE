@@ -19,4 +19,4 @@ UnifiedWelfareGer.iml
 /plots/*
 
 # CSV export folder
-/plots/*
+/csv_export/*
