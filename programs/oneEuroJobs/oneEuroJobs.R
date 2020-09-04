@@ -31,7 +31,7 @@ oneEuroJobs <- function (bootstrap_replication = 0, extend_effect = 0) {
   share_female_and_east <- total_east / (total_west + total_east) * share_female_conditional_on_east
   share_male_and_east <- total_east / (total_west + total_east) * (1 - share_female_conditional_on_east)
 
-  # (Monthly) effect on gross earnings:
+  # Annual effect on gross earnings:
   earnings_effect_year1 <- share_female_and_west * estimates$monthly_gross_earnings_effect_female_west_year1 +
     share_male_and_west * estimates$monthly_gross_earnings_effect_male_west_year1 +
     share_female_and_east * estimates$monthly_gross_earnings_effect_female_east_year1 +
@@ -47,7 +47,7 @@ oneEuroJobs <- function (bootstrap_replication = 0, extend_effect = 0) {
     share_female_and_east * estimates$monthly_gross_earnings_effect_female_east_year3 +
     share_male_and_east * estimates$monthly_gross_earnings_effect_male_east_year3
   
-  # (Monthly) effect on benefit payed:
+  # Annual effect on benefit payed:
   benefit_effect_year1 <- share_female_and_west * estimates$monthly_benefit_receipt_effect_female_west_year1 +
     share_male_and_west * estimates$monthly_benefit_receipt_effect_male_west_year1 +
     share_female_and_east * estimates$monthly_benefit_receipt_effect_female_east_year1 +
@@ -83,9 +83,9 @@ oneEuroJobs <- function (bootstrap_replication = 0, extend_effect = 0) {
   # Effect of Earnings Change on WTP and Government Cost
   #--------------------------------------------------------------------------------------------------------------------#
 
-  reform_impact <- project_medium_run_impact(absolute_impact_magnitude = c(earnings_effect_year1 * 12,
-                                                                           earnings_effect_year2 * 12,
-                                                                           earnings_effect_year3 * 12),
+  reform_impact <- project_medium_run_impact(absolute_impact_magnitude = c(earnings_effect_year1,
+                                                                           earnings_effect_year2,
+                                                                           earnings_effect_year3),
                                              yearly_control_income = control_income,
                                              number_of_periods = 3 + extend_effect,
                                              prices_year = prices_year,
