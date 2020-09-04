@@ -247,7 +247,8 @@ project_medium_run_impact <- function(impact_magnitude, # can be either scalar o
                                       absolute_impact_magnitude, #can be either scalar or a vector containing the effect for each period (change in yearly earnings)
                                       yearly_control_income,
                                       number_of_periods,
-                                      prices_year) {
+                                      prices_year,
+                                      inculde_welfare_benefits_fraction = 1) {
 
   # This function returns the dataframe as project_lifetime_impact but is simpler and requires less assumptions.
   # It is intened for reforms for reforms whose beneficiaries vary greatly.
@@ -275,11 +276,13 @@ project_medium_run_impact <- function(impact_magnitude, # can be either scalar o
 
   tax_payment_no_reform <- sapply(gross_earnings_no_reform,
                                   getTaxPayment,
-                                  prices_year = prices_year)
+                                  prices_year = prices_year,
+                                  inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction)
 
   tax_payment_reform <- sapply(gross_earnings_reform,
                                getTaxPayment,
-                               prices_year = prices_year)
+                               prices_year = prices_year,
+                               inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction)
 
   net_earnings_no_reform <- gross_earnings_no_reform - tax_payment_no_reform
   net_earnings_refrom <- gross_earnings_reform - tax_payment_reform
