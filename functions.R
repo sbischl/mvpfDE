@@ -465,13 +465,19 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
 
 getNetIncome <- function(gross_income,
                          inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
-                         income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution) {
-  return(getTaxSystemEffects(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution)$net_income_yearly)
+                         income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
+                         income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution,
+                         income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution) {
+  return(getTaxSystemEffects(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution,
+                             income_fraction_of_long_term_care_contribution, income_fraction_of_health_insurance_contribution)$net_income_yearly)
 }
 
 getTaxSystemEffects <- function(gross_income,
                                 inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
-                                income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution) {
+                                income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
+                                income_fraction_of_unemployment_insurance_contribution = global_income_fraction_of_unemployment_insurance_contribution,
+                                income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution,
+                                income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution) {
 
   # inculde_welfare_benefits_fraction is the fraction of welfare benefits (i.e. Hartz IV) that are considered net income.
   # A value < 1 represents the fact that not everyone who receives low income is entitled to Hartz IV
@@ -625,9 +631,15 @@ getTaxSystemEffects <- function(gross_income,
   welfare_benefit <- max(welfare_benefit_monthly - income_minus_excemptions, 0)
 
   # Net income defined as gross income MINUS social security contributions, income tax, solidarity chage PLUS welfare benefit
-  net_income_monthly <- gross_income - social_security_contributions - income_tax_monthly - solidarity_charge_monthly +
+  net_income_monthly <- gross_income -
+    (social_security_contributions + income_tax_monthly + solidarity_charge_monthly) +
     welfare_benefit * inculde_welfare_benefits_fraction +
-    pension_contribution * income_fraction_of_pension_contribution
+    pension_contribution * income_fraction_of_pension_contribution +
+    unemployment_insurance_contribution * income_fraction_of_unemployment_insurance_contribution +
+    health_insurance_contribution * income_fraction_of_health_insurance_contribution +
+    long_term_care_contribution * income_fraction_of_long_term_care_contribution
+
+
 
   net_income_yearly <- net_income_monthly * 12
 
@@ -659,15 +671,20 @@ getTaxSystemEffects <- function(gross_income,
 
 getAverageTaxRate <- function(gross_income,
                               inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
-                              income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution) {
+                              income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
+                              income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution,
+                              income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution) {
 
   # Average Tax Rate = 1 - NetIncome(gross income) / gross income)
-  return(1 - getNetIncome(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution) / gross_income)
+  return(1 - getNetIncome(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution,
+                          income_fraction_of_long_term_care_contribution, income_fraction_of_health_insurance_contribution) / gross_income)
 }
 
 getTaxPayment <- function(gross_income,
                           inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
                           income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
+                          income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution,
+                          income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution,
                           prices_year = 2019,
                           flat_tax = global_flat_tax,
                           assume_flat_tax = global_assume_flat_tax) {
@@ -683,7 +700,9 @@ getTaxPayment <- function(gross_income,
 
   tax_payment <- getTaxSystemEffects(gross_income_inflated,
                                      inculde_welfare_benefits_fraction,
-                                     income_fraction_of_pension_contribution)$tax_yearly
+                                     income_fraction_of_pension_contribution,
+                                     income_fraction_of_long_term_care_contribution,
+                                     income_fraction_of_health_insurance_contribution)$tax_yearly
 
   # Deflate tax_payment back to initial year:
   tax_payment_deflated <-  deflate(2019, prices_year) * tax_payment
@@ -693,11 +712,15 @@ getTaxPayment <- function(gross_income,
 
 getMarginalTaxRate <- function(gross_income,
                                inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
-                               income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution) {
+                               income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
+                               income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution,
+                               income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution) {
 
   # Marginal Tax Rate = 1 - (NetIncome(gross income + 1) - NetIncome(gross income))
-  return(1 - (getNetIncome(gross_income + 1, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution) -
-    getNetIncome(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution)))
+  return(1 - (getNetIncome(gross_income + 1, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution,
+                           income_fraction_of_long_term_care_contribution, income_fraction_of_health_insurance_contribution) -
+    getNetIncome(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution,
+                 income_fraction_of_long_term_care_contribution, income_fraction_of_health_insurance_contribution)))
 }
 
 incomeTax <- function(taxable_income) {
@@ -753,6 +776,8 @@ plotTaxRates <- function() {
   # Assumptions for the plots:
   inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction
   income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution
+  income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution
+  income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution
 
   # Calculate all the Tax Payment, Net incomes, social insurance contributions etc. for a wide range of incomes
   # Income Range
@@ -760,13 +785,17 @@ plotTaxRates <- function() {
   # Initialize dataframe by calculating the first row
   taxes_and_transfers <- getTaxSystemEffects(income_range[1],
                                              inculde_welfare_benefits_fraction,
-                                             income_fraction_of_pension_contribution)
+                                             income_fraction_of_pension_contribution,
+                                             income_fraction_of_health_insurance_contribution,
+                                             income_fraction_of_health_insurance_contribution)
 
   # Complete the dataframe by iterating over range of incomes
   for (i in 2:length(income_range)) {
     taxes_and_transfers[i, ] <- getTaxSystemEffects(income_range[i],
                                                     inculde_welfare_benefits_fraction,
-                                                    income_fraction_of_pension_contribution)
+                                                    income_fraction_of_pension_contribution,
+                                                    income_fraction_of_health_insurance_contribution,
+                                                    income_fraction_of_health_insurance_contribution)
   }
 
   # Keep the relevant information for each of the Figures:
@@ -1095,11 +1124,88 @@ getPlotData <- function(mvpf_results) {
   return(left_join(mvpf_results, program_information, by = c("program" = "program_identifier")))
 }
 
-exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE) {
+getListOfAllMetaAssumptions <- function() {
+  # Update this function when updating setMetaAssumptions!
+  list_of_all_meta_assumptions <- list(
+    discount_rate = c("7", "3", "1"),
+    tax_rate = c("0", "15", "30", "45", "60", "nonlinear", "incometaxonly")
+  )
+}
+
+setMetaAssumption <- function(key, value) {
+  # Update getListOfAllMetaAssumptions function when this
+  if (key == "discount_rate") {
+    if (value == "7") {
+      discount_rate <<- 0.07
+    }
+    else if (value == "3") {
+      discount_rate <<- 0.03
+    }
+    else if (value == "1") {
+      discount_rate <<- 0.01
+    }
+    else {
+      warning(paste("Value", value, "of assumption", key, "not found"))
+    }
+  }
+  else if (key == "tax_rate") {
+    if (value == "0") {
+      global_assume_flat_tax <<- TRUE
+      global_flat_tax <<- 0
+    }
+    else if (value == "15") {
+      global_assume_flat_tax <<- TRUE
+      global_flat_tax <<- 0.15
+    }
+    else if (value == "30" ) {
+      global_assume_flat_tax <<- TRUE
+      global_flat_tax <<- 0.3
+    }
+    else if(value == "45") {
+      global_assume_flat_tax <<- TRUE
+      global_flat_tax <<- 0.45
+    }
+    else if(value == "60") {
+      global_assume_flat_tax <<- TRUE
+      global_flat_tax <<- 0.60
+    }
+    else if(value == "nonlinear") {
+      # Assume the german tax system with pension contributions as income
+      global_assume_flat_tax <<- FALSE
+      global_inculde_welfare_benefits_fraction <<- 1
+      global_income_fraction_of_pension_contribution <<- 1
+      global_income_fraction_of_unemployment_insurance_contribution <<- 1
+      global_income_fraction_of_health_insurance_contribution <<- 0 #The fraction of pension contributions that is considered income
+      global_income_fraction_of_long_term_care_contribution <<- 0
+    }
+    else if(value == "incometaxonly") {
+      # Assume that only the income tax (with soli) is relevant
+      global_assume_flat_tax <<- FALSE
+      global_inculde_welfare_benefits_fraction <<- 1
+      global_income_fraction_of_pension_contribution <<- 1
+      global_income_fraction_of_unemployment_insurance_contribution <<- 1
+      global_income_fraction_of_health_insurance_contribution <<- 1 #The fraction of pension contributions that is considered income
+      global_income_fraction_of_long_term_care_contribution <<- 1
+      global_inculde_welfare_benefits_fraction <<- 0
+    }
+    else {
+      warning(paste("Value", value, "of assumption", key, "not found"))
+    }
+  }
+  else {
+    warning(paste("Assumption", key, "not found"))
+    return(-1)
+  }
+}
+
+exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_assumptions = TRUE) {
   # assumption list is a list that specifies all the possible assumptions for which the code should be run.
   # Example:
   # assumption_list = list(tax_rate = c(0.5,0.3), discount_rate = c(0.1,0.2))
   # Would export csvs for all possible combinations of the tax_rate assumption and the discount_rate assumption
+  # If meta_assumptions is set to false, the assumption_list has to contain actual variable names and values.
+  # If meta_asumptions is set to true, the assumption will be looked up in setMetaAssumptions(). This useful to make
+  # assumptions that require multiple variables to be set
 
   # Run with default assumption and save the csv file:
   source("assumptions.R")
@@ -1115,13 +1221,25 @@ exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE) {
   possible_assumption_combinations <- expand.grid(assumption_list)
   for (i in 1:nrow(possible_assumption_combinations)) {
     # Iterate over all possible assumption combinations
+
+    # First reset all assumptions back to default:
+    source("assumptions.R")
+
+    #Generate a string that summarizes the assumptions:
+    assumptions_string <- ""
+
     assumptions <- colnames(possible_assumption_combinations)
     for (j in 1:length(assumptions)) {
       # Iterate over all assumptions:
-      assign(assumptions[j], possible_assumption_combinations[i,j], envir = .GlobalEnv)
+      if (!meta_assumptions) {
+        assign(assumptions[j], possible_assumption_combinations[i,j], envir = .GlobalEnv)
+      }
+      else {
+        setMetaAssumption(assumptions[j], possible_assumption_combinations[i,j])
+      }
+      #Generate a string that summarizes the assumptions:
+      assumptions_string <- paste0(assumptions_string, assumptions[j], possible_assumption_combinations[i,j])
     }
-    # Generate a string that summarizes the assumptions:
-    assumptions_string <- paste0(assumptions, possible_assumption_combinations[i,], collapse = "")
 
     # Now that the assumptions have been set, we can run the estimation
     results <- quietelyRunPrograms(programs, bootstrap)
@@ -1130,7 +1248,7 @@ exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE) {
               row.names = FALSE)
   }
 
-  # Reset the assumptions. This appears to work:
+  # Reset the assumptions.
   source("assumptions.R")
 }
 

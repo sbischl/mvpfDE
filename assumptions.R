@@ -8,6 +8,9 @@ global_assume_flat_tax <- FALSE # If this is set to TRUE, only flat_tax is relev
 global_flat_tax <- 0.3
 global_inculde_welfare_benefits_fraction <- 1 #The share of welfare_benefits 'Hartz IV' invidivudals receive.
 global_income_fraction_of_pension_contribution <- 1 #The fraction of pension contributions that is considered income
+global_income_fraction_of_unemployment_insurance_contribution <- 1 #The fraction of unemployment insurance contributions that is considered income
+global_income_fraction_of_health_insurance_contribution <- 0 #The fraction of pension contributions that is considered income
+global_income_fraction_of_long_term_care_contribution <- 0 #The fraction of unemployment insurance contributions that is considered income
 global_welfare_benefit_monthly <- 700
 value_added_tax <- 0.19
 
