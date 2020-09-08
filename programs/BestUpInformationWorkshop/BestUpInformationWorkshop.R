@@ -17,7 +17,7 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
   # Implementation cost (per student), see Table A4 :
   set_up_cost <- 4.54 #Preparing the workshop
   implementation_cost <- 1.34 #Deliviring the presentation
-  total_cost <- 5.87
+  program_cost <- 5.87
 
   # Effect on enrollment, see Table 5:
   enrollment_effect_1year_all <- estimates$enrollment_effect_1year_all
@@ -33,7 +33,7 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
   # Program Implementation Cost
   #--------------------------------------------------------------------------------------------------------------------#
 
-  government_net_costs <- total_cost
+  government_net_costs <- program_cost
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Project and discount earnings / tax payments when enrolling in college compared to a vocational degree.
@@ -79,9 +79,11 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
   # on probability of enrollment.
 
   # Students value higher net-income
-  willingness_to_pay <- lifetime_impacts$present_value_net_earnings_impact * enrollment_effect_1year_all
+  net_income_increase <- lifetime_impacts$present_value_net_earnings_impact * enrollment_effect_1year_all
+  willingness_to_pay <- net_income_increase
   # Government costs are reduced by the increase in tax revenue
-  government_net_costs <- government_net_costs - lifetime_impacts$present_value_tax_payment_impact * enrollment_effect_1year_all
+  tax_revenue_increase <- -lifetime_impacts$present_value_tax_payment_impact * enrollment_effect_1year_all
+  government_net_costs <- government_net_costs + tax_revenue_increase
 
   #--------------------------------------------------------------------------------------------------------------------#
   # University Attendence Cost
@@ -91,21 +93,22 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
   cost_difference <- costOfCollege(duration_of_study = duration_of_study, year = 2014, prices_year = prices_year) -
     costOfSchool(duration_of_schooling = duration_of_berufsschule, year = 2014, prices_year = prices_year, school_type = "berufsschule_dual")
 
-
-  government_net_costs <- government_net_costs + enrollment_effect_1year_all * cost_difference
+  education_cost <-  enrollment_effect_1year_all * cost_difference
+  government_net_costs <- government_net_costs + education_cost
 
   # Bafoeg
   discounted_cost_bafoeg <- sum(rep(average_bafoeg_2014 * 12, 5) * discountVector(5))
-  government_net_costs <- government_net_costs + discounted_cost_bafoeg * bafoeg_application
+  bafoeg_cost <- discounted_cost_bafoeg * bafoeg_application
+  government_net_costs <- government_net_costs + bafoeg_cost
 
   # Bafög is a transfer to students. Students value it euro for euro.
   # They would not receive it if they did an apprenticeship
-  willingness_to_pay <- willingness_to_pay + discounted_cost_bafoeg * bafoeg_application
+  willingness_to_pay <- willingness_to_pay + bafoeg_cost
 
   # Assume that 50 percent of Bafög has to be payed back 5 years after finishing the degree.
-  repayment_bafoeg <- 0.5*(average_bafoeg_2014 * 12 * 5) * (1 + discount_rate)^(-9)
-  willingness_to_pay <- willingness_to_pay - repayment_bafoeg * bafoeg_application
-  government_net_costs <- government_net_costs - repayment_bafoeg * bafoeg_application
+  bafoeg_repayment <- - bafoeg_application * 0.5*(average_bafoeg_2014 * 12 * 5) * (1 + discount_rate)^(-9)
+  willingness_to_pay <- willingness_to_pay + bafoeg_repayment
+  government_net_costs <- government_net_costs + bafoeg_repayment
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Private costs of studying
@@ -116,8 +119,11 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs,
-                        increased_net_income = lifetime_impacts$present_value_net_earnings_impact,
-                        increased_tax_revenue = lifetime_impacts$present_value_tax_payment_impact,
-                        cost_difference_between_college_and_vocational_degree = cost_difference)
+                        net_income_increase = net_income_increase,
+                        bafoeg_cost = bafoeg_cost,
+                        bafoeg_repayment = bafoeg_repayment,
+                        program_cost = program_cost,
+                        tax_revenue_increase = tax_revenue_increase,
+                        education_cost = education_cost)
   return(return_values)
 }

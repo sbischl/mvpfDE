@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Relevant Literature:
-# Caliendo et. al. (2015)
+# Caliendo et. al. (2016)
 
 startupGrant <- function(bootstrap_replication = 0,
                          private_subsidy_valuation = 0,
@@ -71,8 +71,10 @@ startupGrant <- function(bootstrap_replication = 0,
                                              number_of_periods = effect_delay + effect_duration,
                                              prices_year = prices_year)
 
-  government_net_costs <- - reform_impact$present_value_tax_payment_impact
-  willingness_to_pay <- reform_impact$present_value_net_earnings_impact
+  tax_revenue_increase <- - reform_impact$present_value_tax_payment_impact
+  government_net_costs <- tax_revenue_increase
+  net_income_increase <- reform_impact$present_value_net_earnings_impact
+  willingness_to_pay <- net_income_increase
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Effects of the Transfer
@@ -94,10 +96,14 @@ startupGrant <- function(bootstrap_replication = 0,
   # we would have to account for the additional costs that come with setting up a new company.
   # To get some idea, how the private valuation of the subsidy influence the results, private_subsidy_valuation denotes
   # the share of the subsidy the start up founders value euro for euro.
-  willingness_to_pay = willingness_to_pay + private_subsidy_valuation * subsidy
+  subsidy_valuation <- private_subsidy_valuation * subsidy
+  willingness_to_pay = willingness_to_pay + subsidy_valuation
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
-                        government_net_costs = government_net_costs)
+                        government_net_costs = government_net_costs,
+                        program_cost = subsidy,
+                        tax_revenue_increase = tax_revenue_increase,
+                        net_income_increase = net_income_increase)
 
   return(return_values)
 }

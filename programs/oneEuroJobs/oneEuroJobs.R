@@ -92,14 +92,16 @@ oneEuroJobs <- function (bootstrap_replication = 0, extend_effect = 0) {
                                              inculde_welfare_benefits_fraction = 0)
   # Do not include welfare benefits since these are separately estimated by the paper
 
-  government_net_costs <- - reform_impact$present_value_tax_payment_impact
-  willingness_to_pay <- reform_impact$present_value_net_earnings_impact
+  tax_revenue_increase <- reform_impact$present_value_tax_payment_impact
+  government_net_costs <- tax_revenue_increase
+  net_income_increase <- reform_impact$present_value_net_earnings_impact
+  willingness_to_pay <- net_income_increase
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Effect of reduced benefit payment
   #--------------------------------------------------------------------------------------------------------------------#
   discounted_effects_on_benefits <- c(c(benefit_effect_year1, benefit_effect_year2, benefit_effect_year3),
-                                     rep(benefit_effect_year3, extend_effect)) * discountVector(3 + extend_effect)
+                                      rep(benefit_effect_year3, extend_effect)) * discountVector(3 + extend_effect)
   cumulated_discounted_effect_on_benefits <- sum(discounted_effects_on_benefits)
 
   government_net_costs <- government_net_costs + cumulated_discounted_effect_on_benefits
@@ -112,6 +114,10 @@ oneEuroJobs <- function (bootstrap_replication = 0, extend_effect = 0) {
   government_net_costs <- government_net_costs + discounted_program_cost
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
-                        government_net_costs = government_net_costs)
+                        government_net_costs = government_net_costs,
+                        tax_revenue_increase = -tax_revenue_increase,
+                        net_income_increase = net_income_increase,
+                        program_cost = discounted_program_cost,
+                        benefit_receipt = cumulated_discounted_effect_on_benefits)
   return(return_values)
 }

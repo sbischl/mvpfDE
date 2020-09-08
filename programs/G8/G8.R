@@ -50,7 +50,8 @@ G8 <- function (bootstrap_replication = 0) {
   cost_difference <- costOfCollege(duration_of_study = 5, year = 2011, prices_year = prices_year) -
     costOfSchool(duration_of_schooling = 3, year = 2011, prices_year = prices_year, school_type = "berufsschule_dual")
 
-  government_net_costs <- cost_difference * enrollmentrate_change_pp
+  education_cost <- cost_difference * enrollmentrate_change_pp
+  government_net_costs <- education_cost
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Effects of earlier Employment
@@ -67,9 +68,10 @@ G8 <- function (bootstrap_replication = 0) {
                                            prices_year = prices_year)
 
 
-
-  willingness_to_pay <- one_additional_year_net_income * earlier_labor_force_participation
-  government_net_costs <- government_net_costs - one_additional_year_tax_payment * earlier_labor_force_participation
+  earlier_labor_market_participation_tax_revenue <-  - one_additional_year_tax_payment * earlier_labor_force_participation
+  earlier_labor_market_participation_net_income <- one_additional_year_net_income * earlier_labor_force_participation
+  willingness_to_pay <- earlier_labor_market_participation_net_income
+  government_net_costs <- government_net_costs + earlier_labor_market_participation_tax_revenue
 
 
 
@@ -89,11 +91,18 @@ G8 <- function (bootstrap_replication = 0) {
                                               inculde_welfare_benefits_fraction = 0)
 
   # Students value higher net-income
-  willingness_to_pay <- willingness_to_pay + lifetime_impacts$present_value_net_earnings_impact * (enrollmentrate_change_pp - drop_out_pp)
+  net_income_increase <- lifetime_impacts$present_value_net_earnings_impact * (enrollmentrate_change_pp - drop_out_pp)
+  willingness_to_pay <- willingness_to_pay + net_income_increase
   # Government costs are reduced by the increase in tax revenue
-  government_net_costs <- government_net_costs - lifetime_impacts$present_value_tax_payment_impact * (enrollmentrate_change_pp - drop_out_pp)
+  tax_revenue_increase <- -lifetime_impacts$present_value_tax_payment_impact * (enrollmentrate_change_pp - drop_out_pp)
+  government_net_costs <- government_net_costs + tax_revenue_increase
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
-                        government_net_costs = government_net_costs)
+                        government_net_costs = government_net_costs,
+                        education_cost = education_cost,
+                        net_income_increase = net_income_increase,
+                        earlier_labor_market_participation_net_income = earlier_labor_market_participation_net_income,
+                        tax_revenue_increase = tax_revenue_increase,
+                        earlier_labor_market_participation_tax_revenue = earlier_labor_market_participation_tax_revenue)
   return(return_values)
 }

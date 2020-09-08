@@ -14,7 +14,7 @@ mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to
   #--------------------------------------------------------------------------------------------------------------------#
 
   # Implementation cost (per student), see p. 22:
-  implemenation_cost <- 1000
+  program_cost <- 1000
 
   # Effect on attendence of high track in 10th grade:
   high_track_attendence_10th <- estimates$high_track_attendence_10th
@@ -24,7 +24,7 @@ mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to
   #--------------------------------------------------------------------------------------------------------------------#
   # Program Implementation Cost
   #--------------------------------------------------------------------------------------------------------------------#
-  government_net_costs <- implemenation_cost
+  government_net_costs <- program_cost
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Project and discount earnings / tax payments when attending higher track instead of one of the lower tracks
@@ -71,9 +71,11 @@ mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to
 
 
   # Students value higher net-income
-  willingness_to_pay <- lifetime_impacts$present_value_net_earnings_impact * high_track_attendence_10th
+  net_income_increase <- lifetime_impacts$present_value_net_earnings_impact * high_track_attendence_10th
+  willingness_to_pay <- net_income_increase
   # Government costs are reduced by the increase in tax revenue
-  government_net_costs <- government_net_costs - lifetime_impacts$present_value_tax_payment_impact * high_track_attendence_10th
+  tax_revenue_increase <- - lifetime_impacts$present_value_tax_payment_impact * high_track_attendence_10th
+  government_net_costs <- government_net_costs + tax_revenue_increase
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Cost of Schooling
@@ -84,9 +86,14 @@ mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to
 
 
   cost_difference <- cost_of_schooling_high_track - cost_of_schooling_low_track
-  government_net_costs <- government_net_costs + cost_difference * high_track_attendence_10th
+  education_cost <- cost_difference * high_track_attendence_10th
+  government_net_costs <- government_net_costs + education_cost
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
-                        government_net_costs = government_net_costs)
+                        government_net_costs = government_net_costs,
+                        program_cost = program_cost,
+                        net_income_increase = net_income_increase,
+                        tax_revenue_increase = tax_revenue_increase,
+                        education_cost = education_cost)
   return(return_values)
 }

@@ -52,8 +52,10 @@ startupSubsidy <- function (bootstrap_replication = 0,
                                              number_of_periods = effect_delay + effect_duration,
                                              prices_year = prices_year)
 
-  government_net_costs <- - reform_impact$present_value_tax_payment_impact
-  willingness_to_pay <- reform_impact$present_value_net_earnings_impact
+  tax_revenue_increase <- - reform_impact$present_value_tax_payment_impact
+  government_net_costs <- tax_revenue_increase
+  net_income_increase <- reform_impact$present_value_net_earnings_impact
+  willingness_to_pay <- net_income_increase
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Effects of the Transfer
@@ -72,7 +74,10 @@ startupSubsidy <- function (bootstrap_replication = 0,
   willingness_to_pay = willingness_to_pay + private_subsidy_valuation * subsidy
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
-                        government_net_costs = government_net_costs)
+                        government_net_costs = government_net_costs,
+                        program_cost = subsidy,
+                        tax_revenue_increase = tax_revenue_increase,
+                        net_income_increase = net_income_increase)
 
   return(return_values)
 }

@@ -1215,7 +1215,7 @@ exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_as
             row.names = FALSE)
 
   if (missing(assumption_list)) {
-    return()
+    return(0)
   }
 
   possible_assumption_combinations <- expand.grid(assumption_list)

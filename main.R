@@ -113,6 +113,4 @@ plotResults(plot_data = plot_data, x_axis = "program_name", x_label = "Program N
 
 
 # Export CSV Files
-exportCSV <- function() {
-
-}
+exportPlotCSV(programs)

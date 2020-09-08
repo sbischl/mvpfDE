@@ -110,9 +110,10 @@ speedLimitA3 <- function (bootstrap_replication = 0, internalize_carbon_emission
   government_net_costs <- - public_safer_traffic_valuation
 
   # Effects of lower fuel consumption on private and public budgets:
-  willingness_to_pay <- willingness_to_pay +
-    gasoline_liter_consumption_decrease * gasoline_price +
+  private_fuel_cost_saving = gasoline_liter_consumption_decrease * gasoline_price +
     diesel_tons_consumption_decrease * diesel_price
+  willingness_to_pay <- willingness_to_pay + private_fuel_cost_saving
+
 
   # Goverment looses tax revenue
   value_added_tax_share_of_prices <- (1 - 1 /(1 + value_added_tax))
@@ -124,11 +125,20 @@ speedLimitA3 <- function (bootstrap_replication = 0, internalize_carbon_emission
   government_net_costs <- government_net_costs + value_added_tax_loss + energy_tax_loss
 
   # Local Emission Reduction
-  willingness_to_pay <- willingness_to_pay + pm_cost_reduction + nox_cost_reduction + co_cost_reduction + hc_cost_reduction
+  local_emission_reduction <- pm_cost_reduction + nox_cost_reduction + co_cost_reduction + hc_cost_reduction
+  willingness_to_pay <- willingness_to_pay + local_emission_reduction
   # CO2 Emission Reduction
   willingness_to_pay <- willingness_to_pay + co2_cost_reducation * internalize_carbon_emissions
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
-                        government_net_costs = government_net_costs)
+                        government_net_costs = government_net_costs,
+                        cost_increased_travel_time = -cost_increased_travel_time,
+                        private_safer_traffic_valuation = private_safer_traffic_valuation,
+                        public_safer_traffic_valuation = -public_safer_traffic_valuation,
+                        private_fuel_cost_saving = private_fuel_cost_saving,
+                        value_added_tax_loss = value_added_tax_loss,
+                        energy_tax_loss = energy_tax_loss,
+                        local_emission_reduction = local_emission_reduction,
+                        co2_emission_reducation = co2_cost_reducation * internalize_carbon_emissions)
   return(return_values)
 }

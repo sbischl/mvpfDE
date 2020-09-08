@@ -57,7 +57,8 @@ tuitionFees <- function (bootstrap_replication = 0, use_constant_ols_return_to_s
     costOfSchool(duration_of_schooling = duration_of_berufsschule, year = 2008, prices_year = prices_year, school_type = "berufsschule_dual")
 
   # Government saves more money because less students enroll
-  government_net_costs <- government_net_costs + enrollment_effect * cost_difference
+  education_cost <- enrollment_effect * cost_difference
+  government_net_costs <- government_net_costs + education_cost
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Project and discount earnings / tax payments when enrolling in college compared to a vocational degree.
@@ -99,11 +100,18 @@ tuitionFees <- function (bootstrap_replication = 0, use_constant_ols_return_to_s
   }
 
   # Students value higher net-income
-  willingness_to_pay <- willingness_to_pay + lifetime_impacts$present_value_net_earnings_impact * enrollment_effect
+  net_income_increase <- lifetime_impacts$present_value_net_earnings_impact * enrollment_effect
+  willingness_to_pay <- willingness_to_pay + net_income_increase
   # Government costs are reduced by the increase in tax revenue
-  government_net_costs <- government_net_costs - lifetime_impacts$present_value_tax_payment_impact * enrollment_effect
+  tax_revenue_increase <- - lifetime_impacts$present_value_tax_payment_impact * enrollment_effect
+  government_net_costs <- government_net_costs  + tax_revenue_increase
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
-                        government_net_costs = government_net_costs)
+                        government_net_costs = government_net_costs,
+                        program_cost = average_discounted_tuition_fee_per_college_student,
+                        education_cost = education_cost,
+                        tax_revenue_increase = tax_revenue_increase,
+                        net_income_increase = net_income_increase)
+
   return(return_values)
 }

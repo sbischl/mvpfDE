@@ -85,8 +85,12 @@ classRoomTraining <- function (bootstrap_replication = 0, extend_effect = 6) {
                                              number_of_periods = 2 + extend_effect,
                                              prices_year = prices_year)
 
-  government_net_costs <- - reform_impact$present_value_tax_payment_impact
-  willingness_to_pay <- reform_impact$present_value_net_earnings_impact
+  # The effect on willingness to pay and government net cost is given by the increase in tax revenue and net earnings
+  net_income_increase <- reform_impact$present_value_net_earnings_impact
+  tax_revenue_increase <- - reform_impact$present_value_tax_payment_impact
+
+  government_net_costs <- tax_revenue_increase
+  willingness_to_pay <- net_income_increase
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Training cost
@@ -95,6 +99,9 @@ classRoomTraining <- function (bootstrap_replication = 0, extend_effect = 6) {
   government_net_costs <- government_net_costs + enrollment_length * monthly_cost
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
-                        government_net_costs = government_net_costs)
+                        government_net_costs = government_net_costs,
+                        program_cost = enrollment_length * monthly_cost,
+                        net_income_increase = net_income_increase,
+                        tax_revenue_increase = tax_revenue_increase)
   return(return_values)
 }
