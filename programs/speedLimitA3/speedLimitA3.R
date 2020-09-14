@@ -18,16 +18,16 @@ speedLimitA3 <- function (bootstrap_replication = 0, internalize_carbon_emission
 
   # Value of avoiding accidents depending on severity of the accident:
   # 1. Resource Cost: "resource cost reflect lost production and economic cost of an accident", Thiedig (2018), p. 54
-  resource_cost_fatal <- 1161892 # Table 7.3 Thiedig (2018), p 54
-  resource_cost_severe <- 116151 # Table 7.3 Thiedig (2018), p 54
-  resource_cost_light <- 4829 # Table 7.3 Thiedig (2018), p 54
+  resource_cost_fatal <- global_resource_cost_fatal
+  resource_cost_severe <- global_resource_cost_severe
+  resource_cost_light <- global_resource_cost_light
 
   # 2. Risk Value Component:
   # In addition to the resource costs of accidents, there is a private willingness to pay for having a higher probability of
   # being alive and uninjured.
-  risk_value_fatal <- 1319104 # Table 7.3 Thiedig (2018), p 54
-  risk_value_severe <- 171484 # Table 7.3 Thiedig (2018), p 54
-  risk_value_light <- 13191 # Table 7.3 Thiedig (2018), p 54
+  risk_value_fatal <- global_risk_value_fatal
+  risk_value_severe <- global_risk_value_severe
+  risk_value_light <- global_risk_value_light
 
 
   # Cost incurred by spending more time on the road:

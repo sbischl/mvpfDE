@@ -984,7 +984,7 @@ getSchoolCostInformation <- function(year, school_type , prices_year) {
         school_costs[!complete.cases(school_costs), "all_schools"]) %>% select(-year)
   }
 
-  available_years <- school_costs$year
+  available_years <- pull(school_costs %>% select(!!school_type, year) %>% filter(complete.cases(.)), year)
 
   if (year %in% available_years) {
     return(deflate(from = year, to = prices_year) * school_costs %>%
@@ -1148,6 +1148,19 @@ setMetaAssumption <- function(key, value) {
       warning(paste("Value", value, "of assumption", key, "not found"))
     }
   }
+  else if (key == "returns_to_schooling") {
+    if (value == "IAB") {
+      global_use_constant_ols_return_to_schooling <<- FALSE
+    }
+    else if (value == "5") {
+      global_use_constant_ols_return_to_schooling <<- FALSE
+      yearly_return_to_schooling <<- 0.05
+    }
+    else if (value == "10") {
+      global_use_constant_ols_return_to_schooling <<- FALSE
+      yearly_return_to_schooling <<- 0.1
+    }
+  }
   else if (key == "tax_rate") {
     if (value == "0") {
       global_assume_flat_tax <<- TRUE
@@ -1212,7 +1225,9 @@ exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_as
   results <- quietelyRunPrograms(programs, bootstrap)
   write.csv(x = getPlotData(results),
             file = "./csv_export/default.csv",
-            row.names = FALSE)
+            row.names = FALSE,
+            fileEncoding = "UTF-8"
+  )
 
   if (missing(assumption_list)) {
     return(0)
@@ -1245,7 +1260,8 @@ exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_as
     results <- quietelyRunPrograms(programs, bootstrap)
     write.csv(x = getPlotData(results),
               file = paste0("./csv_export/", assumptions_string, ".csv"),
-              row.names = FALSE)
+              row.names = FALSE,
+              fileEncoding = "UTF-8")
   }
 
   # Reset the assumptions.

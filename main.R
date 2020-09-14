@@ -114,3 +114,4 @@ plotResults(plot_data = plot_data, x_axis = "program_name", x_label = "Program N
 
 # Export CSV Files
 exportPlotCSV(programs)
+#exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)

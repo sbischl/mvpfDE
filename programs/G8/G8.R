@@ -5,7 +5,8 @@
 # Relevant Literature:
 # Marcus & Zambre (2019)
 
-G8 <- function (bootstrap_replication = 0) {
+G8 <- function (bootstrap_replication = 0,
+                use_constant_ols_return_to_schooling = global_use_constant_ols_return_to_schooling) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)
 
@@ -82,13 +83,34 @@ G8 <- function (bootstrap_replication = 0) {
   impact_magnitude_matrix <- getEducationEffectOnEarnings(education_decision = "university_degree",
                                                           alternative = "abitur")
 
-  lifetime_impacts <- project_lifetime_impact(impact_age = 21,
-                                              impact_magnitude_matrix = impact_magnitude_matrix,
-                                              relative_control_income = 1,
-                                              start_projection_year = 2014,
-                                              prices_year = prices_year,
-                                              discount_to = 2011,
-                                              inculde_welfare_benefits_fraction = 0)
+  if (use_constant_ols_return_to_schooling) {
+    lifetime_impacts <- project_lifetime_impact(impact_age = 21,
+                                                impact_magnitude_matrix = impact_magnitude_matrix,
+                                                relative_control_income = 1,
+                                                start_projection_year = 2014,
+                                                prices_year = prices_year,
+                                                discount_to = 2011,
+                                                inculde_welfare_benefits_fraction = 0)
+  }
+  else {
+    impact_longer_schooling <- project_lifetime_impact(impact_age = 21,
+                                                       impact_magnitude = -1,
+                                                       relative_control_income = 1,
+                                                       end_projection_age = 22,
+                                                       start_projection_year = 2011,
+                                                       prices_year = prices_year,
+                                                       inculde_welfare_benefits_fraction = 0)
+
+    impact_more_education <- project_lifetime_impact(impact_age = 23,
+                                                     impact_magnitude = 2* yearly_return_to_schooling,
+                                                     relative_control_income = 1,
+                                                     start_projection_year = 2011,
+                                                     prices_year = prices_year,
+                                                     discount_to = 2011,
+                                                     inculde_welfare_benefits_fraction = 0)
+
+    lifetime_impacts <- impact_longer_schooling + impact_more_education
+  }
 
   # Students value higher net-income
   net_income_increase <- lifetime_impacts$present_value_net_earnings_impact * (enrollmentrate_change_pp - drop_out_pp)

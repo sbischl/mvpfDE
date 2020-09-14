@@ -6,7 +6,7 @@
 # Peter et. al. (2018)
 
 BestUpInformationWorkshop <- function (bootstrap_replication = 0,
-                                       use_constant_ols_return_to_schooling = FALSE) {
+                                       use_constant_ols_return_to_schooling = global_use_constant_ols_return_to_schooling) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)
 
