@@ -1,0 +1,56 @@
+#----------------------------------------------------------------------------------------------------------------------#
+# Coronavirus Lockdown R = 0.627 vs No Lockdown
+#----------------------------------------------------------------------------------------------------------------------#
+
+# Relevant Literature:
+# Dorn et al. (2020)
+# Flaxman et al. (2020)
+coronavirusLockdown <- function (bootstrap_replication = 0, only_risk_value = FALSE) {
+  program_name <- toString(match.call()[1])
+  estimates <- getEstimates(program_name, bootstrap_replication)
+
+  # All of these calculations are obviously very very uncertain, and depend heavily on the made assumptions.
+
+
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Assumptions
+  #--------------------------------------------------------------------------------------------------------------------#
+  lockdown_cost <- 287.6 * 10^9 + 1 / (1 + discount_rate) * 45.7 * 10^9 # Dorn et al. (2020)
+
+  averted_deaths <- estimates$averted_deaths
+  population_germany <- 83 * 10^6
+
+  # Value of a statistical life:
+  risk_value_fatal <- global_risk_value_fatal
+  resource_cost_fatal <- global_resource_cost_fatal
+
+  if (only_risk_value) {
+    risk_value_fatal <- risk_value_fatal + resource_cost_fatal
+    resource_cost_fatal <- 0
+  }
+
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Willingness to Pay
+  #--------------------------------------------------------------------------------------------------------------------#
+
+  valuation_lower_risk_of_dying <- averted_deaths * (risk_value_fatal + (1 - global_flat_tax)  * resource_cost_fatal) / population_germany
+  income_loss <- (1 - global_flat_tax) * lockdown_cost / population_germany
+  willingness_to_pay <- valuation_lower_risk_of_dying - income_loss
+
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Government Net Cost
+  #--------------------------------------------------------------------------------------------------------------------#
+
+  fiscal_lockdown_cost <- lockdown_cost * global_flat_tax / population_germany
+  tax_revenue_effect <- averted_deaths * global_flat_tax * resource_cost_fatal / population_germany
+  government_net_costs <- fiscal_lockdown_cost - tax_revenue_effect
+
+  return_values <- list(willingness_to_pay = willingness_to_pay,
+                        government_net_costs = government_net_costs,
+                        valuation_lower_risk_of_dying = valuation_lower_risk_of_dying,
+                        income_loss = income_loss,
+                        program_cost = fiscal_lockdown_cost,
+                        tax_revenue_increase = -fiscal_lockdown_cost)
+
+  return(return_values)
+}
