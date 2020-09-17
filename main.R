@@ -28,7 +28,7 @@ if (length(not_installed_packages) > 0) {
       break
     }
     else if (confirmation == "n") {
-      stop("Need to install required packages. Exiting.")
+      stop("Need to have required packages installed. Exiting...")
     }
   }
 }
@@ -68,7 +68,7 @@ for (i in 1:length(estimate_files)) {
             row.names=FALSE)
 }
 
-# Get all programs that are complete in the sense that a correctly named R file, function and estimates file exists
+# Get all programs that are complete in the sense that a correctly named .R file, function and estimates file exists
 programs <- getCompletePrograms()
 
 # Run each program with default settings to get the point estimates

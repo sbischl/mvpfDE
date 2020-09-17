@@ -10,6 +10,7 @@ coronavirusLockdown <- function (bootstrap_replication = 0, only_risk_value = FA
   estimates <- getEstimates(program_name, bootstrap_replication)
 
   # All of these calculations are obviously very very uncertain, and depend heavily on the made assumptions.
+  # In particular, the assumption that a no lockdown scenario exists that would leave the gdp unchanged is unlikely.
 
 
   #--------------------------------------------------------------------------------------------------------------------#
