@@ -51,7 +51,7 @@ tryCatch({
 showtext_auto()
 
 # Initilialize parallel environment
-registerDoParallel(4)
+registerDoParallel(detectCores(all.tests = FALSE, logical = TRUE) - 1)
 
 # Measure runtime
 start_time <- Sys.time()
@@ -124,4 +124,4 @@ plotResults(plot_data = plot_data, x_axis = "program_name", x_label = "Program N
 
 # Export CSV Files
 exportPlotCSV(programs)
-#exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)
+exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)

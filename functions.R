@@ -1234,7 +1234,13 @@ exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_as
   }
 
   possible_assumption_combinations <- expand.grid(assumption_list)
-  for (i in 1:nrow(possible_assumption_combinations)) {
+
+  message("Running and Exporting the results of ", nrow(possible_assumption_combinations),
+          " specifications as csv. This can take a while.\n")
+
+  foreach(i = 1:nrow(possible_assumption_combinations),
+          .export =  ls(globalenv())[!ls(globalenv()) %in% c("programs")], #this gets rid of some warnings
+          .packages = c("dplyr", "readxl")) %dopar% {
     # Iterate over all possible assumption combinations
 
     # First reset all assumptions back to default:
@@ -1263,7 +1269,6 @@ exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_as
               row.names = FALSE,
               fileEncoding = "UTF-8")
   }
-
   # Reset the assumptions.
   source("assumptions.R")
 }
