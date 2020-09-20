@@ -80,7 +80,7 @@ mvpf_results <- getPointEstimates(programs)
 mvpf_results <- addBootstrappedConfidenceIntervalls(mvpf_results)
 
 # Display runtime of the estimation procedure
-cat("Estimation completed in ", start_time - Sys.time(), "\n")
+cat("Estimation completed in ", -(start_time - Sys.time()), " minutes \n")
 
 # Print results:
 for (i in 1:length(programs)) {
