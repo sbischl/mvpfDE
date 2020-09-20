@@ -48,6 +48,8 @@ tryCatch({
 })
 showtext_auto()
 
+# Measure runtime
+start_time <- Sys.time()
 
 # Working Directory:
 setwd("C:/Users/Simon/IdeaProjects/UnifiedWelfareGer")
@@ -76,6 +78,9 @@ mvpf_results <- getPointEstimates(programs)
 
 # Bootstrap
 mvpf_results <- addBootstrappedConfidenceIntervalls(mvpf_results)
+
+# Display runtime of the estimation procedure
+cat("Estimation completed in ", start_time - Sys.time(), "\n")
 
 # Print results:
 for (i in 1:length(programs)) {
