@@ -12,7 +12,9 @@ required_packages <- c("ggplot2",
                        "readxl",
                        "showtext",
                        "ggrepel",
-                       "tidyr")
+                       "tidyr",
+                       "foreach",
+                       "doParallel")
 
 not_installed_packages <- required_packages[!required_packages %in% installed.packages()[, 1]]
 
@@ -47,6 +49,9 @@ tryCatch({
            plot_font <<- "sans"
 })
 showtext_auto()
+
+# Initilialize parallel environment
+registerDoParallel(4)
 
 # Measure runtime
 start_time <- Sys.time()

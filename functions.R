@@ -1335,23 +1335,31 @@ addBootstrappedConfidenceIntervalls <- function(mvpf_results) {
   for (i in 1:length(programs)) {
     message(paste("Running", bootstrap_replications, "bootstrap replications for", programs[i] ))
 
-    # Preallocate data.frame with number of replications rows
-    bootstrapped_mvpf_results <- data.frame(replication = 1:bootstrap_replications)
-
-    # Run 'number of replications' bootstrap replications
-    for (j in 1:bootstrap_replications) {
+    # This function generates a single row of a dataframe that contains one bootstrap replication
+    single_bootstrap_replication <- function(j) {
       return_values <- do.call(programs[i], list(bootstrap_replication = j))
-      bootstrapped_mvpf_results[j, names(return_values)] <- unlist(return_values)
-      bootstrapped_mvpf_results[j, "mvpf"] <-
-        calculateMVPF(bootstrapped_mvpf_results[j, "willingness_to_pay"], bootstrapped_mvpf_results[j, "government_net_costs"])
+      replication_row <- data.frame(replication = j)
+      replication_row[,names(return_values)] <- unlist(return_values)
+      replication_row$mvpf <- calculateMVPF(replication_row$willingness_to_pay, replication_row$government_net_costs)
+      return(replication_row)
     }
 
-    # Calculate confidence intervall for all return values
-    for (k in 1:length(return_values)) {
-      mvpf_results[i, paste0(names(return_values)[k], "_95ci_lower")] <-
-        quantile(bootstrapped_mvpf_results[, names(return_values)[k]], 0.025)
-      mvpf_results[i, paste0(names(return_values)[k], "_95ci_upper")] <-
-        quantile(bootstrapped_mvpf_results[, names(return_values)[k]], 0.975)
+    # Call single_bootstrap_replication once for each bootstrap replication and row bind all the dataframe rows
+    bootstrapped_mvpf_results <- foreach(j = 1:bootstrap_replications,
+                                         .combine=rbind,
+                                         .export = ls(globalenv())[!ls(globalenv()) %in% c("programs", "i")], #this gets rid of some warnings
+                                         .packages = 'dplyr') %dopar% {
+      single_bootstrap_replication(j)
+    }
+
+
+    # Calculate confidence intervall here for all columns in the dataframe except: replication & mvpf
+    ci_variables <- names(bootstrapped_mvpf_results)[!names(bootstrapped_mvpf_results) %in% c("replication", "mvpf")]
+    for (k in 1:length(ci_variables)) {
+      mvpf_results[i, paste0(ci_variables[k], "_95ci_lower")] <-
+        quantile(bootstrapped_mvpf_results[, ci_variables[k]], 0.025)
+      mvpf_results[i, paste0(ci_variables[k], "_95ci_upper")] <-
+        quantile(bootstrapped_mvpf_results[, ci_variables[k]], 0.975)
     }
 
     # The interpretation of the MVPF changes when the willingsness to pay and the government net costs are both negative.
