@@ -33,7 +33,7 @@ jobSearchInformation <- function (bootstrap_replication = 0, extend_effect = 0) 
   #--------------------------------------------------------------------------------------------------------------------#
 
   reform_impact <- project_medium_run_impact(absolute_impact_magnitude = earnings_effect,
-                                             yearly_control_income = earnings_control_group,
+                                             yearly_control_income = earnings_control_group * 12,
                                              number_of_periods = 1 + extend_effect,
                                              prices_year = prices_year)
 
