@@ -72,6 +72,7 @@ speedLimitA3 <- function (bootstrap_replication = 0, internalize_carbon_emission
   # Traffic Data is from 2015-2017. Could also use 2015 gas prices and deflate to 2012
   gasoline_price <- 1.598
   diesel_price <- 1.478
+  prices_year <- 2012
 
   # Energy Tax
   energy_tax_gasoline <- 0.6545
@@ -138,7 +139,9 @@ speedLimitA3 <- function (bootstrap_replication = 0, internalize_carbon_emission
                         private_fuel_cost_saving = private_fuel_cost_saving,
                         value_added_tax_loss = value_added_tax_loss,
                         energy_tax_loss = energy_tax_loss,
+                        program_cost = 0, # the programmatic cost is 0
                         local_emission_reduction = local_emission_reduction,
-                        co2_emission_reducation = co2_cost_reducation * internalize_carbon_emissions)
+                        co2_emission_reducation = co2_cost_reducation * internalize_carbon_emissions,
+                        prices_year = prices_year)
   return(return_values)
 }

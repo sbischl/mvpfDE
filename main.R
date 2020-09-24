@@ -65,7 +65,7 @@ source("functions.R")
 # Load Assumptions:
 source("assumptions.R")
 
-#Prepare Bootstrap
+# Prepare Bootstrap
 estimate_files <- list.files("./estimates", pattern = "^[^~$].*.xlsx")
 
 

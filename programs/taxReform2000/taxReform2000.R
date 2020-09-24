@@ -36,6 +36,7 @@ taxReform2000 <- function (bootstrap_replication = 0, year_difference = 3) {
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs,
-                        fiscal_externality = -average_fiscal_externality)
+                        fiscal_externality = -average_fiscal_externality,
+                        program_cost = 1)
   return(return_values)
 }

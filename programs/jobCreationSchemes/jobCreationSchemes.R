@@ -122,6 +122,7 @@ jobCreationSchemes <- function (bootstrap_replication = 0, extend_effect = 0) {
                         tax_revenue_increase = -tax_revenue_increase,
                         net_income_increase = net_income_increase,
                         program_cost = discounted_program_cost,
-                        benefit_receipt = cumulated_discounted_effect_on_benefits)
+                        benefit_receipt = cumulated_discounted_effect_on_benefits,
+                        prices_year = prices_year)
   return(return_values)
 }

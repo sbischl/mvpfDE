@@ -60,7 +60,8 @@ relocationAssistance <- function (bootstrap_replication = 0) {
                         government_net_costs = government_net_costs,
                         program_cost = program_cost,
                         tax_revenue_increase = -tax_revenue_increase,
-                        net_income_increase = net_income_increase)
+                        net_income_increase = net_income_increase,
+                        prices_year = prices_year)
 
   return(return_values)
 }

@@ -31,7 +31,7 @@ mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to
   #--------------------------------------------------------------------------------------------------------------------#
 
   impact_magnitude_matrix <- getEducationEffectOnEarnings(education_decision = "abitur",
-                                                         alternative = "vocational_educ")
+                                                          alternative = "vocational_educ")
 
 
   if (!use_constant_ols_return_to_schooling) {
@@ -74,8 +74,8 @@ mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to
   net_income_increase <- lifetime_impacts$present_value_net_earnings_impact * high_track_attendence_10th
   willingness_to_pay <- net_income_increase
   # Government costs are reduced by the increase in tax revenue
-  tax_revenue_increase <- - lifetime_impacts$present_value_tax_payment_impact * high_track_attendence_10th
-  government_net_costs <- government_net_costs + tax_revenue_increase
+  tax_revenue_increase <- lifetime_impacts$present_value_tax_payment_impact * high_track_attendence_10th
+  government_net_costs <- government_net_costs - tax_revenue_increase
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Cost of Schooling
@@ -93,7 +93,8 @@ mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to
                         government_net_costs = government_net_costs,
                         program_cost = program_cost,
                         net_income_increase = net_income_increase,
-                        tax_revenue_increase = tax_revenue_increase,
-                        education_cost = education_cost)
+                        tax_revenue_increase = -tax_revenue_increase,
+                        education_cost = education_cost,
+                        prices_year = prices_year)
   return(return_values)
 }

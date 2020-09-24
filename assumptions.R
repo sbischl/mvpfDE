@@ -2,6 +2,7 @@
 discount_rate <- 0.03
 retirement_age <- 65
 wage_growth_rate <- 0.005
+results_prices <- 2015 # The year to which results should be discounted
 
 # Tax System Assumptions:
 global_assume_flat_tax <- FALSE # If this is set to TRUE, only flat_tax is relevant. Otherwise flat_tax is only

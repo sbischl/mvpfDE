@@ -31,6 +31,10 @@ bicycleHelmet <- function (bootstrap_replication = 0, internalize_carbon_emissio
 
   tax_rate <- global_flat_tax
 
+  # The paper does not explicitely state which year's prices it uses. However, we know that prices from 2012 were used in
+  # the authors calculation because price information from "Stiftung Warentest" in 2012 is cited
+  prices_year <- 2012
+
   # All these assumptions are from Sieg (2014). For a description what these variables actually mean, see Sieg (2014) Table 2
   q_head <- 0.364
   q_h <- 0.13
@@ -154,7 +158,8 @@ bicycleHelmet <- function (bootstrap_replication = 0, internalize_carbon_emissio
                         private_health_cost = -K_h_private,
                         value_added_tax_loss = - K_m_public,
                         public_health_cost = K_h_public,
-                        public_safer_traffic_valuation = - (N_f_public + N_n_public))
+                        public_safer_traffic_valuation = - (N_f_public + N_n_public),
+                        prices_year = prices_year)
 
   return(return_values)
 }

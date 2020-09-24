@@ -138,7 +138,8 @@ bafoeg2001 <- function (bootstrap_replication = 0,
                         net_income_increase = net_income_increase,
                         program_cost = program_cost,
                         tax_revenue_increase = -tax_revenue_effect,
-                        education_cost = education_cost)
+                        education_cost = education_cost,
+                        prices_year = prices_year)
 
   return(return_values)
 }

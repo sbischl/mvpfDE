@@ -91,7 +91,8 @@ maternityLeave79 <- function (bootstrap_replication = 0) {
                         tax_revenue_increase = - tax_revenue_effect_mother,
                         tax_revenue_increase_children = - tax_revenue_effect_children,
                         net_income_increase = net_income_children_effect,
-                        benefit_receipt = valuation_maternity_benefit)
+                        benefit_receipt = valuation_maternity_benefit,
+                        prices_year = prices_year)
 
   return(return_values)
 }

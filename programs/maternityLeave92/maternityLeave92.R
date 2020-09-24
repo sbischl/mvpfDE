@@ -116,7 +116,8 @@ maternityLeave92 <- function (bootstrap_replication = 0, use_constant_ols_return
                         tax_revenue_increase = - tax_revenue_effect_mother,
                         education_cost = education_cost,
                         tax_revenue_increase_children = - tax_revenue_effect_children,
-                        net_income_increase = net_income_children_effect)
+                        net_income_increase = net_income_children_effect,
+                        prices_year = prices_year)
 
   return(return_values)
 }

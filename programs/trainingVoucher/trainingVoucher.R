@@ -36,7 +36,7 @@ trainingVoucher <- function (bootstrap_replication = 0, extend_effect = 0) {
 
   control_income <- 91258 / 4 # Huber et al. (2018) Online Appendix Table A1
   average_age <- 39.03 # Huber et al. (2018) Online Appendix Table A1
-  redeption_rate <- 0.78 # "Individuals who redeemed their vouchers (78% of all the treated individuals who received a voucher)",
+  redemption_rate <- 0.78 # "Individuals who redeemed their vouchers (78% of all the treated individuals who received a voucher)",
   # Doerr et al. (2016), p. 39
 
   prices_year <- 2003 # Both studies look at training voucher that were awarded in 2003 and 2004
@@ -53,8 +53,8 @@ trainingVoucher <- function (bootstrap_replication = 0, extend_effect = 0) {
                                              number_of_periods = 4 + extend_effect,
                                              prices_year = prices_year)
 
-  tax_revenue_increase <- - reform_impact$present_value_tax_payment_impact
-  government_net_costs <- tax_revenue_increase
+  tax_revenue_increase <- reform_impact$present_value_tax_payment_impact
+  government_net_costs <- -tax_revenue_increase
   net_income_increase <- reform_impact$present_value_net_earnings_impact
   willingness_to_pay <- net_income_increase
 
@@ -72,7 +72,8 @@ trainingVoucher <- function (bootstrap_replication = 0, extend_effect = 0) {
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs,
                         program_cost = average_discounted_cost,
-                        tax_revenue_increase = tax_revenue_increase,
-                        net_income_increase = net_income_increase)
+                        tax_revenue_increase = -tax_revenue_increase,
+                        net_income_increase = net_income_increase,
+                        prices_year = prices_year)
   return(return_values)
 }

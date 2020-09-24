@@ -48,9 +48,9 @@ longTraining <- function (bootstrap_replication = 0, extend_effect = 0) {
 
   # The effect on willingness to pay and government net cost is given by the increase in tax revenue and net earnings
   net_income_increase <- reform_impact$present_value_net_earnings_impact
-  tax_revenue_increase <- - reform_impact$present_value_tax_payment_impact
+  tax_revenue_increase <- reform_impact$present_value_tax_payment_impact
 
-  government_net_costs <- tax_revenue_increase
+  government_net_costs <- - tax_revenue_increase
   willingness_to_pay <- net_income_increase
 
   #--------------------------------------------------------------------------------------------------------------------#
@@ -63,6 +63,7 @@ longTraining <- function (bootstrap_replication = 0, extend_effect = 0) {
                         government_net_costs = government_net_costs,
                         program_cost = training_cost,
                         net_income_increase = net_income_increase,
-                        tax_revenue_increase = tax_revenue_increase)
+                        tax_revenue_increase = -tax_revenue_increase,
+                        prices_year = prices_year)
   return(return_values)
 }

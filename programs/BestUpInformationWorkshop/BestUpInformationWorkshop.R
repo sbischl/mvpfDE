@@ -30,12 +30,6 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
   prices_year <- 2013
 
   #--------------------------------------------------------------------------------------------------------------------#
-  # Program Implementation Cost
-  #--------------------------------------------------------------------------------------------------------------------#
-
-  government_net_costs <- program_cost
-
-  #--------------------------------------------------------------------------------------------------------------------#
   # Project and discount earnings / tax payments when enrolling in college compared to a vocational degree.
   #--------------------------------------------------------------------------------------------------------------------#
 
@@ -80,10 +74,8 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
 
   # Students value higher net-income
   net_income_increase <- lifetime_impacts$present_value_net_earnings_impact * enrollment_effect_1year_all
-  willingness_to_pay <- net_income_increase
   # Government costs are reduced by the increase in tax revenue
-  tax_revenue_increase <- -lifetime_impacts$present_value_tax_payment_impact * enrollment_effect_1year_all
-  government_net_costs <- government_net_costs + tax_revenue_increase
+  tax_revenue_increase <- lifetime_impacts$present_value_tax_payment_impact * enrollment_effect_1year_all
 
   #--------------------------------------------------------------------------------------------------------------------#
   # University Attendence Cost
@@ -94,36 +86,37 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
     costOfSchool(duration_of_schooling = duration_of_berufsschule, year = 2014, prices_year = prices_year, school_type = "berufsschule_dual")
 
   education_cost <-  enrollment_effect_1year_all * cost_difference
-  government_net_costs <- government_net_costs + education_cost
 
-  # Bafoeg
+  # Bafög is a transfer to students because only about 50% have to be payed back. Students value it euro for euro.
+  # They would not receive it if they did an apprenticeship
   discounted_cost_bafoeg <- sum(rep(average_bafoeg_2014 * 12, 5) * discountVector(5))
   bafoeg_cost <- discounted_cost_bafoeg * bafoeg_application
-  government_net_costs <- government_net_costs + bafoeg_cost
-
-  # Bafög is a transfer to students. Students value it euro for euro.
-  # They would not receive it if they did an apprenticeship
-  willingness_to_pay <- willingness_to_pay + bafoeg_cost
 
   # Assume that 50 percent of Bafög has to be payed back 5 years after finishing the degree.
-  bafoeg_repayment <- - bafoeg_application * 0.5 * (average_bafoeg_2014 * 12 * 5) * (1 + discount_rate)^(-9)
-  willingness_to_pay <- willingness_to_pay + bafoeg_repayment
-  government_net_costs <- government_net_costs + bafoeg_repayment
+  bafoeg_repayment <- bafoeg_application * 0.5 * (average_bafoeg_2014 * 12 * 5) * (1 + discount_rate)^(-9)
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Private costs of studying
   #--------------------------------------------------------------------------------------------------------------------#
 
   # This is currently missing. There are no tuition fees. Unless students study at private institutions. Yet, there are
-  # still costs that would not be incurred if they did not study. However, these are probably small compared to 
+  # still costs that would not be incurred if they did not study. However, these are probably small compared to
+
+  #--------------------------------------------------------------------------------------------------------------------#
+  # MVPF Calculation
+  #--------------------------------------------------------------------------------------------------------------------#
+
+  willingness_to_pay <- bafoeg_cost - bafoeg_repayment + net_income_increase
+  government_net_costs <- program_cost + bafoeg_cost  - bafoeg_repayment + education_cost - tax_revenue_increase + program_cost
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs,
                         net_income_increase = net_income_increase,
                         bafoeg_cost = bafoeg_cost,
-                        bafoeg_repayment = bafoeg_repayment,
+                        bafoeg_repayment = -bafoeg_repayment,
                         program_cost = program_cost,
-                        tax_revenue_increase = tax_revenue_increase,
-                        education_cost = education_cost)
+                        tax_revenue_increase = -tax_revenue_increase,
+                        education_cost = education_cost,
+                        prices_year = prices_year)
   return(return_values)
 }

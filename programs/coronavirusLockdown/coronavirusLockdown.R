@@ -30,6 +30,9 @@ coronavirusLockdown <- function (bootstrap_replication = 0, only_risk_value = FA
     resource_cost_fatal <- 0
   }
 
+  # Technically this would be 2020 prices, but the currently used CPI from destatis does not include 2020 yet
+  prices_year <- 2019
+
   #--------------------------------------------------------------------------------------------------------------------#
   # Willingness to Pay
   #--------------------------------------------------------------------------------------------------------------------#
@@ -51,7 +54,8 @@ coronavirusLockdown <- function (bootstrap_replication = 0, only_risk_value = FA
                         valuation_lower_risk_of_dying = valuation_lower_risk_of_dying,
                         income_loss = income_loss,
                         program_cost = fiscal_lockdown_cost,
-                        tax_revenue_increase = -fiscal_lockdown_cost)
+                        tax_revenue_increase = -fiscal_lockdown_cost,
+                        prices_year = prices_year)
 
   return(return_values)
 }

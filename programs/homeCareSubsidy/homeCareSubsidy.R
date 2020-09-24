@@ -70,7 +70,8 @@ homeCareSubsidy <- function (bootstrap_replication = 0) {
                         government_net_costs = government_net_costs,
                         child_care_cost_reduction = child_care_cost_reduction,
                         tax_revenue_increase = - tax_revenue_increase,
-                        program_cost = program_cost)
+                        program_cost = program_cost,
+                        prices_year = prices_year)
 
   return(return_values)
 }

@@ -61,7 +61,7 @@ speedLimitA61 <- function (bootstrap_replication = 0, internalize_carbon_emissio
   # change this assumption and unify this assumption across reforms if needed. The other types of emissions are unlikely
   # to be relevant for other reforms. -> Use result from Thiedig (2018) directly
   co_cost_reduction <- 37507.06 # Carbon monoxide
-  hc_cost_reduction <- 6826.76# Hydrocarbons
+  hc_cost_reduction <- 6826.76 # Hydrocarbons
   nox_cost_reduction <- 1739104.67 # Nitrogen oxides
   pm_cost_reduction <- 306419.13 # Particulate matter
 
@@ -72,6 +72,7 @@ speedLimitA61 <- function (bootstrap_replication = 0, internalize_carbon_emissio
   # Traffic Data is from 2015-2017. Could also use 2015 gas prices and deflate to 2012
   gasoline_price <- 1.598
   diesel_price <- 1.478
+  prices_year <- 2012
 
   # Energy Tax
   energy_tax_gasoline <- 0.6545
@@ -138,7 +139,9 @@ speedLimitA61 <- function (bootstrap_replication = 0, internalize_carbon_emissio
                         private_fuel_cost_saving = private_fuel_cost_saving,
                         value_added_tax_loss = value_added_tax_loss,
                         energy_tax_loss = energy_tax_loss,
+                        program_cost = 0, # the programmatic cost is 0
                         local_emission_reduction = local_emission_reduction,
-                        co2_emission_reducation = co2_cost_reducation * internalize_carbon_emissions)
+                        co2_emission_reducation = co2_cost_reducation * internalize_carbon_emissions,
+                        prices_year = prices_year)
   return(return_values)
 }

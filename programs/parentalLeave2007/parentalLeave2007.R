@@ -168,7 +168,8 @@ parentalLeave2007 <- function (bootstrap_replication = 0) {
   return_values <- list(willingness_to_pay =  subsidy_valuation,
                         government_net_costs = government_net_costs,
                         tax_revenue_increase = - tax_revenue_increase,
-                        program_cost = program_cost)
+                        program_cost = program_cost,
+                        prices_year = prices_year)
 
   return(return_values)
 }

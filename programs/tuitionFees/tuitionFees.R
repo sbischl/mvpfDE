@@ -103,15 +103,16 @@ tuitionFees <- function (bootstrap_replication = 0, use_constant_ols_return_to_s
   net_income_increase <- lifetime_impacts$present_value_net_earnings_impact * enrollment_effect
   willingness_to_pay <- willingness_to_pay + net_income_increase
   # Government costs are reduced by the increase in tax revenue
-  tax_revenue_increase <- - lifetime_impacts$present_value_tax_payment_impact * enrollment_effect
-  government_net_costs <- government_net_costs  + tax_revenue_increase
+  tax_revenue_increase <- lifetime_impacts$present_value_tax_payment_impact * enrollment_effect
+  government_net_costs <- government_net_costs  - tax_revenue_increase
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs,
-                        program_cost = average_discounted_tuition_fee_per_college_student,
+                        program_cost = -average_discounted_tuition_fee_per_college_student,
                         education_cost = education_cost,
-                        tax_revenue_increase = tax_revenue_increase,
-                        net_income_increase = net_income_increase)
+                        tax_revenue_increase = -tax_revenue_increase,
+                        net_income_increase = net_income_increase,
+                        prices_year = prices_year)
 
   return(return_values)
 }
