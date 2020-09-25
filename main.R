@@ -68,11 +68,9 @@ source("assumptions.R")
 # Prepare Bootstrap
 estimate_files <- list.files("./estimates", pattern = "^[^~$].*.xlsx")
 
-
+bootstrapped_estimates <- list()
 for (i in 1:length(estimate_files)) {
-  write.csv(drawBootstrap(paste0("./estimates/", estimate_files[i]), bootstrap_replications),
-            file = paste0("./bootstrap/", sub(".xlsx", "", estimate_files[i]), "_bootstrap.csv"),
-            row.names=FALSE)
+  bootstrapped_estimates[[sub(".xlsx", "", estimate_files[i])]] <- drawBootstrap(paste0("./estimates/", estimate_files[i]), bootstrap_replications)
 }
 
 # Get all programs that are complete in the sense that a correctly named .R file, function and estimates file exists
@@ -89,6 +87,7 @@ cat("Estimation completed in ", -(start_time - Sys.time()), " minutes \n")
 
 # Print results:
 for (i in 1:length(programs)) {
+
   message("Printing results for ", programs[i], ":")
   # The first element is the program name. Therefore, remove the first element
   nonNA_results <- mvpf_results[i, !is.na(mvpf_results[i, ])][-1]

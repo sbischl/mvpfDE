@@ -64,22 +64,13 @@ drawBootstrap <- function(path_to_xlsx, number_of_replications) {
 
 getEstimates <- function(program, bootstrap_replication) {
 
-      if (bootstrap_replication == 0) {
+  if (bootstrap_replication == 0) {
     estimates <- read_xlsx(paste0("./estimates/", program, ".xlsx"))
     point_estimates <- data.frame(t(estimates$point_estimate))
     colnames(point_estimates) <- estimates$estimate
     return(point_estimates)
   }
-
-  tryCatch({
-    # Try to read the csv file. This returns an error if the csv file is empty. But I want to allow empty csv files,
-    # as there might be programs which do not have any estimates that can be bootstrapped.
-    bootstrap_estimates <- read.csv(paste0("./bootstrap/", program, "_bootstrap.csv"))
-    return(bootstrap_estimates[bootstrap_replication, , drop = FALSE])
-  },
-    error = function(e) {
-      # No data in csv file and nothing or "NULL" is returned
-    })
+  return(as.data.frame(bootstrapped_estimates[[program]][bootstrap_replication, , drop = FALSE]))
 }
 
 correlationToCovarianceMatrix <- function(correlation_matrix, standard_error_vector) {
