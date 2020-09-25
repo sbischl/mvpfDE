@@ -1,8 +1,11 @@
+#----------------------------------------------------------------------------------------------------------------------#
+# Changeable Assumptions
+#----------------------------------------------------------------------------------------------------------------------#
+
 # Economic Assumptions:
 discount_rate <- 0.03
 retirement_age <- 65
 wage_growth_rate <- 0.005
-results_prices <- 2015 # The year to which results should be discounted
 
 # Tax System Assumptions:
 global_assume_flat_tax <- FALSE # If this is set to TRUE, only flat_tax is relevant. Otherwise flat_tax is only
@@ -36,7 +39,17 @@ duration_of_berufsschule <- 3
 # Environment Policies:
 co2_externality <- 86.5 # Externality in € caused by one additional ton of CO2 emissions. 86.5 is the value from Thiedig (2018)
 
+#----------------------------------------------------------------------------------------------------------------------#
+# Settings
+#----------------------------------------------------------------------------------------------------------------------#
+
 # Bootstrap Settings
 bootstrap_seed <- 24135693
 bootstrap_replications <- 100
 correlation_between_estimates <- 1
+
+# Prices
+results_prices <- 2015 # The year to which results should be discounted
+exclude_variables_from_price_adjustment <- c("prices_year") # All variables that are returned by a program (willingness_to_pay, program_cost ...)
+disable_deflating <- FALSE
+# are deflated to results_prices automatically except those in exclude_variables_from_price_adjustment

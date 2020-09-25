@@ -167,16 +167,23 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
   }
   else if (!is.na(upper_cutoff)) {
     plot_data <- plot_data %>%
-      mutate(!!y_axis := replace(get(y_axis), get(y_axis) > upper_cutoff, upper_cutoff)) %>%
-      mutate(!!paste0(y_axis, "_95ci_upper") := replace(get(paste0(y_axis, "_95ci_upper")), get(paste0(y_axis, "_95ci_upper")) > upper_cutoff, upper_cutoff)) %>%
-      mutate(!!paste0(y_axis, "_95ci_lower") := replace(get(paste0(y_axis, "_95ci_lower")), get(paste0(y_axis, "_95ci_lower")) > upper_cutoff, upper_cutoff))
+      mutate(!!y_axis := replace(get(y_axis), get(y_axis) > upper_cutoff, upper_cutoff))
+    if (confidence_intervalls) {
+      plot_data <-  plot_data %>%
+        mutate(!!paste0(y_axis, "_95ci_upper") := replace(get(paste0(y_axis, "_95ci_upper")), get(paste0(y_axis, "_95ci_upper")) > upper_cutoff, upper_cutoff)) %>%
+        mutate(!!paste0(y_axis, "_95ci_lower") := replace(get(paste0(y_axis, "_95ci_lower")), get(paste0(y_axis, "_95ci_lower")) > upper_cutoff, upper_cutoff))
+    }
+
   }
 
   if (!is.na(lower_cutoff)) {
     plot_data <-  plot_data %>%
-      mutate(!!y_axis := replace(get(y_axis), get(y_axis) < lower_cutoff, lower_cutoff)) %>%
-      mutate(!!paste0(y_axis, "_95ci_upper") := replace(get(paste0(y_axis, "_95ci_upper")), get(paste0(y_axis, "_95ci_upper")) < lower_cutoff, lower_cutoff)) %>%
-      mutate(!!paste0(y_axis, "_95ci_lower") := replace(get(paste0(y_axis, "_95ci_lower")), get(paste0(y_axis, "_95ci_lower")) < lower_cutoff, lower_cutoff))
+      mutate(!!y_axis := replace(get(y_axis), get(y_axis) < lower_cutoff, lower_cutoff))
+    if (confidence_intervalls) {
+      plot_data <-  plot_data %>%
+        mutate(!!paste0(y_axis, "_95ci_upper") := replace(get(paste0(y_axis, "_95ci_upper")), get(paste0(y_axis, "_95ci_upper")) < lower_cutoff, lower_cutoff)) %>%
+        mutate(!!paste0(y_axis, "_95ci_lower") := replace(get(paste0(y_axis, "_95ci_lower")), get(paste0(y_axis, "_95ci_lower")) < lower_cutoff, lower_cutoff))
+    }
   }
 
   # Generate Category 'Other' which contains all programs that have no Category specified:
@@ -1320,6 +1327,7 @@ getPointEstimates <- function(programs) {
   for (i in 1:length(programs)) {
     message(paste("Running ", programs[i], "once to get the point estimate."))
     return_values <- do.call(programs[i], list())
+    return_values <- deflateReturnValues(return_values, results_prices)
     # Check if return_values include the necessary "willingness_to_pay" and "government_net_costs"
     if (!all(c("willingness_to_pay", "government_net_costs") %in% names(return_values))) {
       warning(paste0(programs[i], "does not include willingness_to_pay and / or government_net_costs. Cannot calculate MVPF"))
@@ -1330,6 +1338,30 @@ getPointEstimates <- function(programs) {
     mvpf_results[i, "mvpf"] <- calculateMVPF(mvpf_results[i, "willingness_to_pay"], mvpf_results[i, "government_net_costs"])
   }
   return(mvpf_results)
+}
+
+deflateReturnValues <- function(return_values, year) {
+
+  if (disable_deflating) {
+    return(return_values)
+  }
+
+  # This function deflates the return value of some program e.g. classRoomTraining to 'year' prices
+  if (!"prices_year" %in% names(return_values)) {
+    # The return values do not contain prices_year -> we don't know from which year to deflate. -> Assume that results
+    # are already in corretly deflated
+    return(return_values)
+  }
+
+  # Vector to deselect variables that should not be deflated:
+  variables_to_deflate <- !names(return_values) %in% exclude_variables_from_price_adjustment
+
+  # Deflate variables
+  return_values[variables_to_deflate] <- lapply(return_values[variables_to_deflate], function(var) {
+    return(deflate(from = return_values[["prices_year"]], to = year) * var)
+  })
+
+  return(return_values)
 }
 
 addBootstrappedConfidenceIntervalls <- function(mvpf_results) {
@@ -1343,15 +1375,16 @@ addBootstrappedConfidenceIntervalls <- function(mvpf_results) {
     # This function generates a single row of a dataframe that contains one bootstrap replication
     single_bootstrap_replication <- function(j) {
       return_values <- do.call(programs[i], list(bootstrap_replication = j))
+      return_values <- deflateReturnValues(return_values, results_prices)
       replication_row <- data.frame(replication = j)
-      replication_row[,names(return_values)] <- unlist(return_values)
+      replication_row[, names(return_values)] <- unlist(return_values)
       replication_row$mvpf <- calculateMVPF(replication_row$willingness_to_pay, replication_row$government_net_costs)
       return(replication_row)
     }
 
     # Call single_bootstrap_replication once for each bootstrap replication and row bind all the dataframe rows
     bootstrapped_mvpf_results <- foreach(j = 1:bootstrap_replications,
-                                         .combine=rbind,
+                                         .combine = rbind,
                                          .export = ls(globalenv())[!ls(globalenv()) %in% c("programs", "i")], #this gets rid of some warnings
                                          .packages = 'dplyr') %dopar% {
       single_bootstrap_replication(j)
