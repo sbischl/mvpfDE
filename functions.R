@@ -78,15 +78,21 @@ correlationToCovarianceMatrix <- function(correlation_matrix, standard_error_vec
 }
 
 calculateMVPF <- function(willingness_to_pay , government_net_costs) {
-  if (willingness_to_pay > 0 & government_net_costs <= 0) {
-    return(Inf)
+  # the inputs can either be a scalar or a vector. In case of a vector multiple MVPF are returned.
+  # This is useful for boostrapping the MVPF
+  mvpf <- rep(NA, length(willingness_to_pay))
+  for (j in 1:length(willingness_to_pay)) {
+    if (willingness_to_pay[j] > 0 & government_net_costs[j] <= 0) {
+      mvpf[j] <- Inf
+    }
+    else if (willingness_to_pay[j] < 0 & government_net_costs[j] == 0) {
+      mvpf[j] <- -Inf
+    }
+    else {
+      mvpf[j] <- willingness_to_pay[j] / government_net_costs[j]
+    }
   }
-  else if (willingness_to_pay < 0 & government_net_costs == 0) {
-    return(-Inf)
-  }
-  else {
-    return(willingness_to_pay / government_net_costs)
-  }
+  return(mvpf)
 }
 
 deflate <- function(from, to) {
@@ -128,8 +134,21 @@ discountMonthlyCashFlow <- function(amount, months) {
 }
 
 plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_label = "Year",
-                        plot_data, save = "", lower_cutoff = -1, upper_cutoff = 6, confidence_intervalls = TRUE,
+                        plot_data, category_plot_data, save = "", lower_cutoff = -1, upper_cutoff = 6, confidence_intervalls = TRUE,
                         text_labels = TRUE, legend_label = "Category", vertical_x_axis_labels = FALSE) {
+
+  # Define Colors. These are the same as in the web application:
+  colors <- c(rgb(46,139,87, maxColorValue = 255),
+              rgb(30,144,255, maxColorValue = 255),
+              rgb(255,165,0, maxColorValue = 255),
+              rgb(220,20,60, maxColorValue = 255),
+              rgb(0,128,128, maxColorValue = 255),
+              rgb(0,0,139, maxColorValue = 255),
+              rgb(255,20,147, maxColorValue = 255),
+              rgb(255,140,0, maxColorValue = 255),
+              rgb(0,255,127, maxColorValue = 255),
+              rgb(72,61,139, maxColorValue = 255))
+
 
   # Check if y_axis and x_axis actually exist in the plot_data
   if (!all(c(y_axis, x_axis) %in% colnames(plot_data))) {
@@ -142,18 +161,27 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
     confidence_intervalls <- FALSE
   }
 
-  if (y_axis == "mvpf") {
+  if (y_axis == "mvpf" | y_axis == "grouped_mvpf") {
     # Censor all values that are larger than the the infinity_cutoff and use infinity_cutoff + 1 as 'infinity'
     plot_data <- plot_data %>%
-      mutate(mvpf = replace(mvpf, mvpf > upper_cutoff & mvpf != Inf, upper_cutoff)) %>%
-      mutate(mvpf = replace(mvpf, mvpf == Inf, upper_cutoff + 1))
+      mutate(!!y_axis := replace(get(y_axis), get(y_axis) > upper_cutoff & get(y_axis) != Inf, upper_cutoff)) %>%
+      mutate(!!y_axis := replace(get(y_axis), get(y_axis) == Inf, upper_cutoff + 1))
 
     if (confidence_intervalls) {
       plot_data <- plot_data %>%
-        mutate(mvpf_95ci_upper = replace(mvpf_95ci_upper, mvpf_95ci_upper > upper_cutoff & mvpf_95ci_upper != Inf, upper_cutoff)) %>%
-        mutate(mvpf_95ci_upper = replace(mvpf_95ci_upper, mvpf_95ci_upper == Inf, upper_cutoff + 1)) %>%
-        mutate(mvpf_95ci_lower = replace(mvpf_95ci_lower, mvpf_95ci_lower > upper_cutoff & mvpf_95ci_lower != Inf, upper_cutoff)) %>%
-        mutate(mvpf_95ci_lower = replace(mvpf_95ci_lower, mvpf_95ci_lower == Inf, upper_cutoff + 1))
+        mutate(!!paste0(y_axis, "_95ci_upper") := replace(get(paste0(y_axis, "_95ci_upper")), get(paste0(y_axis, "_95ci_upper")) > upper_cutoff & get(paste0(y_axis, "_95ci_upper")) != Inf, upper_cutoff)) %>%
+        mutate(!!paste0(y_axis, "_95ci_upper") := replace(get(paste0(y_axis, "_95ci_upper")), get(paste0(y_axis, "_95ci_upper")) == Inf, upper_cutoff + 1)) %>%
+        mutate(!!paste0(y_axis, "_95ci_lower") := replace(get(paste0(y_axis, "_95ci_lower")), get(paste0(y_axis, "_95ci_lower")) > upper_cutoff & get(paste0(y_axis, "_95ci_lower")) != Inf, upper_cutoff)) %>%
+        mutate(!!paste0(y_axis, "_95ci_lower") := replace(get(paste0(y_axis, "_95ci_lower")), get(paste0(y_axis, "_95ci_lower")) == Inf, upper_cutoff + 1))
+    }
+    if(!missing(category_plot_data)) {
+      category_plot_data <- category_plot_data %>%
+        mutate(grouped_mvpf = replace(grouped_mvpf, grouped_mvpf > upper_cutoff & grouped_mvpf != Inf, upper_cutoff)) %>%
+        mutate(grouped_mvpf = replace(grouped_mvpf, grouped_mvpf == Inf, upper_cutoff + 1)) %>%
+        mutate(grouped_mvpf_95ci_upper = replace(grouped_mvpf_95ci_upper, grouped_mvpf_95ci_upper > upper_cutoff & grouped_mvpf_95ci_upper != Inf, upper_cutoff)) %>%
+        mutate(grouped_mvpf_95ci_upper = replace(grouped_mvpf_95ci_upper, grouped_mvpf_95ci_upper == Inf, upper_cutoff + 1)) %>%
+        mutate(grouped_mvpf_95ci_lower = replace(grouped_mvpf_95ci_lower, grouped_mvpf_95ci_lower > upper_cutoff & grouped_mvpf_95ci_lower != Inf, upper_cutoff)) %>%
+        mutate(grouped_mvpf_95ci_lower = replace(grouped_mvpf_95ci_lower, grouped_mvpf_95ci_lower == Inf, upper_cutoff + 1))
     }
   }
   else if (!is.na(upper_cutoff)) {
@@ -163,6 +191,11 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
       plot_data <-  plot_data %>%
         mutate(!!paste0(y_axis, "_95ci_upper") := replace(get(paste0(y_axis, "_95ci_upper")), get(paste0(y_axis, "_95ci_upper")) > upper_cutoff, upper_cutoff)) %>%
         mutate(!!paste0(y_axis, "_95ci_lower") := replace(get(paste0(y_axis, "_95ci_lower")), get(paste0(y_axis, "_95ci_lower")) > upper_cutoff, upper_cutoff))
+    }
+    if(!missing(category_plot_data) & confidence_intervalls) {
+      category_plot_data <- category_plot_data %>%
+        mutate(grouped_mvpf_95ci_upper = replace(grouped_mvpf_95ci_upper, grouped_mvpf_95ci_upper > upper_cutoff, upper_cutoff)) %>%
+        mutate(grouped_mvpf_95ci_lower = replace(grouped_mvpf_95ci_lower,grouped_mvpf_95ci_lower > upper_cutoff, upper_cutoff))
     }
 
   }
@@ -175,12 +208,20 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
         mutate(!!paste0(y_axis, "_95ci_upper") := replace(get(paste0(y_axis, "_95ci_upper")), get(paste0(y_axis, "_95ci_upper")) < lower_cutoff, lower_cutoff)) %>%
         mutate(!!paste0(y_axis, "_95ci_lower") := replace(get(paste0(y_axis, "_95ci_lower")), get(paste0(y_axis, "_95ci_lower")) < lower_cutoff, lower_cutoff))
     }
+    if(!missing(category_plot_data) & confidence_intervalls) {
+      category_plot_data <- category_plot_data %>%
+        mutate(grouped_mvpf_95ci_upper = replace(grouped_mvpf_95ci_upper, grouped_mvpf_95ci_upper < lower_cutoff, lower_cutoff)) %>%
+        mutate(grouped_mvpf_95ci_lower = replace(grouped_mvpf_95ci_lower,grouped_mvpf_95ci_lower < lower_cutoff, lower_cutoff))
+    }
   }
 
   # Generate Category 'Other' which contains all programs that have no Category specified:
   plot_data$category <- coalesce(plot_data$category, "Other")
   # Assign the Program program identifier (folder name) as program name, if none is specified:
-  plot_data$program_name <- coalesce(plot_data$program_name, plot_data$program)
+  if (y_axis != "grouped_mvpf") {
+    plot_data$program_name <- coalesce(plot_data$program_name, plot_data$program)
+  }
+
 
 
   plot <- ggplot(aes_string(y = y_axis, x= x_axis), data = plot_data) +
@@ -188,19 +229,52 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
     xlab(x_label) +
     labs(color = legend_label)
 
-  if (confidence_intervalls) {
-    plot <- plot + geom_errorbar(aes_string(ymin = paste0(y_axis, "_95ci_lower"),
-                                            ymax = paste0(y_axis, "_95ci_upper"),
-                                            color = "category"),
-                                 width = 0.1)
-  }
-
   if (text_labels) {
-    plot <- plot + geom_text_repel(aes(label = program_name), size = 2, color = "black")
+    plot <- plot + geom_text_repel(aes(label = program_name),
+                                   size = 1.95,
+                                   direction = "both",
+                                   box.padding = 0.4,
+                                   nudge_x = 0.1,
+                                   min.segment.length = unit(0.1, 'lines'),
+                                   max.iter = 5000,
+                                   segment.size = 0.3,
+                                   segment.color = "grey",
+                                   color = "black")
   }
 
-  if (y_axis == "mvpf") {
+  plot <- plot + geom_point(aes_string(y = y_axis,
+                                       x= x_axis,
+                                       color = "category"),
+                            alpha = ifelse(missing(category_plot_data), 1,0.4)) +
+    theme_modified_minimal() + scale_color_manual(values=colors)
+
+  if (confidence_intervalls) {
+    if (missing(category_plot_data)) {
+      plot <- plot + geom_errorbar(aes_string(ymin = paste0(y_axis, "_95ci_lower"),
+                                              ymax = paste0(y_axis, "_95ci_upper"),
+                                              color = "category"),
+                                              show.legend=FALSE,
+                                              width = 0.2)
+    }
+    else {
+      plot <- plot + geom_errorbar(aes_string(ymin = "grouped_mvpf_95ci_lower",
+                                              ymax = "grouped_mvpf_95ci_upper",
+                                              y = "grouped_mvpf",
+                                              x = x_axis,
+                                              color = "category"),
+                                              data = category_plot_data,
+                                              show.legend=FALSE,
+                                              width = 0.2)
+    }
+  }
+
+  if (!missing(category_plot_data)) {
+    plot <- plot + geom_point(aes(y = grouped_mvpf, color = category), data = category_plot_data, size = 3.2)
+  }
+
+  if (y_axis == "mvpf" | y_axis == "grouped_mvpf") {
     plot <- plot + scale_y_continuous(breaks = lower_cutoff:(upper_cutoff + 1),
+                                      expand = expansion(mult = c(0.05, 0.05)),
                                       minor_breaks = (lower_cutoff:(upper_cutoff - 1)) + 0.5,
                                       labels = c(paste("\u2264", lower_cutoff),
                                                  as.character((lower_cutoff + 1):(upper_cutoff -1)),
@@ -213,9 +287,6 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
                                                  paste("\u2265", upper_cutoff)))
   }
 
-  plot <- plot + geom_point(aes_string(y = y_axis, x= x_axis, color = "category")) +
-    theme_modified_minimal()
-
   if (vertical_x_axis_labels) {
     plot <- plot + theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5),
                          axis.title.x = element_blank())
@@ -224,7 +295,7 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
   print(plot)
 
   if (save != "") {
-    ggsave(plot, filename = save, device = pdf, path = "./plots/", width = 7.6, height = 5)
+    ggsave(plot, filename = save, device = pdf, path = "./plots/", width = 12, height = 8)
   }
 }
 
@@ -234,10 +305,14 @@ theme_modified_minimal <- function() {
   # To make the font available use font_add("font name", "file name") and showtext_auto() from the 'showtext' package.
   theme_minimal(base_size=12, base_family=plot_font) %+replace%
     theme (
-      axis.line = element_line(color = "black"),
+      axis.line.y = element_blank(),
+      axis.line.x = element_line(color = "darkgrey", size = 0.5),
+      panel.border = element_blank(),
       panel.grid.minor.x = element_blank(),
       panel.grid.major.x = element_blank(),
-      axis.ticks = element_line()
+      axis.ticks = element_blank(),
+      legend.title=element_blank(),
+      legend.position = "bottom"
     )
 }
 
@@ -826,7 +901,8 @@ plotTaxRates <- function() {
     xlab("Gross Income per Month") +
     ylab("Euro per Month") +
     scale_x_continuous(limits = c(0, 10000)) +
-    scale_y_continuous(limits = c(-1000, 9000)) +
+    scale_y_continuous(limits = c(-1000, 9000),
+                       expand = expansion(mult = c(0, 0))) +
     scale_fill_discrete(name = "Legend:", labels = c("Solidarity Charge", "Income Tax",
                                                      "Long Term Care Insurance", "Health Insurance",
                                                      "Unemployment Insurance",  "Pension Contribution",
@@ -843,7 +919,8 @@ plotTaxRates <- function() {
     xlab("Gross Income per Month") +
     ylab("Euro per Month") +
     scale_x_continuous(limits = c(0, 7000)) +
-    scale_y_continuous(limits = c(-1000, 4000)) +
+    scale_y_continuous(limits = c(-1000, 4000),
+                       expand = expansion(mult = c(0, 0)) +
     scale_colour_discrete(name = "Legend:",
                           labels = c("Net Income", "Tax Net of Transfers"))
 
@@ -869,7 +946,8 @@ plotTaxRates <- function() {
     geom_line() +
     theme_modified_minimal() +
     scale_x_continuous(limits = c(0, 7000)) +
-    scale_y_continuous(limits = c(0, 1.2)) +
+    scale_y_continuous(limits = c(0, 1.2),
+                       expand = expansion(mult = c(0, 0)) +
     scale_colour_discrete(name = "Legend:", labels = c("Average Tax Rate", "Marginal Tax Rate")) +
     xlab("Gross Income per Month") +
     ylab("Tax Rate")
@@ -1119,7 +1197,74 @@ getPlotData <- function(mvpf_results) {
     # Load additional information about each policy from the excel file:
     program_information <- as.data.frame(read_xlsx("programs.xlsx"))
   }
+
+  # Calculate additional variables
+  mvpf_results$government_net_costs_per_program_cost <- mvpf_results$government_net_costs / mvpf_results$program_cost
+  mvpf_results$willingness_to_pay_per_program_cost <- mvpf_results$willingness_to_pay / mvpf_results$program_cost
+  mvpf_results$fiscal_externality_per_euro <- mvpf_results$government_net_costs / mvpf_results$program_cost - 1
+
   return(left_join(mvpf_results, program_information, by = c("program" = "program_identifier")))
+}
+
+getCategoryPlotData <- function(plot_data) {
+  # Calculates average mvpf (with CI) for each category specified in programs.xlsx and returns a dataframe that can be used
+  # to plot the result. Requires plot_data returned by getPlotData as input
+
+  categories <- unique(plot_data$category)
+  category_plot_data <- foreach(i = 1:length(categories), .combine = rbind) %do% {
+    # Select all programs that belong the current category & deselect those which have zero, negative or no program cost.
+    # Unlike in Hendren & Sprung-Keyser (2020) some reforms have negative program costs
+    # i.e. implementing the program (before any fiscal externalities) saves the government money. If in addition, the WTP
+    # is also negative the interpretation of the MVPF changes. The MVPF still measures how much WTP is generated when more money is
+    # spent on the reform. However, spending more in this context means retracting the reform. Hence, a reform with a high MVPF
+    # would be a reform for which retracting the reform would generate a lot of WTP. If retracting the reform is profitable, this
+    # implies that the reform that was actually implemented generates little value. As a result, the interpretation of the MVPF is
+    # reversed for reforms that reduce government spending and the utility of the individuals affected by the reform.
+    # -> It does not make sense to group reforms that reduced spending with reforms that increased spending
+    programs_in_category <- plot_data %>% filter(category == categories[i], !(is.na(program_cost) | program_cost <= 0))
+
+    # If some category only consists of reforms with negative costs, skip it.
+    if (nrow(programs_in_category) == 0) {
+      # All programs in the category have zero cost or cost is NA.
+      # Skip this category
+      return(NULL)
+    }
+    # This is a implementation of Hendren & Sprung-Keyser (2020) Equation 8.
+    numerator <- (1 / nrow(programs_in_category)) * sum(programs_in_category$willingness_to_pay_per_program_cost)
+    denominator <- (1 / nrow(programs_in_category)) * sum(1 + programs_in_category$fiscal_externality_per_euro)
+    grouped_mvpf <- calculateMVPF(numerator, denominator)
+
+    # For the confidence intervall we need to calculate the grouped_mvpf for each bootstrap replication. These are stored in
+    # bootstrapped_estimates
+    # Get willingness_to_pay_per_program_cost from each bootstrap repilcation (rows) for each program beloning to the category (columns)
+    willingness_to_pay_per_euro <- sapply(all_bootstrap_replications_results[programs_in_category$program], function(bootstrap_results) {
+      return(bootstrap_results$willingness_to_pay / bootstrap_results$program_cost)
+    })
+
+    # Get fiscal_externality_per_euro from each bootstrap repilcation (rows) for each program beloning to the category (columns)
+    fiscal_externality_per_euro <- sapply(all_bootstrap_replications_results[programs_in_category$program], function(bootstrap_results) {
+      return(bootstrap_results$government_net_costs / bootstrap_results$program_cost - 1)
+    })
+
+    # Calculate numerator and denominator as before expcet that the result now is a vectow with number of bootstrap replications rows:
+    numerator_bootstrap <- 1 / ncol(willingness_to_pay_per_euro) * rowSums(willingness_to_pay_per_euro)
+    denominator_bootstrap <- 1 / ncol(willingness_to_pay_per_euro) * (rowSums(fiscal_externality_per_euro) + ncol(fiscal_externality_per_euro))
+
+    mvpf_ci_grouped <- calculateMVPFCI(willingness_to_pay_pe = numerator,
+                                       willingness_to_pay_boostrap = numerator_bootstrap,
+                                       government_net_costs_pe = denominator,
+                                       government_net_costs_bootstrap = denominator_bootstrap)
+
+
+    return(data.frame(grouped_mvpf = grouped_mvpf,
+                      category = categories[i],
+                      grouped_mvpf_95ci_upper = mvpf_ci_grouped[["mvpf_95ci_upper"]],
+                      grouped_mvpf_95ci_lower = mvpf_ci_grouped[["mvpf_95ci_lower"]],
+                      average_age_beneficiary = mean(programs_in_category$average_age_beneficiary, na.rm = TRUE)))
+  }
+  # There are some unnecessary row names that do not make sense -> remove those
+  rownames(category_plot_data) <- NULL
+  return(category_plot_data)
 }
 
 getListOfAllMetaAssumptions <- function() {
@@ -1316,7 +1461,7 @@ quietelyRunPrograms <- function(programs, bootstrap = FALSE) {
 getPointEstimates <- function(programs) {
   mvpf_results <- data.frame(program = programs)
   for (i in 1:length(programs)) {
-    message(paste("Running ", programs[i], "once to get the point estimate."))
+    message(paste("Running", programs[i], "once to get the point estimate."))
     return_values <- do.call(programs[i], list())
     return_values <- deflateReturnValues(return_values, results_prices)
     # Check if return_values include the necessary "willingness_to_pay" and "government_net_costs"
@@ -1359,6 +1504,9 @@ addBootstrappedConfidenceIntervalls <- function(mvpf_results) {
   # This requires the dataframe that was returned from getPointEstimates as input
   programs <- mvpf_results$program
 
+  all_bootstrap_replications_results <<- list() # Contains a dataframe for each program with the estimated results from
+  # each bootstrap replication.
+
   # Bootstrap
   for (i in 1:length(programs)) {
     message(paste("Running", bootstrap_replications, "bootstrap replications for", programs[i] ))
@@ -1380,7 +1528,8 @@ addBootstrappedConfidenceIntervalls <- function(mvpf_results) {
                                          .packages = 'dplyr') %dopar% {
       single_bootstrap_replication(j)
     }
-
+    # Store the results to be accessed later
+    all_bootstrap_replications_results[[programs[i]]] <<- bootstrapped_mvpf_results
 
     # Calculate confidence intervall here for all columns in the dataframe except: replication & mvpf
     ci_variables <- names(bootstrapped_mvpf_results)[!names(bootstrapped_mvpf_results) %in% c("replication", "mvpf")]
@@ -1391,45 +1540,62 @@ addBootstrappedConfidenceIntervalls <- function(mvpf_results) {
         quantile(bootstrapped_mvpf_results[, ci_variables[k]], 0.975)
     }
 
-    # The interpretation of the MVPF changes when the willingsness to pay and the government net costs are both negative.
-    # Although the sign of the MVPF is also positive. Example: Consider MVPF = 0.5
-    # This means that either
-    # (1) Willingness to pay and goverment net costs are positive. In this case one dollar spent by the government is valued
-    # with 0.5 dollar by the beneficiaries of the reform (higher value better)
-    # (2) Willingness to pay and goverment net costs are negative. In this case the MVPF measures how much WTP is lost
-    # per tax revenue increase. (lower value better)
-    # If the point estimate is either (1), and one of the bootstrapped estimates is (2) (or vice versa)
-    # the bootstrapped estimate is out of the sensible range and is thus not defined.
-    # When running the bootstrap, this possibility has to be acconted for by removing the replications where the MVPF is
-    # not defined, and adjusting the confidence intervall.
+    # The calculation of the CI for the MVPF is non-trivial. See comment at the beginning of calculateMVPFCI(.)
+    mvpf_ci <- calculateMVPFCI(willingness_to_pay_pe = mvpf_results[i, "willingness_to_pay"],
+                               government_net_costs_pe = mvpf_results[i, "government_net_costs"],
+                               willingness_to_pay_boostrap = bootstrapped_mvpf_results[, "willingness_to_pay"],
+                               government_net_costs_bootstrap = bootstrapped_mvpf_results[, "government_net_costs"])
 
-    replication_defined <- rep (TRUE, bootstrap_replications)
-    for (j in 1:bootstrap_replications) {
-      if (all(mvpf_results[i, c("willingness_to_pay", "government_net_costs")] >= 0) &
-        all(bootstrapped_mvpf_results[j, c("willingness_to_pay", "government_net_costs")] < 0)) {
-        replication_defined[j] <- FALSE
-      }
-      else if (all(mvpf_results[i, c("willingness_to_pay", "government_net_costs")] < 0) &
-        all(bootstrapped_mvpf_results[j, c("willingness_to_pay", "government_net_costs")] < 0)) {
-        replication_defined[j] <- FALSE
-      }
-    }
-
-    # Adjust the confindence intervall to account for the fact that the non-defined estimates have been removed.
-    # Note that the 95% confidence intervall can reach into the non-defined region of the mvpf. In this case,
-    # the confidence intervall spans -Inf to +Inf.
-    upper_percentile_95ci <- 1 - (0.05 - sum(!replication_defined) / bootstrap_replications) / 2
-    lower_percentile_95ci <- (0.05 - sum(!replication_defined) / bootstrap_replications) / 2
-
-
-    if (lower_percentile_95ci  <= 0 & upper_percentile_95ci >= 1) {
-      mvpf_results$mvpf_95ci_lower[i] <- -Inf
-      mvpf_results$mvpf_95ci_upper[i] <- Inf
-    }
-    else {
-      mvpf_results$mvpf_95ci_lower[i] <- quantile(bootstrapped_mvpf_results[replication_defined, "mvpf"], lower_percentile_95ci)
-      mvpf_results$mvpf_95ci_upper[i] <- quantile(bootstrapped_mvpf_results[replication_defined, "mvpf"], upper_percentile_95ci)
-    }
+    mvpf_results$mvpf_95ci_lower[i] <- mvpf_ci[["mvpf_95ci_lower"]]
+    mvpf_results$mvpf_95ci_upper[i] <- mvpf_ci[["mvpf_95ci_upper"]]
   }
   return(mvpf_results)
+}
+
+calculateMVPFCI <- function(willingness_to_pay_pe,
+                            willingness_to_pay_boostrap,
+                            government_net_costs_pe,
+                            government_net_costs_bootstrap) {
+  # Takes bootstrapped willingness_to_pay & government_net_costs vector as inputs and calculates the MVPF confidence interval.
+
+  # When calculating the MVPF CI the following has to be taken into account:
+  # The interpretation of the MVPF changes when the willingsness to pay and the government net costs are both negative.
+  # Although the sign of the MVPF is also positive. Example: Consider MVPF = 0.5
+  # This means that either
+  # (1) Willingness to pay and goverment net costs are positive. In this case one dollar spent by the government is valued
+  # with 0.5 dollar by the beneficiaries of the reform (higher value better)
+  # (2) Willingness to pay and goverment net costs are negative. In this case the MVPF measures how much WTP is lost
+  # per tax revenue increase. (lower value better)
+  # If the point estimate is either (1), and one of the bootstrapped estimates is (2) (or vice versa)
+  # the bootstrapped estimate is out of the sensible range and is thus not defined.
+  # When running the bootstrap, this possibility has to be acconted for by removing the replications where the MVPF is
+  # not defined, and adjusting the confidence intervall.
+
+  replication_defined <- rep (TRUE, bootstrap_replications)
+
+  for (j in 1:bootstrap_replications) {
+    if (all(c(willingness_to_pay_pe, government_net_costs_pe) >= 0) &
+      all(c(willingness_to_pay_boostrap[j], government_net_costs_bootstrap[j]) < 0)) {
+      replication_defined[j] <- FALSE
+    }
+    else if (all(c(willingness_to_pay_pe, government_net_costs_pe) < 0) &
+      all(c(willingness_to_pay_boostrap[j], government_net_costs_bootstrap[j]) > 0)) {
+      replication_defined[j] <- FALSE
+    }
+  }
+
+  # Adjust the confindence intervall to account for the fact that the non-defined estimates have been removed.
+  # Note that the 95% confidence intervall can reach into the non-defined region of the mvpf. In this case,
+  # the confidence intervall spans -Inf to +Inf.
+  upper_percentile_95ci <- 1 - (0.05 - sum(!replication_defined) / bootstrap_replications) / 2
+  lower_percentile_95ci <- (0.05 - sum(!replication_defined) / bootstrap_replications) / 2
+
+  if (lower_percentile_95ci  <= 0 & upper_percentile_95ci >= 1) {
+    return(list(mvpf_95ci_lower = -Inf, mvpf_95ci_upper = Inf))
+  }
+  else {
+    bootstrapped_mvpf <- calculateMVPF(willingness_to_pay_boostrap, government_net_costs_bootstrap)
+    return(list(mvpf_95ci_lower = quantile(bootstrapped_mvpf[replication_defined], lower_percentile_95ci),
+                mvpf_95ci_upper = quantile(bootstrapped_mvpf[replication_defined], upper_percentile_95ci)))
+  }
 }
