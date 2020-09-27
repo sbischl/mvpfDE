@@ -920,9 +920,8 @@ plotTaxRates <- function() {
     ylab("Euro per Month") +
     scale_x_continuous(limits = c(0, 7000)) +
     scale_y_continuous(limits = c(-1000, 4000),
-                       expand = expansion(mult = c(0, 0)) +
-    scale_colour_discrete(name = "Legend:",
-                          labels = c("Net Income", "Tax Net of Transfers"))
+                       expand = expansion(mult = c(0, 0))) +
+    scale_colour_discrete(name = "Legend:", labels = c("Net Income", "Tax Net of Transfers"))
 
   print(figure_net_income_reduced)
   ggsave(figure_net_income_reduced, filename = "figure_net_income_reduced.pdf", device = pdf, path = "./plots/",  width = 7.6, height = 5)
@@ -947,7 +946,7 @@ plotTaxRates <- function() {
     theme_modified_minimal() +
     scale_x_continuous(limits = c(0, 7000)) +
     scale_y_continuous(limits = c(0, 1.2),
-                       expand = expansion(mult = c(0, 0)) +
+                       expand = expansion(mult = c(0, 0))) +
     scale_colour_discrete(name = "Legend:", labels = c("Average Tax Rate", "Marginal Tax Rate")) +
     xlab("Gross Income per Month") +
     ylab("Tax Rate")
