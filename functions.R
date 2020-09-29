@@ -145,7 +145,7 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
               rgb(0,128,128, maxColorValue = 255),
               rgb(0,0,139, maxColorValue = 255),
               rgb(255,20,147, maxColorValue = 255),
-              rgb(255,140,0, maxColorValue = 255),
+              rgb(165,42,42, maxColorValue = 255),
               rgb(0,255,127, maxColorValue = 255),
               rgb(72,61,139, maxColorValue = 255))
 
@@ -1270,12 +1270,13 @@ getListOfAllMetaAssumptions <- function() {
   # Update this function when updating setMetaAssumptions!
   list_of_all_meta_assumptions <- list(
     discount_rate = c("7", "3", "1"),
-    tax_rate = c("0", "15", "30", "45", "60", "nonlinear", "incometaxonly")
+    tax_rate = c("0", "15", "30", "45", "60", "nonlinear", "incometaxonly"),
+    returns_to_schooling = c("5","10","IAB")
   )
 }
 
 setMetaAssumption <- function(key, value) {
-  # Update getListOfAllMetaAssumptions function when this
+  # Update getListOfAllMetaAssumptions function when updating this function
   if (key == "discount_rate") {
     if (value == "7") {
       discount_rate <<- 0.07
@@ -1295,11 +1296,11 @@ setMetaAssumption <- function(key, value) {
       global_use_constant_ols_return_to_schooling <<- FALSE
     }
     else if (value == "5") {
-      global_use_constant_ols_return_to_schooling <<- FALSE
+      global_use_constant_ols_return_to_schooling <<- TRUE
       yearly_return_to_schooling <<- 0.05
     }
     else if (value == "10") {
-      global_use_constant_ols_return_to_schooling <<- FALSE
+      global_use_constant_ols_return_to_schooling <<- TRUE
       yearly_return_to_schooling <<- 0.1
     }
   }

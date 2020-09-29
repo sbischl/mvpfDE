@@ -134,7 +134,7 @@ bafoeg2001 <- function (bootstrap_replication = 0,
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs,
-                        reform_valuation =reform_valuation_inframarginal_students,
+                        reform_valuation = reform_valuation_inframarginal_students,
                         net_income_increase = net_income_increase,
                         program_cost = program_cost,
                         tax_revenue_increase = -tax_revenue_effect,

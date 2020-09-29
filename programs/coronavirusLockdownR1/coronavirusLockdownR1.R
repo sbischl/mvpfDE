@@ -53,7 +53,7 @@ coronavirusLockdownR1 <- function (bootstrap_replication = 0, only_risk_value = 
                         valuation_lower_risk_of_dying = valuation_lower_risk_of_dying,
                         income_loss = income_loss,
                         program_cost = fiscal_lockdown_cost,
-                        tax_revenue_increase = -fiscal_lockdown_cost,
+                        tax_revenue_increase = -tax_revenue_effect,
                         prices_year = prices_year)
 
   return(return_values)
