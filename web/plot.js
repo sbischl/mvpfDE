@@ -7,11 +7,19 @@ var document_root = 'https://sbischl.github.io';
 var infinity_cutoff = 6;
 var lower_cutoff = -1;
 
+var cost_lower_cutoff = -1
+var cost_upper_cutoff = 3 
+var wtp_lower_cutoff = -1
+var wtp_upper_cutoff = 3
+
 // Generate a global chart variable that can always be accessed:
 var mvpfChart;
 var governmentCostChart;
 var wtpChart;
 var wtpCostChart;
+
+//Store barChartSuperDiv's in a array
+var barChartSuperDivArray;
 
 // Currently displayed Program:
 var currently_displayed_program;
@@ -270,7 +278,7 @@ var variable_mapping = [
         }
     },
     {
-        program: "maternityBenefit79",
+        program: "maternityLeave79",
         willingness_to_pay: {
             benefit_receipt: "Valuation of additional Maternity Benefit",
             net_income_increase: "Net Income Effect on Children"
@@ -282,7 +290,7 @@ var variable_mapping = [
         }
     },
     {
-        program: "maternityBenefit86",
+        program: "maternityLeave86",
         willingness_to_pay: {
             benefit_receipt: "Valuation of additional Maternity Benefit",
             net_income_increase: "Net Income Effect on Children"
@@ -295,7 +303,7 @@ var variable_mapping = [
         }
     },
     {
-        program: "maternityBenefit92",
+        program: "maternityLeave92",
         willingness_to_pay: {
             net_income_increase: "Net Income Effect on Children"
         },
@@ -327,16 +335,61 @@ var variable_mapping = [
         }
     },
     {
-        program: "Bafög Repayment Reform",
+        program: "coronavirusLockdown",
+        willingness_to_pay: {
+            valuation_lower_risk_of_dying: "Valuation Lower Risk of Dying",
+            income_loss: "Income Loss"
+        },
+        government_net_costs: {
+            program_cost: "Fiscal Cost of Lockdown",
+            tax_revenue_increase: "Resource Cost of averted Deaths"
+        }
+    },
+    {
+        program: "coronavirusLockdownR1",
+        willingness_to_pay: {
+            valuation_lower_risk_of_dying: "Valuation Lower Risk of Dying",
+            income_loss: "Income Loss"
+        },
+        government_net_costs: {
+            program_cost: "Fiscal Cost of Lockdown",
+            tax_revenue_increase: "Resource Cost of averted Deaths"
+        }
+    },
+    {
+        program: "coronavirusLockdown",
+        willingness_to_pay: {
+            valuation_lower_risk_of_dying: "Valuation Lower Risk of Dying",
+            income_loss: "Income Loss"
+        },
+        government_net_costs: {
+            program_cost: "Fiscal Cost of Lockdown",
+            tax_revenue_increase: "Resource Cost of averted Deaths"
+        }
+    },
+    {
+        program: "bafoegRepayment",
         willingness_to_pay: {
             net_income_increase: "Lifteime Effect on Net Income",
             bafoeg_valuation: "Reduced Repayment"
         },
         government_net_costs: {
-            program_cost: "Bafög Repayment",
+            program_cost: "Only Partial Repayment",
             tax_revenue_increase: "Lifteime Tax Revenue Increase",
             education_cost: "Education Cost Difference",
             bafoeg_cost: "Additional Bafög Recipients",
+        }
+    },
+    {
+        program: "bafoeg2001",
+        willingness_to_pay: {
+            net_income_increase: "Lifteime Effect on Net Income",
+            reform_valuation: "Bafög Receipt"
+        },
+        government_net_costs: {
+            program_cost: "Additional Bafög Recipients",
+            tax_revenue_increase: "Lifteime Tax Revenue Increase",
+            education_cost: "Education Cost Difference"
         }
     },
     {
@@ -384,6 +437,17 @@ var variable_mapping = [
         }
     },
     {
+        program: "unemploymentBenefits2006",
+        willingness_to_pay: {
+            program_cost: "Benefit Payment",
+            valuation_reduced_risk: "Valuation of Lower Risk"
+        },
+        government_net_costs: {
+            program_cost: "Benefit Payment",
+            fiscal_externality: "Fiscal Externality due to longer unemployment"
+        }
+    },
+    {
         program: "jobSearchInformation",
         willingness_to_pay: {
             net_income_increase: "Effect on Net Income"
@@ -414,12 +478,23 @@ var variable_mapping = [
         }
     },
     {
-        program: "sportsExpenditure",
+        program: "negativeIncomeTax",
         willingness_to_pay: {
             reform_valuation: "Valuation of Transfer"
         },
         government_net_costs: {
             program_cost: "Sports Expenditure",
+            tax_revenue_increase: "Tax Revenue Effect"
+        }
+    },
+    {
+        program: "placementService",
+        willingness_to_pay: {
+            net_income_increase: "Effect on Net Income"
+        },
+        government_net_costs: {
+            program_cost: "Cost of Providing Service Inhouse",
+            benefit_receipt: "Unemployment Benefits",
             tax_revenue_increase: "Tax Revenue Effect"
         }
     }
@@ -440,11 +515,14 @@ async function readcsv(csv_location) {
     var csv_as_array;
 
     // This fixes the broken Umlaute: Thx @https://stackoverflow.com/questions/15333711/specials-chars-from-csv-to-javascript
+    // Now this breaks them. I dunno what I have changed. These encoding problems are weird
+    /*
     jQuery.ajaxSetup({
         'beforeSend' : function(xhr) {
             xhr.overrideMimeType('text/html; charset=iso-8859-1');
         }
     });
+    */
 
     await jQuery.get(csv_location, function (data) {
         // Calling toObject. Javascript's typeof() function calls the resulting "thing" a object. But to me this looks like an array that contains key-value pairs (= objects??).
@@ -507,6 +585,22 @@ function censorValues(datasets) {
                         current_dataset[j][k] = infinity_cutoff + 1;
                     }
                 }
+                else if (k == "government_net_costs_per_program_cost") {
+                    if (current_dataset[j][k] > cost_upper_cutoff ) {
+                        current_dataset[j][k] = cost_upper_cutoff;
+                    }
+                    else if (current_dataset[j][k] < cost_lower_cutoff ) {
+                        current_dataset[j][k] = cost_lower_cutoff;
+                    }
+                }
+                else if (k == "willingness_to_pay_per_program_cost") {
+                    if (current_dataset[j][k] > wtp_upper_cutoff ) {
+                        current_dataset[j][k] = wtp_upper_cutoff;
+                    }
+                    else if (current_dataset[j][k] < wtp_lower_cutoff ) {
+                        current_dataset[j][k] = wtp_lower_cutoff;
+                    }
+                }
             }
         }
     }
@@ -560,11 +654,11 @@ function getScales(variable,
                     labelString: yLab
                 },
                 ticks: {
-                    min: -1,
-                    max: 7,
+                    min: lower_cutoff,
+                    max: infinity_cutoff,
                     stepSize: 1,
                     callback: function (value, index, values) {
-                        if (value == 7) {
+                        if (value == infinity_cutoff + 1) {
                             return "∞";
                         }
                         else if (value == infinity_cutoff) {
@@ -597,7 +691,7 @@ function getScales(variable,
             }
         });
     }
-    if (variable == "willingness_to_pay") {
+    else if (variable == "willingness_to_pay_per_program_cost") {
         return ({
             y: {
                 display: true,
@@ -605,6 +699,65 @@ function getScales(variable,
                     display: true,
                     labelString: yLab
                 },
+                ticks: {
+                    min: wtp_lower_cutoff,
+                    max: wtp_upper_cutoff,
+                    stepSize: 1,
+                    callback: function (value, index, values) {
+                        if (value == wtp_upper_cutoff) {
+                            return "≥" + wtp_upper_cutoff;
+                        }
+                        else if (value == wtp_lower_cutoff) {
+                            return "≤" + wtp_lower_cutoff;
+                        }
+                        else {
+                            return value;
+                        }
+                    }
+                }
+            },
+            x: {
+                display: true,
+                gridLines: {
+                    display: false
+                },
+                scaleLabel: {
+                    display: true,
+                    labelString: xLab
+                },
+                ticks: {
+                    maxTicksLimit: 6,
+                    callback: function (value, index, values) {
+                        return value;
+                    }
+                }
+            }
+        });
+    }
+    else if (variable == "government_net_costs_per_program_cost") {
+        return ({
+            y: {
+                display: true,
+                scaleLabel: {
+                    display: true,
+                    labelString: yLab
+                },
+                ticks: {
+                    min: cost_lower_cutoff,
+                    max: cost_upper_cutoff,
+                    stepSize: 1,
+                    callback: function (value, index, values) {
+                        if (value == cost_upper_cutoff) {
+                            return "≥" + cost_upper_cutoff;
+                        }
+                        else if (value == cost_lower_cutoff) {
+                            return "≤" + cost_lower_cutoff;
+                        }
+                        else {
+                            return value;
+                        }
+                    }
+                }
             },
             x: {
                 display: true,
@@ -661,7 +814,6 @@ function updateGraphDataSet(csv_as_array) {
         mvpfChart.data.datasets[i].data = updatedDatasets[i].data;
     }
     mvpfChart.update();
-
     // Update Bar Charts
     var range = getScalesMinMax(currently_displayed_program);
 
@@ -765,7 +917,7 @@ function getUnmodifiedProgram(program_name) {
             return unmodified_dataset[i];
         }
     }
-    console.log("program not found");
+    console.log("There is a problem. Program not found");
 }
 
 function getUnmodifiedbyIdentProgram(programIdent) {
@@ -775,7 +927,7 @@ function getUnmodifiedbyIdentProgram(programIdent) {
             return unmodified_dataset[j];
         }
     }
-    console.log("program not found");
+    console.log("There is a problem. Program not found");
 }
 
 
@@ -840,10 +992,10 @@ function selectColor(number, background = false) {
     }
     else if (number == 8) {
         if (background) {
-            return "rgba(255,140,0," + background_opa + ")"
+            return "rgba(165,42,42," + background_opa + ")"
         }
         else {
-            return "rgba(255,140,0," + foreground_opa + ")"
+            return "rgba(165,42,42," + foreground_opa + ")"
         }
     }
     else if (number == 9) {
@@ -971,14 +1123,13 @@ function generateBarData(csv_as_array, variable_to_plot, program) {
 function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
     currently_displayed_program = program;
     // Set Font size
-    Chart.defaults.font.size = 14;
+    Chart.defaults.font.size = 15.5;
     Chart.defaults.font.family = 'Open Sans';
 
     // Get Plotting range
     var range = getScalesMinMax(program);
 
     var smallscreen = jQuery(window).width() < 1450 ? true : false
-
     barChart = new Chart(chartElement, {
         type: 'bar',
         data: {
@@ -1030,7 +1181,7 @@ function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
 
 function drawMVPFChart(csv_as_array) {
     // Set Font size
-    Chart.defaults.font.size = 14;
+    Chart.defaults.font.size = 15.5;
     Chart.defaults.font.family = 'Open Sans';
 
     // Number Of Programs at Tooltip.
@@ -1173,6 +1324,18 @@ function generateLeftSideHTMLCharts(program) {
     governmentCostChart = drawBarChart(unmodified_dataset, "government_net_costs", program, html.chartElements[0]);
     wtpChart = drawBarChart(unmodified_dataset, "willingness_to_pay", program, html.chartElements[1]);
     wtpCostChart = drawBarChart(unmodified_dataset, "mvpf", program, html.chartElements[2]);
+    
+    // Increase size of bar Charts if legend has to many elements:
+    var chartArray = [governmentCostChart, wtpChart, wtpCostChart];
+    var i;
+    var screensize = jQuery(window).width();
+    var effect_size = 35 * (500 / screensize);
+    for (i = 0; i < chartArray.length; i++) {
+        legendItems = chartArray[i]._sortedMetasets.length;
+        if (legendItems > 3) {
+            barChartSuperDivArray[i].style.height = (160 + (legendItems - 3) * effect_size) + "px" 
+        }
+    }
 }
 
 function generateSingleProgramHTML(program) {
@@ -1188,7 +1351,6 @@ function generateSingleProgramHTML(program) {
     singleProgramDiv.appendChild(programHeadLine);
 
     //Description
-    console.log(program_data.short_description);
     var programDescription = document.createElement('p');
     programHeadLine.className = "programDescription";
     programDescription.innerHTML = "<strong>Short Description:</strong> <br>" + program_data.short_description;
@@ -1198,25 +1360,43 @@ function generateSingleProgramHTML(program) {
     gccHeadline.className = "chartHeadline";
     gccHeadline.innerHTML = "<strong>Government Net Cost:</strong>";
     singleProgramDiv.appendChild(gccHeadline);
+
+    var gccDiv = document.createElement('div');
+    gccDiv.className = "barChartSuperDiv";
+    gccDiv.innerHTML = "";
     var governmentCostChartElement = document.createElement('canvas');
     governmentCostChartElement.className = "barPlotElement";
-    singleProgramDiv.appendChild(governmentCostChartElement);
+    gccDiv.appendChild(governmentCostChartElement);
+    singleProgramDiv.appendChild(gccDiv);
 
     var wtpHeadline = document.createElement('div');
     wtpHeadline.className = "chartHeadline";
     wtpHeadline.innerHTML = "<strong>Willingness to Pay:</strong>";
     singleProgramDiv.appendChild(wtpHeadline);
+
+    var wtpDiv = document.createElement('div');
+    wtpDiv.className = "barChartSuperDiv";
+    wtpDiv.innerHTML = "";
     var wtpChartElement = document.createElement('canvas');
     wtpChartElement.className = "barPlotElement";
-    singleProgramDiv.appendChild(wtpChartElement);
+    wtpDiv.appendChild(wtpChartElement)
+    singleProgramDiv.appendChild(wtpDiv);
 
     var mvpfHeadline = document.createElement('div');
     mvpfHeadline.className = "chartHeadline";
     mvpfHeadline.innerHTML = "<strong>Government Net Cost & Willingness to Pay:</strong>";
     singleProgramDiv.appendChild(mvpfHeadline);
+    
+    var wtpCostDiv = document.createElement('div');
+    wtpCostDiv.className = "barChartSuperDiv";
+    wtpCostDiv.innerHTML = "";
     var wtpCostChartElement = document.createElement('canvas');
     wtpCostChartElement.className = "barPlotElement";
-    singleProgramDiv.appendChild(wtpCostChartElement);
+    wtpCostDiv.appendChild(wtpCostChartElement);
+    singleProgramDiv.appendChild(wtpCostDiv);
+
+    // I need to access the barChartSuperDivs later on to manipulate the size of the barCharts
+    barChartSuperDivArray = [gccDiv, wtpDiv, wtpCostDiv];
 
     //Cite papers
     var html = "<strong>Relevant Literature:</strong> <br>"
@@ -1243,6 +1423,7 @@ function populatePrograms() {
     var i;
     for (i in variable_mapping) {
         var current_program = getUnmodifiedbyIdentProgram(variable_mapping[i].program);
+        console.log(current_program);
         var option = document.createElement("option");
         option.value = current_program.program;
         option.innerHTML = current_program.program_name;

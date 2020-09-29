@@ -1,47 +1,74 @@
+:root {
+    --left-width: 250px;
+    --middle-share: 0.55;
+}
+
+html, body {
+    margin:0;
+    padding:0;
+    font-size: 18px;
+}
+
+* { 
+    -moz-box-sizing: border-box; 
+    -webkit-box-sizing: border-box; 
+     box-sizing: border-box; 
+}
+
+
 #headLine {
     width: 100%;
-    height: 50px;
     font-size: 24px;
-    line-height: 50px;
+    line-height: 40px;
     background-color: rgb(74, 80, 207);
     color: white;
     padding-left: 15px;
     position:fixed;
     top: 0;
     left: 0;
+    z-index: 100;
+    box-shadow: 0 0 0.1em 0.1em rgb(74, 80, 207); /*shadow effect*/
 }
 
 .barHeadLine {
-    font-size: 19px;
+    font-size: 20px;
     font-weight: bold;
     padding-bottom: 3px;
+    font-weight: 700;
 }
+
 #leftSide {
-    margin-top: 50px;
-    width: 250px;
-    height: 100%;
-    position: fixed;
-    z-index: 1;
-    position:flex;
-    left: 0;
+    margin-top: 100px;
+    width: var(--left-width);
+    float:left;
     color: black;
     background-color: rgb(255, 255, 255);
     padding-left: 15px;
     padding-right: 15px;
 }
 
-#content {
-    margin-top: 50px;
-    margin-left: 300px;
-}
-
 #mvpfChartDiv {
-    padding-top: 50px;
+    margin-top: 100px;
     float: left;
-    width: 50%;
-    height: 50%;
+    width: calc((100vw - var(--left-width)) * var(--middle-share));
+    height: auto;
+    max-height: 95vh;
     padding-left: 50px;
     padding-right: 50px;
+}
+
+.selectBox {
+    font-size: 14px;
+    padding: 1px;
+}
+
+#barChartDiv {
+    margin-top: 75px;
+    float: left;
+    /*height: 150px;*/
+    position: relative;
+    width: calc((100vw - var(--left-width)) * (1 - var(--middle-share)));
+    margin-bottom: 50px;
 }
 
 #mvpfChart {
@@ -49,25 +76,35 @@
     height: 100%;
 }
 
-#barChartDiv {
-    height: 12vh;
-    width: 100%;
-    padding-top: 50px;
-    float: left;
-    width: 30%;
+.singleProgramDiv {
+    width: inherit;
+    height: 160px;
     padding-left: 50px;
     padding-right: 50px;
+    margin-bottom: 50px;
 }
 
-.singleProgramDiv {
+.barChartSuperDiv {
     width: 100%;
-    height: 100%;
-    padding-top: 1px;
-    padding-bottom: 1px;
+    height: 160px;
+    margin-bottom: 30px;
 }
 
 .plotSettingsBox {
     margin-bottom: 10px;
+    font-size: 17px;
+}
+
+.selectField {
+    columns: green;
+    max-width: var(--left-width);
+}
+
+.plotAssumptionsBox {
+    margin-bottom: 10px;
+    font-size: 17px;
+    float: left;
+    width: var(--left-width);
 }
 
 .chartHeadline {
@@ -75,10 +112,8 @@
 }
 
 .barPlotElement {
-    margin-top: 20px;
-    width :100%;
-    height : 100%;
-    margin-bottom: 20px;
+    margin-top: 40px;
+    margin-bottom: 40px;
 }
 
 .programHeadLine {
@@ -94,4 +129,66 @@
 #allProgram{
     width: 100%;
     height: 100%;
+}
+
+
+@media screen and (max-width: 1400px) {
+    #mvpfChartDiv {
+     margin-top: 0px;
+     float: left;
+     width: calc((100vw - var(--left-width)) - 50px);
+     padding-top: 100px;
+     height: 800px;
+     padding-left: 50px;
+     padding-right: 50px;  
+   }
+   #barChartDiv {
+       margin-top:0px;
+       float: left;
+       width: 100%;
+       height: 150px;
+       padding-top: 30px;
+   }
+   #leftSie {
+    margin-top:50px;
+   }
+}
+ 
+ @media screen and (max-width: 800px) {
+   #leftSide {
+    margin-bottom: 0px;
+    float: none;
+    width:auto;
+    margin-top: 75px;
+    color: black;
+    background-color: rgb(255, 255, 255);
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  #headLine {
+    width: 100%;
+    font-size: 20px;
+    line-height: 25px;
+    color: white;
+    padding: 15px;
+    padding-bottom: 10px;
+    padding-top: 10px;
+    position:fixed;
+    top: 0;
+    left: 0;
+}
+  #mvpfChartDiv {
+    float: none;
+    width: auto;
+    margin-top: 60px;
+    height: 600px;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  .singleProgramDiv {
+    width: inherit;
+    height: inherit;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
 }
