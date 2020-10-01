@@ -14,7 +14,9 @@ required_packages <- c("ggplot2",
                        "ggrepel",
                        "tidyr",
                        "foreach",
-                       "doParallel")
+                       "doParallel",
+                       "knitr",
+                       "kableExtra")
 
 not_installed_packages <- required_packages[!required_packages %in% installed.packages()[, 1]]
 
@@ -52,6 +54,9 @@ showtext_auto()
 
 # Initilialize parallel environment
 registerDoParallel(detectCores(all.tests = FALSE, logical = TRUE) - 1)
+
+# Set up table export
+options(knitr.kable.NA = '-')
 
 # Measure runtime
 start_time <- Sys.time()
@@ -115,11 +120,11 @@ category_plot_data <- getCategoryPlotData(plot_data)
 # Plot MVPF
 plotResults(plot_data = plot_data, save ="mvpf_against_year.pdf", y_label = "Marginal Value of Public Funds",confidence_intervalls = FALSE)
 plotResults(plot_data = plot_data, y_axis = "government_net_costs_per_program_cost", y_label = "Government Net Costs per Euro Progammatic Expenditure", x_axis = "year", x_label = "Year",
-            save = "government_net_costs_against_year.pdf", lower_cutoff = 0, upper_cutoff = 4, confidence_intervalls = FALSE, text_labels = TRUE)
+            save = "cost_against_year.pdf", lower_cutoff = 0, upper_cutoff = 4, confidence_intervalls = FALSE, text_labels = TRUE)
 plotResults(plot_data = plot_data, y_axis = "willingness_to_pay_per_program_cost", y_label = "Willingness to Pay per Euro Progammatic Expenditure", x_axis = "year", x_label = "Year",
-            save = "willingness_to_pay_against_year.pdf", lower_cutoff = 0, upper_cutoff = 4, confidence_intervalls = FALSE, text_labels = TRUE)
-plotResults(plot_data = plot_data, x_axis = "program_name", x_label = "Program Name", y_label = "Marginal Value of Public Funds", save = "mvpf_overview.pdf",
-            confidence_intervalls = TRUE, text_labels = FALSE, vertical_x_axis_labels =  TRUE)
+            save = "wtp_against_year.pdf", lower_cutoff = 0, upper_cutoff = 4, confidence_intervalls = FALSE, text_labels = TRUE)
+plotResults(plot_data = plot_data, x_axis = "program_name", x_label = "Program Name", y_label = "Marginal Value of Public Funds",
+            save = "mvpf_overview.pdf", confidence_intervalls = TRUE, text_labels = FALSE, vertical_x_axis_labels =  TRUE)
 plotResults(plot_data = plot_data, category_plot_data = category_plot_data, y_axis = "mvpf", y_label = "Marginal Value of Public Funds", x_axis = "average_age_beneficiary", x_label = "Age of Beneficiaries",
             save = "mvpf_categories.pdf", confidence_intervalls = TRUE, text_labels = FALSE)
 
@@ -127,3 +132,9 @@ plotResults(plot_data = plot_data, category_plot_data = category_plot_data, y_ax
 # Export CSV Files
 exportPlotCSV(programs)
 exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)
+
+# Export Tables:
+exportLatexTables(plot_data)
+
+# Copy Files:
+FolderCopy("plots", "figures")

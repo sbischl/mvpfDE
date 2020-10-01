@@ -126,7 +126,6 @@ G8 <- function (bootstrap_replication = 0,
                         earlier_labor_market_participation_net_income = earlier_labor_market_participation_net_income,
                         tax_revenue_increase = -tax_revenue_increase,
                         earlier_labor_market_participation_tax_revenue = -earlier_labor_market_participation_tax_revenue,
-                        program_cost = 0,
                         prices_year = prices_year)
   return(return_values)
 }

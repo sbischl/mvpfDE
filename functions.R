@@ -958,6 +958,150 @@ plotTaxRates <- function() {
 
 }
 
+generateCIString <- function(lowerCI, upperCI) {
+  lowerCI <- sapply(lowerCI, roundAndreplace)
+  upperCI <- sapply(upperCI, roundAndreplace)
+  return(paste0("[", lowerCI, ", ", upperCI, "]"))
+}
+
+
+
+roundAndreplace <-  function(value) {
+  if (is.na(value)) {
+    return("-")
+  }
+  if (value == Inf) {
+    return("$\\infty$") # This is a work around. It should be ∞ or \u221e. But there is a bug in R on Windows that converts infinty to 8.
+  }
+  else if(value == -Inf) {
+    return("$\\infty$") # This is a work around using Latex's math mode. It should be ∞ or \u221e. But there is a bug in R on Windows that converts infinty to 8.
+  }
+  else {
+    return(round(value, 2))
+  }
+}
+
+roundToString <- function(values, remove_trailing_zeros = TRUE) {
+  return (sapply(values, function(value) {
+    if (is.na(value)) {
+      return("-")
+    }
+    rounded_string <- paste0("", round(value,2))
+    if (remove_trailing_zeros) {
+      while(nchar(rounded_string) > 1) {
+        if (substr(rounded_string, nchar(rounded_string), nchar(rounded_string)) != "0") {
+          break
+        }
+        else if (substr(rounded_string, nchar(rounded_string), nchar(rounded_string)) == ",") {
+          rounded_string <- substr(rounded_string, 1, nchar(rounded_string) - 1)
+          break
+        }
+        else {
+          rounded_string <- substr(rounded_string, 1, nchar(rounded_string) - 1)
+        }
+      }
+      return(rounded_string)
+    }
+  }))
+}
+
+exportLatexTables <- function(plot_data)  {
+  # Store category names and count in a data frame
+  categories <- plot_data %>% group_by(category) %>% summarize(count=n()) %>% as.data.frame()
+
+  # Sort programs by category
+  export_data <- plot_data %>% arrange(category)
+  # Generate additional columns:
+  export_data$mvpf <- sapply(export_data$mvpf, roundAndreplace)
+  export_data$ci_string_mvpf <- generateCIString(export_data$mvpf_95ci_lower,
+                                                 export_data$mvpf_95ci_upper)
+
+  export_data$ci_string_cost <- generateCIString(export_data$government_net_costs_per_program_cost_95ci_lower,
+                                                 export_data$government_net_costs_per_program_cost_95ci_upper)
+
+  export_data$ci_string_wtp  <- generateCIString(export_data$willingness_to_pay_per_program_cost_95ci_lower,
+                                                 export_data$willingness_to_pay_per_program_cost_95ci_upper)
+
+  export_data$ci_string_fe  <- generateCIString(export_data$fiscal_externality_per_euro_95ci_upper,
+                                                export_data$fiscal_externality_per_euro_95ci_lower)
+
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Table with main results & CIs
+  #--------------------------------------------------------------------------------------------------------------------#
+
+  # Select columns to be shown in resulting table
+  program_export_results <- export_data %>%
+    select(program_name, mvpf, ci_string_mvpf, government_net_costs_per_program_cost, ci_string_cost, willingness_to_pay_per_program_cost, ci_string_wtp)
+
+
+  # Give each of the columns names without underscores
+  colnames(program_export_results) <- c("Program", "MVPF", "MVPF CI", "Net Cost per Euro", "Cost CI", "WTP per Euro", "WTP CI")
+
+  programs_table <- kable(program_export_results, digits = 2,
+                          format = "latex",
+                          booktabs = T,
+                          escape = F,
+                          longtable = T,
+                          caption = "List of all programs \\label{programsTableResults}",
+                          align = c('l', rep('c', ncol(program_export_results) - 1))) %>%
+    kable_styling(latex_options = c("hold_position", "repeat_header"), font_size = 8)
+
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Table with further relevant Information
+  #--------------------------------------------------------------------------------------------------------------------#
+
+  program_count <- 1
+  for (i in 1:nrow(categories)) {
+    programs_table <- programs_table %>% pack_rows(categories[i, "category"], program_count, program_count + categories[i, "count"] - 1)
+    program_count <- program_count + categories[i, "count"]
+  }
+
+  programs_table %>% save_kable("tex/programsTableResults.tex")
+
+  program_export_additional_info <- export_data %>% arrange(category) %>%
+    select(program_name, average_age_beneficiary, average_earnings_beneficiary)
+
+
+  program_export_additional_info$average_age_beneficiary <- roundToString(program_export_additional_info$average_age_beneficiary)
+  program_export_additional_info$average_earnings_beneficiary <- roundToString(program_export_additional_info$average_earnings_beneficiary)
+  program_export_additional_info$literature <- sapply(export_data$bibtexkeys, function(key) {
+    # Return Latex Code that cites the relevant bibtex key and begins a new line for each cited paper
+    paste0("\\makecell[tl]{", paste(paste0("\\cite{",unlist(strsplit(key, ";")), "}"), collapse = " \\\\ "), "}")
+  })
+
+  # Give each of the columns names without underscores
+  colnames(program_export_additional_info) <- c("Program", "Age Beneficiary", "Average Earnings", "Literature")
+
+  additional_info_table <- kable(program_export_additional_info, digits = 2,
+                          format = "latex",
+                          booktabs = TRUE,
+                          escape = FALSE,
+                          longtable = TRUE,
+                          caption = "Programs \\label{programsTableAdditionalInfo}",
+                          align = c('l', rep('c', ncol(program_export_results) - 1))) %>%
+                          kable_styling(latex_options = c("hold_position", "repeat_header"))
+
+  # Add Category Headlines
+  program_count <- 1
+  for (i in 1:nrow(categories)) {
+    additional_info_table <- additional_info_table %>% pack_rows(categories[i, "category"], program_count, program_count + categories[i, "count"] - 1)
+    program_count <- program_count + categories[i, "count"]
+  }
+
+  additional_info_table %>% save_kable("tex/programsTableAdditionalInfo.tex")
+
+
+  ## Copy Files:
+  FolderCopy("tex", "tables")
+}
+
+FolderCopy <- function(from, to) {
+  # Small helper function which copies folders from the working directory to path below:
+  path <- "C:/Users/Simon/OneDrive/Universität/Fächer/Master Thesis/Latex/"
+  files <- list.files(paste0("./", from))
+  file.copy(file.path(paste0("./", from), files), paste0(path, to, "/", files), overwrite = T)
+}
+
 discountVector <- function(periods) {
   # Returns a vector that contains the discount factor for all periods
   return((1/(1 + discount_rate))^(0:(periods-1)))
@@ -1197,10 +1341,24 @@ getPlotData <- function(mvpf_results) {
     program_information <- as.data.frame(read_xlsx("programs.xlsx"))
   }
 
-  # Calculate additional variables
+  # Calculate additional variables. CIs can only be calculated if the results already contains cis
   mvpf_results$government_net_costs_per_program_cost <- mvpf_results$government_net_costs / mvpf_results$program_cost
+  if ("government_net_costs_95ci_lower" %in% colnames(mvpf_results)) {
+    mvpf_results$government_net_costs_per_program_cost_95ci_lower <- mvpf_results$government_net_costs_95ci_lower / mvpf_results$program_cost
+    mvpf_results$government_net_costs_per_program_cost_95ci_upper <- mvpf_results$government_net_costs_95ci_upper / mvpf_results$program_cost
+  }
+
   mvpf_results$willingness_to_pay_per_program_cost <- mvpf_results$willingness_to_pay / mvpf_results$program_cost
+  if ("willingness_to_pay_95ci_lower" %in% colnames(mvpf_results)) {
+    mvpf_results$willingness_to_pay_per_program_cost_95ci_lower <- mvpf_results$willingness_to_pay_95ci_lower / mvpf_results$program_cost
+    mvpf_results$willingness_to_pay_per_program_cost_95ci_upper <- mvpf_results$willingness_to_pay_95ci_upper / mvpf_results$program_cost
+  }
+
   mvpf_results$fiscal_externality_per_euro <- mvpf_results$government_net_costs / mvpf_results$program_cost - 1
+  if ("government_net_costs_95ci_lower" %in% colnames(mvpf_results)) {
+    mvpf_results$fiscal_externality_per_euro_95ci_lower <- mvpf_results$government_net_costs_95ci_lower / mvpf_results$program_cost - 1
+    mvpf_results$fiscal_externality_per_euro_95ci_upper <- mvpf_results$government_net_costs_95ci_upper / mvpf_results$program_cost - 1
+  }
 
   return(left_join(mvpf_results, program_information, by = c("program" = "program_identifier")))
 }
