@@ -1,11 +1,11 @@
 #----------------------------------------------------------------------------------------------------------------------#
-# Job Search Information Brochure:
+# Pension Information Letter:
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Relevant Literature:
-# Altmann et al. (2018)
+# Dolls et al. (2019)
 
-jobSearchInformation <- function (bootstrap_replication = 0, extend_effect = 0) {
+expectedPensionLetter <- function (bootstrap_replication = 0, extend_effect = 0) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)
 
@@ -13,31 +13,39 @@ jobSearchInformation <- function (bootstrap_replication = 0, extend_effect = 0) 
   # Assumptions:
   #--------------------------------------------------------------------------------------------------------------------#
 
-  prices_year <- 2011 # The experiment was conducted in 2010 / 2011. Earnings were measured one year after.
+  prices_year <- 2005 # Data from 2001 to 2010. The treatment occured in 2005
 
-  # Altmann et al. (2018) reports cumulated earnings effects 1 year and 2 years after the treatment. The 2 years after
-  # effect is super imprecise
-  earnings_effect <- estimates$cumulative_earnings_effect_52weeks
+  # Dolls et al. (2019), Table 5 reports effect on earnings up to 3 years after receiving the letter
+  gross_earnings_effect_year_0 <- estimates$gross_earnings_effect_year_0
+  gross_earnings_effect_year_1 <- estimates$gross_earnings_effect_year_1
+  gross_earnings_effect_year_2 <- estimates$gross_earnings_effect_year_2
+  gross_earnings_effect_year_3 <- estimates$gross_earnings_effect_year_3
 
   # Earnings of control group conditional on being employed.
-  earnings_control_group <- (52.38 * 365) / 12 # Altmann et al. (2018) Table 1
+  earnings_control_group <- 24048.84 / 12 # Dolls et al. (2019) Table 3 "2005"
 
   # Average age of training participants:
-  average_age <- 36.92 # Altmann et al. (2018) Table 1
+  average_age <- 27 # Age of cut-off
 
-  # The program cost is virtually zero. According to Altmann et al. (2018) less then 1€ per brochure. Assume symbolic cost of 1€
+  # The program cost is equal to sending the letter. Dolls et al. (2019) argue that aggregating the information needed to
+  # send the letter has to be collected anyways (see footnote 22) -> Assume symbolic cost of 1€
   program_cost <- 1
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Effect of Earnings Change on WTP and Government Cost
   #--------------------------------------------------------------------------------------------------------------------#
 
-  reform_impact <- project_medium_run_impact(absolute_impact_magnitude = earnings_effect,
+  reform_impact <- project_medium_run_impact(absolute_impact_magnitude = c(gross_earnings_effect_year_0,
+                                                                           gross_earnings_effect_year_1,
+                                                                           gross_earnings_effect_year_2,
+                                                                           gross_earnings_effect_year_3),
                                              yearly_control_income = earnings_control_group * 12,
-                                             number_of_periods = 1 + extend_effect,
+                                             number_of_periods = 4,
                                              prices_year = prices_year)
 
-  # The effect on willingness to pay and government net cost is given by the increase in tax revenue and net earnings
+  # Assume individuals value their earnings change euro for euro. This is upper bound as individuals who earn
+  # more also probably work more. The MVPF is infinity anyways due to the sizeable effect on tax revenue and the essentially
+  # zero cost of sending the letter
   net_income_increase <- reform_impact$present_value_net_earnings_impact
   tax_revenue_increase <- reform_impact$present_value_tax_payment_impact
 
@@ -45,7 +53,7 @@ jobSearchInformation <- function (bootstrap_replication = 0, extend_effect = 0) 
   willingness_to_pay <- net_income_increase
 
   #--------------------------------------------------------------------------------------------------------------------#
-  # Brochure cost
+  # Letter Cost
   #--------------------------------------------------------------------------------------------------------------------#
 
   government_net_costs <- government_net_costs + program_cost
@@ -56,5 +64,6 @@ jobSearchInformation <- function (bootstrap_replication = 0, extend_effect = 0) 
                         net_income_increase = net_income_increase,
                         tax_revenue_increase = tax_revenue_increase,
                         prices_year = prices_year)
+
   return(return_values)
 }
