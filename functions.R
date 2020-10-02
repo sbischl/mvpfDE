@@ -321,6 +321,7 @@ project_medium_run_impact <- function(impact_magnitude, # can be either scalar o
                                       yearly_control_income,
                                       number_of_periods,
                                       prices_year,
+                                      share_affected = 1, # with labor market policies it can happen that only employed are affected and the share of employed increases over time
                                       inculde_welfare_benefits_fraction = 1) {
 
   # This function returns the dataframe as project_lifetime_impact but is simpler and requires less assumptions.
@@ -360,9 +361,9 @@ project_medium_run_impact <- function(impact_magnitude, # can be either scalar o
   net_earnings_no_reform <- gross_earnings_no_reform - tax_payment_no_reform
   net_earnings_refrom <- gross_earnings_reform - tax_payment_reform
 
-  earnings_difference <- gross_earnings_reform - gross_earnings_no_reform
-  tax_payment_difference <- tax_payment_reform - tax_payment_no_reform
-  net_earnings_difference <- net_earnings_refrom - net_earnings_no_reform
+  earnings_difference <- share_affected* (gross_earnings_reform - gross_earnings_no_reform)
+  tax_payment_difference <- share_affected* (tax_payment_reform - tax_payment_no_reform)
+  net_earnings_difference <- share_affected* (net_earnings_refrom - net_earnings_no_reform)
 
   present_value_earnings_impact <- sum(earnings_difference * discountVector(number_of_periods))
   present_value_tax_payment_impact <- sum(tax_payment_difference * discountVector(number_of_periods))
