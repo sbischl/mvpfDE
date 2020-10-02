@@ -95,9 +95,9 @@ decentralizedEmploymentServices <- function (bootstrap_replication = 0) {
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs,
+                        benefit_receipt = unemployment_benefits_cost,
                         net_income_increase =  net_income_increase,
                         tax_revenue_increase = -tax_revenue_increase,
                         prices_year = prices_year)
-
   return(return_values)
 }
