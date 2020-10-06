@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Relevant Literature:
-# Biewen et. al. (2014)
+# Biewen et al. (2014)
 
 trainingMeasures <- function (bootstrap_replication = 0, extend_effect = 6) {
   program_name <- toString(match.call()[1])
@@ -18,7 +18,7 @@ trainingMeasures <- function (bootstrap_replication = 0, extend_effect = 6) {
   # There is no specification that averages over all individuals.
   # But there is information about the size of each group:
 
-  # Number of class room training participants in each strata, see Biewen et. al. (2014) Table 2
+  # Number of class room training participants in each strata, see Biewen et al. (2014) Table 2
   number_women_stratum_1 <- 693
   number_men_stratum_1 <- 912
 
@@ -47,15 +47,15 @@ trainingMeasures <- function (bootstrap_replication = 0, extend_effect = 6) {
   earnings_effect_2year_men_strat1 <- estimates$earnings_effect_2year_men_strat1
 
   # Average age of training participants:
-  average_age <- 37 # About 37, see Online Appendix of Biewen et. al. (2014) Table A2, A3
+  average_age <- 37 # About 37, see Online Appendix of Biewen et al. (2014) Table A2, A3
 
   control_income <- 1700 # There is no information about this in the paper. In the appendix
   # log wage earnings are reported. But these seem implausible.
   # The control income only matters if the marginal tax rate is not constant.
 
   # Training cost:
-  enrollment_length <- 1.2 # Biewen et. al. (2014), Table 1 Column 2000
-  monthly_cost <- 580 # Biewen et. al. (2014) Table 1 Column 2000
+  enrollment_length <- 1.2 # Biewen et al. (2014), Table 1 Column 2000
+  monthly_cost <- 580 # Biewen et al. (2014) Table 1 Column 2000
 
   prices_year <- 2000 # Dataset covers 2000 - 2002. Figures, e.g. Figure 5, use 2000 Euros
 

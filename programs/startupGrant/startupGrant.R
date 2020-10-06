@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Relevant Literature:
-# Caliendo et. al. (2016)
+# Caliendo et al. (2016)
 
 startupGrant <- function(bootstrap_replication = 0,
                          private_subsidy_valuation = 0,
@@ -18,28 +18,28 @@ startupGrant <- function(bootstrap_replication = 0,
   #--------------------------------------------------------------------------------------------------------------------#
 
   # Number of particpants:
-  participants_women <- 222 # Caliendo et. al. (2015) Table 2
-  participants_men <- 367 # Caliendo et. al. (2015) Table 2
+  participants_women <- 222 # Caliendo et al. (2015) Table 2
+  participants_men <- 367 # Caliendo et al. (2015) Table 2
   participants <- participants_women + participants_men
   men_share <- (participants_men / participants)
   women_share <-  (participants_women / participants)
 
   # Average age of program participants:
-  average_age_men <- 40.92 # Caliendo et. al. (2015) Table 3
-  average_age_women <- 41.05 # Caliendo et. al. (2015) Table 3
+  average_age_men <- 40.92 # Caliendo et al. (2015) Table 3
+  average_age_women <- 41.05 # Caliendo et al. (2015) Table 3
   average_age <- women_share * average_age_women + men_share * average_age_men
 
-  prices_year <- 2009 # Caliendo et. al. (2015) study entries into the start up subsidy program in the first quarter of 2009.
+  prices_year <- 2009 # Caliendo et al. (2015) study entries into the start up subsidy program in the first quarter of 2009.
 
   # Average Unemployment Benefit before receiving the subsidy.
-  unemployment_benefit_men <- 1093 # Caliendo et. al. (2015) Table 2
-  unemployment_benefit_women <- 803 # Caliendo et. al. (2015) Table 2
+  unemployment_benefit_men <- 1093 # Caliendo et al. (2015) Table 2
+  unemployment_benefit_women <- 803 # Caliendo et al. (2015) Table 2
   unemployment_benefit <- women_share * unemployment_benefit_women + men_share * unemployment_benefit_men
 
 
   # Income of Participants
-  average_net_income_participants_men <- 3189 # Caliendo et. al. (2015) Table 4
-  average_net_income_participants_women <- 1988 # Caliendo et. al. (2015) Table 4
+  average_net_income_participants_men <- 3189 # Caliendo et al. (2015) Table 4
+  average_net_income_participants_women <- 1988 # Caliendo et al. (2015) Table 4
   average_net_income_participants <- women_share * average_net_income_participants_women + men_share * average_net_income_participants_men
 
   # Net income of the matched control group
@@ -65,7 +65,7 @@ startupGrant <- function(bootstrap_replication = 0,
 
   # To make this comparable to the previous study by Caliendo & Künn (2011) who studied the predecessors of the
   # "Gründungszuschuss", i.e. ""Existenzgründungszuschuss" and "Überbrückungsgeld", only the 40 month 'long run'
-  # effect is used although Caliendo et. al. (2015) also measure the impact on earnings 21 months after start up.
+  # effect is used although Caliendo et al. (2015) also measure the impact on earnings 21 months after start up.
   reform_impact <- project_medium_run_impact(absolute_impact_magnitude = c(rep(0, effect_delay), rep(yearly_income_effect, effect_duration)),
                                              yearly_control_income = yearly_gross_income_control,
                                              number_of_periods = effect_delay + effect_duration,

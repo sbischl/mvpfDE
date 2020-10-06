@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Relevant Literature:
-# Doerrenberg et. al. (2017) and Working Paper Version from 2015
+# Doerrenberg et al. (2017) and Working Paper Version from 2015
 # Clementi and Gallegati (2005)
 
 taxReform2000 <- function (bootstrap_replication = 0, year_difference = 3) {

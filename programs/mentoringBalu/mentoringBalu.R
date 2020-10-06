@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Relevant Literature:
-# Falk et. al. (2020)
+# Falk et al. (2020)
 
 mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to_schooling = global_use_constant_ols_return_to_schooling) {
   program_name <- toString(match.call()[1])

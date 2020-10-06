@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Relevant Literature:
-# Peter et. al. (2018)
+# Peter et al. (2018)
 
 BestUpInformationWorkshop <- function (bootstrap_replication = 0,
                                        use_constant_ols_return_to_schooling = global_use_constant_ols_return_to_schooling) {
@@ -66,7 +66,7 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
     lifetime_impacts <- impact_longer_schooling + impact_more_education
   }
 
-  # Peter et. al. (2018) measure the effect of their information workshop on the probability of college enrollment using
+  # Peter et al. (2018) measure the effect of their information workshop on the probability of college enrollment using
   # a linear probability model. Hence, the reported estimate represents the effect on the probability of enrollment in
   # percentage points. On average, the probability that a student changes her behavior because of the treatment
   # (i.e. enrolls but would have enrolled in absence of the information workshop) is given be the estimated effect

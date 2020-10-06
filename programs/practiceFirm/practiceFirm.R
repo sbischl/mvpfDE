@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Relevant Literature:
-# Lechner et. al. (2011)
+# Lechner et al. (2011)
 
 practiceFirm <- function (bootstrap_replication = 0, extend_effect = 0) {
   program_name <- toString(match.call()[1])
@@ -23,16 +23,16 @@ practiceFirm <- function (bootstrap_replication = 0, extend_effect = 0) {
   earnings_effect <- estimates$earnings_effect_8years_practice_firm
 
   # Earnings of control group conditional on being employed.
-  earnings_control_group <- 1396 # Lechner et. al. (2011) Table 5.
+  earnings_control_group <- 1396 # Lechner et al. (2011) Table 5.
 
   # Long run employment rate of individuals who do not participate in any training program:
-  employment_rate <- 0.9 # This can be inferred from Figure 2 depicting the share of unemployed over time in Lechner et. al. (2011)
+  employment_rate <- 0.9 # This can be inferred from Figure 2 depicting the share of unemployed over time in Lechner et al. (2011)
 
   # Average age of training participants:
-  average_age <- 36 # Lechner et. al. (2011) Appendix Table B.1
+  average_age <- 36 # Lechner et al. (2011) Appendix Table B.1
 
   # Training cost:
-  training_cost <- 6565 # Lechner et. al. (2011) Appendix Table 6
+  training_cost <- 6565 # Lechner et al. (2011) Appendix Table 6
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Effect of Earnings Change on WTP and Government Cost
