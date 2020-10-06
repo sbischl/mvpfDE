@@ -21,5 +21,8 @@ UnifiedWelfareGer.iml
 # Latex folder
 /tex/*
 
+# Python environment
+/venv/*
+
 # CSV export folder
 /csv_export/*
