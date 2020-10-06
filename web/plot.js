@@ -18,6 +18,9 @@ var governmentCostChart;
 var wtpChart;
 var wtpCostChart;
 
+var headline_font = "Source Sans Pro";
+var headline_fontsize = 20;
+
 //Store barChartSuperDiv's in a array
 var barChartSuperDivArray;
 
@@ -26,6 +29,9 @@ var currently_displayed_program;
 
 // Bar Chart Div. This one has to be dynamically updated.
 var chartDiv = document.querySelector("#barChartDiv")
+
+// Count Tooltip calls;
+var tooltip_counter = 1;
 
 // Store the mapping of willingness to pay and government net cost in a JSON object:
 var variable_mapping = [
@@ -453,7 +459,7 @@ var variable_mapping = [
             net_income_increase: "Effect on Net Income"
         },
         government_net_costs: {
-            program_cost: "Training Cost",
+            program_cost: "Brochure Cost",
             tax_revenue_increase: "Tax Revenue Increase"
         }
     },
@@ -496,6 +502,46 @@ var variable_mapping = [
             program_cost: "Cost of Providing Service Inhouse",
             benefit_receipt: "Unemployment Benefits",
             tax_revenue_increase: "Tax Revenue Effect"
+        }
+    },
+    {
+        program: "expectedPensionLetter",
+        willingness_to_pay: {
+            net_income_increase: "Effect on Net Income"
+        },
+        government_net_costs: {
+            program_cost: "Letter Cost",
+            tax_revenue_increase: "Tax Revenue Increase"
+        }
+    },
+    {
+        program: "decentralizedEmploymentServices",
+        willingness_to_pay: {
+            net_income_increase: "Effect on Net Income"
+        },
+        government_net_costs: {
+            benefit_receipt: "Cost of Paying Unemployment Benefits",
+            tax_revenue_increase: "Tax Revenue Increase"
+        }
+    },
+    {
+        program: "eegWind",
+        willingness_to_pay: {
+            net_income_increase: "Less CO2 Emissions",
+            income_loss: "Energy Producer Losses"
+        },
+        government_net_costs: {
+            program_cost: "Subsidy Cost"
+        }
+    },
+    {
+        program: "eegSolar",
+        willingness_to_pay: {
+            net_income_increase: "Less CO2 Emissions",
+            income_loss: "Energy Producer Losses"
+        },
+        government_net_costs: {
+            program_cost: "Subsidy Cost"
         }
     }
 ]
@@ -853,7 +899,7 @@ function getCSVLocation(specifiedAssumptions) {
 function getGraphAssumptions() {
     // The assumption Select Box Ids have to be in the correct order!!
     // The correct order is given by order of the assumptions in the csv files
-    var assumptionSelectBoxesIds = ["discountRateAssumption", "taxRateAssumption", "returnsToSchoolingAssumption"];
+    var assumptionSelectBoxesIds = ["discountRateAssumption", "taxRateAssumption", "returnsToSchoolingAssumption", "valueOfStatisticalLifeAssumption", "co2externality", "wage_growth_rate", "relative_risk_aversion"];
     var specifiedAssumptions = [];
 
     var i;
@@ -1107,7 +1153,7 @@ function generateBarData(csv_as_array, variable_to_plot, program) {
             break;
         }
     }
-    var component;
+
     for (component in barComponents) {
         datasets.push({
             label: barComponents[component],
@@ -1142,7 +1188,8 @@ function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
             aspectRatio: smallscreen ? 2 : 4,
             legend: {
                 position: 'bottom',
-                usePointStyle: true
+                usePointStyle: true,
+                onClick: () => {} //This disables the ability to click on the legend and remove effects.
             },
             scales: {
                 x: {
@@ -1217,9 +1264,11 @@ function drawMVPFChart(csv_as_array) {
                     title: function (data) {
                         if (data.length > 1) {
                             tooltip_number = data.length;
+                            tooltip_counter = 1;
                             return null;
                         }
                         tooltip_number = 1;
+                        tooltip_counter = 1;
                         return data[0].dataset.data[data[0].dataIndex]["program_name"];
                     },
                     label: function (data) {
@@ -1233,16 +1282,16 @@ function drawMVPFChart(csv_as_array) {
                             tooltip.push(program_name + ":");
                         }
 
-                        tooltip.push("Willingness to Pay: " + +parseFloat(unmodified_datapoint["willingness_to_pay"]).toFixed(2));
+                        tooltip.push("Willingness to Pay:" + +parseFloat(unmodified_datapoint["willingness_to_pay"]).toFixed(2));
                         tooltip.push("Government Net Cost: " + +parseFloat(unmodified_datapoint["government_net_costs"]).toFixed(2));
                         tooltip.push("MVPF: " + (mvpfIsInfinity ? "∞" : +parseFloat(unmodified_datapoint["mvpf"]).toFixed(2)));
 
-                        if (tooltip_number > 1) {
+                        if (tooltip_number > 1 & tooltip_counter < tooltip_number) {
                             tooltip.push("");
                         }
+                        tooltip_counter++;
                         return tooltip;
                     }
-
                 }
             }
         }
@@ -1353,12 +1402,12 @@ function generateSingleProgramHTML(program) {
     //Description
     var programDescription = document.createElement('p');
     programHeadLine.className = "programDescription";
-    programDescription.innerHTML = "<strong>Short Description:</strong> <br>" + program_data.short_description;
+    programDescription.innerHTML = "<span style=\"font-family: "+ headline_font + "; font-size:"+ headline_fontsize + "px;\"><strong>Short Description:</strong></span> <br> <span style=\"color:rgb(102,102,102);\">" + program_data.short_description + "</span>";
     singleProgramDiv.appendChild(programDescription);
 
     var gccHeadline = document.createElement('div');
     gccHeadline.className = "chartHeadline";
-    gccHeadline.innerHTML = "<strong>Government Net Cost:</strong>";
+    gccHeadline.innerHTML = "<strong><span style=\"font-family: "+ headline_font + "; font-size:"+ headline_fontsize + "px;\">Government Net Cost:</strong></span>";
     singleProgramDiv.appendChild(gccHeadline);
 
     var gccDiv = document.createElement('div');
@@ -1371,7 +1420,7 @@ function generateSingleProgramHTML(program) {
 
     var wtpHeadline = document.createElement('div');
     wtpHeadline.className = "chartHeadline";
-    wtpHeadline.innerHTML = "<strong>Willingness to Pay:</strong>";
+    wtpHeadline.innerHTML = "<strong><span style=\"font-family: "+ headline_font + "; font-size:"+ headline_fontsize + "px;\">Willingness to Pay:</strong></span>";
     singleProgramDiv.appendChild(wtpHeadline);
 
     var wtpDiv = document.createElement('div');
@@ -1384,7 +1433,7 @@ function generateSingleProgramHTML(program) {
 
     var mvpfHeadline = document.createElement('div');
     mvpfHeadline.className = "chartHeadline";
-    mvpfHeadline.innerHTML = "<strong>Government Net Cost & Willingness to Pay:</strong>";
+    mvpfHeadline.innerHTML = "<strong><span style=\"font-family: "+ headline_font + "; font-size:"+ headline_fontsize + "px;\">Government Net Cost & Willingness to Pay:</strong></span>";;
     singleProgramDiv.appendChild(mvpfHeadline);
     
     var wtpCostDiv = document.createElement('div');
@@ -1399,12 +1448,16 @@ function generateSingleProgramHTML(program) {
     barChartSuperDivArray = [gccDiv, wtpDiv, wtpCostDiv];
 
     //Cite papers
-    var html = "<strong>Relevant Literature:</strong> <br>"
+    var html = "<span style=\"font-family: "+ headline_font + "; font-size:"+ headline_fontsize + "px;\"><strong>Relevant Literature:</strong></span> <br>"
     var links = program_data.Links.split(";");
     var authors = program_data.Papers.split(";");
     var i;
     for (i = 0; i < authors.length; i++) {
-        html += authors[i] + ', <a href="' + links[i] + '" target="_blank">IDEAS Link</a>' + " <br>";
+        html += "<span style=\"color: rgb(102,102,102);\">" + 
+        authors[i] + 
+        ', <a href="' + links[i] + 
+        '" target="_blank">[Link]</a>' + 
+        " <br>";
     }
 
     var sources = document.createElement('p');
@@ -1439,5 +1492,6 @@ function main() {
     });
 
 }
+
 
 main();

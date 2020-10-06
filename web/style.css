@@ -12,7 +12,7 @@ html, body {
 * { 
     -moz-box-sizing: border-box; 
     -webkit-box-sizing: border-box; 
-     box-sizing: border-box; 
+     box-sizing: border-box;
 }
 
 
@@ -35,6 +35,7 @@ html, body {
     font-weight: bold;
     padding-bottom: 3px;
     font-weight: 700;
+    font-family: 'Source Sans Pro';
 }
 
 #leftSide {
@@ -60,6 +61,7 @@ html, body {
 .selectBox {
     font-size: 14px;
     padding: 1px;
+    color: black;
 }
 
 #barChartDiv {
@@ -77,6 +79,7 @@ html, body {
 }
 
 .singleProgramDiv {
+    font-size: 18px;
     width: inherit;
     height: 160px;
     padding-left: 50px;
@@ -95,11 +98,6 @@ html, body {
     font-size: 17px;
 }
 
-.selectField {
-    columns: green;
-    max-width: var(--left-width);
-}
-
 .plotAssumptionsBox {
     margin-bottom: 10px;
     font-size: 17px;
@@ -109,6 +107,7 @@ html, body {
 
 .chartHeadline {
     padding-top: 0px;
+    font-family: 'Source Sans Pro';
 }
 
 .barPlotElement {

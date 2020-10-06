@@ -10,9 +10,10 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script type="text/javascript"
         src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.11/jquery.csv.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.0.0-alpha.2/chart.min.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.0.0-beta/chart.min.js"></script>
+    <link rel="icon" href="icon.png">
     <link href='https://fonts.googleapis.com/css?family=Open Sans' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Source Sans Pro' rel='stylesheet'>
 
 <body style="font-family: Open Sans"></body>
 
@@ -84,8 +85,51 @@
             <br>
             <select id="returnsToSchoolingAssumption" class="selectBox" onchange="updateGraphAssumptions()">
                 <option value="returns_to_schooling5">5%</option>
-                <option value="returns_to_schooling10">10%</option>
+                <option value="returns_to_schooling7">7%</option>
+                <option value="returns_to_schooling11">11%</option>
                 <option value="returns_to_schoolingIAB" selected>IAB Data</option>
+            </select>
+        </div>
+
+        <div class="plotAssumptionsBox">
+            <label for="valueOfStatisticalLifeAssumption">Value of Statistical Life:</label>
+            <br>
+            <select id="valueOfStatisticalLifeAssumption" class="selectBox" onchange="updateGraphAssumptions()">
+                <option value="value_of_statistical_life1million">1 Million</option>
+                <option value="value_of_statistical_life2.5million" selected>2.5 Million</option>
+                <option value="value_of_statistical_life5million">5 Million</option>
+            </select>
+        </div>
+
+        <div class="plotAssumptionsBox">
+            <label for="co2externality">Valuation of Saving a ton of CO<sub>2</sub></label>
+            <br>
+            <select id="co2externality" class="selectBox" onchange="updateGraphAssumptions()">
+                <option value="co2externality0">0€</option>
+                <option value="co2externality50">50€</option>
+                <option value="co2externality100" selected>100€</option>
+                <option value="co2externality250">250€</option>
+            </select>
+        </div>
+
+        <div class="plotAssumptionsBox">
+            <label for="wage_growth_rate">Wage Growth Rate</label>
+            <br>
+            <select id="wage_growth_rate" class="selectBox" onchange="updateGraphAssumptions()">
+                <option value="wage_growth_rate0">0%</option>
+                <option value="wage_growth_rate05" selected>0.5%</option>
+                <option value="wage_growth_rate1">1%</option>
+                <option value="wage_growth_rate15">1.5%</option>
+            </select>
+        </div>
+
+        <div class="plotAssumptionsBox">
+            <label for="relative_risk_aversion">Arrow-Pratt Measure of Relative Risk Aversion</label>
+            <br>
+            <select id="relative_risk_aversion" class="selectBox" onchange="updateGraphAssumptions()">
+                <option value="relative_risk_aversion1">1</option>
+                <option value="relative_risk_aversion2" selected>2</option>
+                <option value="relative_risk_aversion5">5</option>
             </select>
         </div>
     </div>
