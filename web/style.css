@@ -68,9 +68,9 @@ html, body {
     margin-top: 75px;
     float: left;
     /*height: 150px;*/
-    position: relative;
     width: calc((100vw - var(--left-width)) * (1 - var(--middle-share)));
     margin-bottom: 50px;
+    position:relative;
 }
 
 #mvpfChart {
@@ -177,9 +177,12 @@ html, body {
     left: 0;
 }
   #mvpfChartDiv {
-    float: none;
+    padding-top: 15px;
+    float: left;
     width: auto;
-    margin-top: 60px;
+    overflow: auto;
+    margin-top: 0px;
+    width: 100%;
     height: 600px;
     padding-left: 15px;
     padding-right: 15px;
@@ -190,4 +193,13 @@ html, body {
     padding-left: 15px;
     padding-right: 15px;
   }
+  #barChartDiv {
+    margin-top: 0px;
+    padding-top: 0px;
+    float: left;
+    /*height: 150px;*/
+    width: 100%;
+    margin-bottom: 0px;
+    position:relative;
+}
 }
