@@ -19,7 +19,14 @@ global_income_fraction_of_long_term_care_contribution <- 0 #The fraction of unem
 global_welfare_benefit_monthly <- 700
 value_added_tax <- 0.19
 
+# Preferences
+global_relative_risk_aversion <- 2
+
 # Value of statistical Life and Injuries:
+use_single_statistical_life_value <- TRUE # If set to true only one statistical life value has to be specified. All of the
+# other values for injuries and the differentiation between resource cost and risk value are derived from the value set
+# in value_of_statistical_life
+value_of_statistical_life <-1161892 + 1319104  # Should be the sum of resource cost and risk value (see below)
 # Resource Cost: "resource cost reflect lost production and economic cost of an accident", Thiedig (2018), p. 54
 global_resource_cost_fatal <- 1161892 # Table 7.3 Thiedig (2018), p 54
 global_resource_cost_severe <- 116151 # Table 7.3 Thiedig (2018), p 54
@@ -30,14 +37,16 @@ global_risk_value_fatal <- 1319104 # Table 7.3 Thiedig (2018), p 54
 global_risk_value_severe <- 171484 # Table 7.3 Thiedig (2018), p 54
 global_risk_value_light <- 13191 # Table 7.3 Thiedig (2018), p 54
 
+
 # Education
 global_use_constant_ols_return_to_schooling <- FALSE
-yearly_return_to_schooling <- 0.05
+yearly_return_to_schooling <- 0.07
 duration_of_study <- 5
 duration_of_berufsschule <- 3
 
 # Environment Policies:
-co2_externality <- 86.5 # Externality in € caused by one additional ton of CO2 emissions. 86.5 is the value from Thiedig (2018)
+co2_externality <- 100 # Externality in € caused by one additional ton of CO2 emissions. 86.5 is the value used by Thiedig (2018)
+
 
 #----------------------------------------------------------------------------------------------------------------------#
 # Settings
@@ -53,3 +62,30 @@ results_prices <- 2015 # The year to which results should be discounted
 exclude_variables_from_price_adjustment <- c("prices_year") # All variables that are returned by a program (willingness_to_pay, program_cost ...)
 disable_deflating <- FALSE
 # are deflated to results_prices automatically except those in exclude_variables_from_price_adjustment
+
+#----------------------------------------------------------------------------------------------------------------------#
+# Apply Statistical Life Assumptions: (No relevant settings / assumptions beyond this point)
+#----------------------------------------------------------------------------------------------------------------------#
+calculate_statistical_life_assumptions <- function() {
+  # Each of the assumptions relative to the sum of resource cost and risk value
+  if (use_single_statistical_life_value) {
+    # This scales all the injury valuation as they are in Thiedig (2018)
+    sum <- global_resource_cost_fatal + global_risk_value_fatal
+    share_global_resource_cost_fatal <<- global_resource_cost_fatal / sum
+    share_global_resource_cost_severe <<- global_resource_cost_severe / sum
+    share_global_resource_cost_light <<- global_resource_cost_light / sum
+
+    share_global_risk_value_fatal <<- global_risk_value_fatal / sum
+    share_global_risk_value_severe <<- global_risk_value_severe / sum
+    share_global_risk_value_light <<- global_risk_value_light / sum
+
+    global_resource_cost_fatal <<- share_global_resource_cost_fatal * value_of_statistical_life
+    global_resource_cost_severe <<- share_global_resource_cost_severe * value_of_statistical_life
+    global_resource_cost_light <<-  share_global_resource_cost_light * value_of_statistical_life
+
+    global_risk_value_fatal <<- share_global_risk_value_fatal * value_of_statistical_life
+    global_risk_value_severe <<- share_global_risk_value_severe * value_of_statistical_life
+    global_risk_value_light <<-  share_global_risk_value_light * value_of_statistical_life
+  }
+}
+calculate_statistical_life_assumptions()

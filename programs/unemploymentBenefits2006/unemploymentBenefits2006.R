@@ -34,7 +34,7 @@ unemploymentBenefits2006 <- function (bootstrap_replication = 0) {
   max_benefit_duration_before <- 18 * share_6month_reduction  + 22 * share_10month_reduction + 32 * share_14month_reduction + 26 * share_8month_reduction
 
   consumption_drop <- 0.08 # (delta consumption / consumption), i.e. the consumption drop when someone becomes unemployed
-  relative_risk_aversion <- 2 # Coefficient of relative risk aversion
+  relative_risk_aversion <- global_relative_risk_aversion # Coefficient of relative risk aversion
   # The two assumptions above are from Hendren & Sprung-Keyser (2020).
   # Schmieder & von Wachter (2016) survey studies that estimate the consumption drop. Estimates range from about 5%
   # to 25%. All but one study look at the US. There is no study for Germany.

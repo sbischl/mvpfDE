@@ -1430,7 +1430,11 @@ getListOfAllMetaAssumptions <- function() {
   list_of_all_meta_assumptions <- list(
     discount_rate = c("7", "3", "1"),
     tax_rate = c("0", "15", "30", "45", "60", "nonlinear", "incometaxonly"),
-    returns_to_schooling = c("5","10","IAB")
+    returns_to_schooling = c("5","7", "11", "IAB"),
+    value_of_statistical_life = c("1million", "2.5million", "5million"),
+    co2_externality = c("0","50","100","250"),
+    wage_growth_rate = c("0", "05", "1", "15"),
+    relative_risk_aversion = c("1", "2", "5")
   )
 }
 
@@ -1458,9 +1462,16 @@ setMetaAssumption <- function(key, value) {
       global_use_constant_ols_return_to_schooling <<- TRUE
       yearly_return_to_schooling <<- 0.05
     }
-    else if (value == "10") {
+    else if (value == "7") {
       global_use_constant_ols_return_to_schooling <<- TRUE
-      yearly_return_to_schooling <<- 0.1
+      yearly_return_to_schooling <<- 0.07
+    }
+    else if (value == "11") {
+      global_use_constant_ols_return_to_schooling <<- TRUE
+      yearly_return_to_schooling <<- 0.11
+    }
+    else {
+      warning(paste("Value", value, "of assumption", key, "not found"))
     }
   }
   else if (key == "tax_rate") {
@@ -1507,10 +1518,77 @@ setMetaAssumption <- function(key, value) {
       warning(paste("Value", value, "of assumption", key, "not found"))
     }
   }
+  else if (key == "value_of_statistical_life") {
+    if (value == "1million") {
+      use_single_statistical_life_value <<- TRUE
+      value_of_statistical_life <<- 10^6
+    }
+    else if (value == "2.5million") {
+      use_single_statistical_life_value <<- TRUE
+      value_of_statistical_life <<- 2.5 * 10^6
+    }
+    else if (value == "5million") {
+      use_single_statistical_life_value <<- TRUE
+      value_of_statistical_life <<- 5 * 10^6
+    }
+    else {
+      warning(paste("Value", value, "of assumption", key, "not found"))
+    }
+  }
+  else if (key == "co2_externality") {
+    if (value == "0") {
+      co2_externality <<- 0
+    }
+    else if (value == "50") {
+      co2_externality <<- 50
+    }
+    else if (value == "100") {
+      co2_externality <<- 100
+    }
+    else if (value == "250") {
+      co2_externality <<- 250
+    }
+    else {
+      warning(paste("Value", value, "of assumption", key, "not found"))
+    }
+  }
+  else if (key == "wage_growth_rate") {
+    if (value == "0") {
+      wage_growth_rate <<- 0
+    }
+    else if (value == "05") {
+      wage_growth_rate <<- 0.005
+    }
+    else if (value == "1") {
+      wage_growth_rate <<- 0.01
+    }
+    else if (value == "15") {
+      wage_growth_rate <<- 0.015
+    }
+    else {
+      warning(paste("Value", value, "of assumption", key, "not found"))
+    }
+  }
+  else if (key == "relative_risk_aversion") {
+    if (value == "1") {
+      global_relative_risk_aversion <<- 1
+    }
+    else if (value == "2") {
+      global_relative_risk_aversion <<- 2
+    }
+    else if (value == "5") {
+      global_relative_risk_aversion <<- 5
+    }
+    else {
+      warning(paste("Value", value, "of assumption", key, "not found"))
+    }
+  }
   else {
     warning(paste("Assumption", key, "not found"))
     return(-1)
   }
+  calculate_statistical_life_assumptions()
+  print("got here")
 }
 
 exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_assumptions = TRUE) {
