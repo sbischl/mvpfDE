@@ -5,6 +5,9 @@
 # Clear the environment:
 rm(list = ls())
 
+# Working Directory:
+setwd("C:/Users/Simon/IdeaProjects/UnifiedWelfareGer")
+
 # Check if packages are installed
 required_packages <- c("ggplot2",
                        "mvtnorm",
@@ -60,9 +63,6 @@ options(knitr.kable.NA = '-')
 
 # Measure runtime
 start_time <- Sys.time()
-
-# Working Directory:
-setwd("C:/Users/Simon/IdeaProjects/UnifiedWelfareGer")
 
 # Load functions
 source("functions.R")
