@@ -88,7 +88,7 @@ mvpf_results <- getPointEstimates(programs)
 mvpf_results <- addBootstrappedConfidenceIntervalls(mvpf_results)
 
 # Display runtime of the estimation procedure
-cat("Estimation completed in ", -(start_time - Sys.time()), " minutes \n")
+cat("Estimation completed in ", difftime(Sys.time(), start_time, units='mins'), " minutes \n")
 
 # Print results:
 for (i in 1:length(programs)) {
@@ -130,7 +130,7 @@ plotResults(plot_data = plot_data, category_plot_data = category_plot_data, y_ax
 
 
 # Export CSV Files
-exportPlotCSV(programs)
+#exportPlotCSV(programs)
 exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)
 
 # Export Tables:

@@ -1618,6 +1618,8 @@ exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_as
   message("Running and Exporting the results of ", nrow(possible_assumption_combinations),
           " specifications as csv. This can take a while.\n")
 
+  start_time <- Sys.time()
+
   foreach(i = 1:nrow(possible_assumption_combinations),
           .export =  ls(globalenv())[!ls(globalenv()) %in% c("programs")], #this gets rid of some warnings
           .packages = c("dplyr", "readxl")) %dopar% {
@@ -1651,6 +1653,8 @@ exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_as
   }
   # Reset the assumptions.
   source("assumptions.R")
+
+  message("Exporting results completed in ", difftime(Sys.time(), start_time, units='mins'), " minutes \n")
 }
 
 getCompletePrograms <- function() {
