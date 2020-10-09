@@ -131,7 +131,7 @@ plotResults(plot_data = plot_data, category_plot_data = category_plot_data, y_ax
 
 # Export CSV Files
 #exportPlotCSV(programs)
-exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)
+#exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)
 
 # Export Tables:
 exportLatexTables(plot_data)
