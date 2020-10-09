@@ -5,13 +5,13 @@
 # Relevant Literature:
 # Doerrenberg et al. (2017) and Working Paper Version from 2015
 
-taxReform2001 <- function (bootstrap_replication = 0, year_difference = 3) {
+taxReform2005 <- function (bootstrap_replication = 0, year_difference = 3) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)
 
   # Tax rates before and after the reform:
-  marginal_top_tax_rate_before <- 0.53
-  marginal_top_tax_rate_after <- 0.485
+  marginal_top_tax_rate_before <- 0.45
+  marginal_top_tax_rate_after <- 0.42
 
   # We have 3 estimates for the elasticity of taxable income with respect to the net-of-tax rate depending on the
   # elapsed time between tax rate change and the income reaction.
@@ -22,10 +22,10 @@ taxReform2001 <- function (bootstrap_replication = 0, year_difference = 3) {
 
   # Calculate the fiscal externality given the tax rate before the reform and after the reform
   fiscal_externality_before <-
-    marginal_top_tax_rate_before / (1 - marginal_top_tax_rate_before) * estimates$pareto_coefficient_2001_wid * elasticity_of_taxable_income
+    marginal_top_tax_rate_before / (1 - marginal_top_tax_rate_before) * estimates$pareto_coefficient_2005_wid * elasticity_of_taxable_income
 
   fiscal_externality_after <-
-    marginal_top_tax_rate_after / (1 - marginal_top_tax_rate_after) * estimates$pareto_coefficient_2001_wid * elasticity_of_taxable_income
+    marginal_top_tax_rate_after / (1 - marginal_top_tax_rate_after) * estimates$pareto_coefficient_2005_wid * elasticity_of_taxable_income
 
   # Follow Hendren and Sprung-Keyser (2020) by taking the average of the fiscal externality before and after the reform
   average_fiscal_externality <- (fiscal_externality_before + fiscal_externality_after) / 2

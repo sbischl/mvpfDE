@@ -9,8 +9,8 @@ library(wid)
 library(dplyr)
 
 
-relevant_year <- 2001 # Year of the Tax Reform
-top_tax_theshold <- 54998 # Income at which the top tax rate starts. (As defined by the tax schedule)
+relevant_year <- 2005 # Year of the Tax Reform
+top_tax_theshold <- 52152 # Income at which the top tax rate starts. (As defined by the tax schedule)
 # See https://www.bmf-steuerrechner.de/ekst/eingabeformekst.xhtml
 
 # The relevant threshold is the gross income at which the top tax rate is actually payed. Due to deductions,
@@ -18,7 +18,6 @@ top_tax_theshold <- 54998 # Income at which the top tax rate starts. (As defined
 # In 2020, the top tax rate starts at about 55000. But to actually pay the top tax rate the income has to
 # be about 70000. This is roughly + 30%. Assume that this was also true in the 90s and 2000s.
 relevant_threshold <- top_tax_theshold * 1.3
-
 
 
 
