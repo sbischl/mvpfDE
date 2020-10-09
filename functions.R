@@ -1090,17 +1090,12 @@ exportLatexTables <- function(plot_data)  {
   }
 
   additional_info_table %>% save_kable("tex/programsTableAdditionalInfo.tex")
-
-
-  ## Copy Files:
-  FolderCopy("tex", "tables")
 }
 
-FolderCopy <- function(from, to) {
-  # Small helper function which copies folders from the working directory to path below:
-  path <- "C:/Users/Simon/OneDrive/Universität/Fächer/Master Thesis/Latex/"
-  files <- list.files(paste0("./", from))
-  file.copy(file.path(paste0("./", from), files), paste0(path, to, "/", files), overwrite = T)
+FolderCopy <- function() {
+  # Copies some files to my Latex Workspace. Tried to do this with R. Failed miserably because R does not allow to pass system commands
+  # or filenames to file.copy which contain Umlaute... Had to use python.
+  system("python web/copyFiles.py")
 }
 
 discountVector <- function(periods) {

@@ -137,4 +137,4 @@ plotResults(plot_data = plot_data, category_plot_data = category_plot_data, y_ax
 exportLatexTables(plot_data)
 
 # Copy Files:
-FolderCopy("plots", "figures")
+FolderCopy()
