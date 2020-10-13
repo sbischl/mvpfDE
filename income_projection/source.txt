@@ -1,0 +1,31 @@
+age_income_degree.csv is the raw data from the table in the appendix of IAB Kurzbericht "Bildung lohnt sich ein Leben lang".
+
+The "Kurzbericht" does not report what shares of the population have which level of education. 
+Fortunatley, the IAB publishes a frequency tables of the SIAB that was used in the IAB Kurzbericht at (2010 Wave):
+https://fdz.iab.de/187/section.aspx/Publikation/k130513302
+.. which links to a zip file: http://doku.iab.de/fdz/reporte/2013/DR_01-13_frequencies_labels_en.zip
+.. which contains the file freq_SIAB_7510_v1_byYear_en.txt
+The relevant table is displayed in the table with the headline "School education and vocational training (bild)"
+
+From the documenationtion (in German) at http://doku.iab.de/fdz/reporte/2013/DR_05-13.pdf we know what the levels mean in terms of the German school
+system:
+
+1 Volks-/Hauptschule/mittlere Reife oder gleichwertige Schulbildung, ohne abgeschlossene Berufsausbildung
+2 Volks-/Hauptschule/mittlere Reife oder gleichwertige Schulbildung, mit abgeschlossener Berufsausbildung
+3 Mit Abitur, ohne abgeschlossene Berufsausbildung
+4 Mit Abitur und abgeschlossener Berufsausbildung
+5 Fachhochschulabschluss
+6 Hochschulabschluss
+
+The Table form the Kurzbericht differentiates between "keine Berufsausbildung" , "Berufsausbildung", "Abitur", "Fachhochschulabschluss", "Hochschulabschluss"
+Its pretty clear that the mapping from the Kurzbericht to the frequency table is:
+"keine Berufsausbildung" -> 1
+"Berufsausbildung" -> 2
+"Abitur" -> 3 & 4
+"Fachhochschulabschluss" -> 5
+"Hochschulabschluss" -> 6
+
+-> This can be used to calculate the share of each degree in the population.
+-> see generateIncomeCrossSection.R
+
+

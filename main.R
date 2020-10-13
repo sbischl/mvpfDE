@@ -46,13 +46,13 @@ invisible(lapply(required_packages, FUN = library, character.only = TRUE))
 # Try to load the alternative font that is used in the pdf exports.
 # If this font is not installed / cannot be found, the standard one will be used
 tryCatch({
-           plot_font <<- "Open Sans"
-           font_add(plot_font, "OpenSans-Regular.ttf")
-         },
-         error = function(e) {
-           warning("Font is not installed. Plots are going to use the standard font instead.")
-           plot_font <<- "sans"
+  plot_font <<- "Open Sans"
+  font_add(plot_font, "OpenSans-Regular.ttf")
+}, error = function(e) {
+  warning("Font is not installed. Plots are going to use the standard font instead.")
+  plot_font <<- "sans"
 })
+
 showtext_auto()
 
 # Initilialize parallel environment
@@ -129,8 +129,9 @@ plotResults(plot_data = plot_data, category_plot_data = category_plot_data, y_ax
             save = "mvpf_categories.pdf", confidence_intervalls = TRUE, text_labels = FALSE)
 
 
-# Export CSV Files
-#exportPlotCSV(programs)
+# Exports only the result of the baseline specification
+exportPlotCSV(programs)
+# Exports all possible combinations of assumptions. Takes about 2 hours with 3 parallel threads.
 #exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)
 
 # Export Tables:

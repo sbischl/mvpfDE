@@ -452,7 +452,7 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
   impact_year <- (start_projection_year- start_projection_age) + impact_age
 
   # Adjust for inflation, i.e., convert incomes to 'prices_year' euros.
-  age_income_table$income_price_adjusted <- age_income_table$income * deflate(from = 2015, to = prices_year)
+  age_income_table$income_price_adjusted <- age_income_table$income * deflate(from = 2010, to = prices_year)
 
 
   # Calculate the average income trajectory(i.e. average income for each age) for the population that is 'impact_age' years old in the year 'impact_year'
@@ -461,7 +461,7 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
   age_income_table$year <- (start_projection_year - start_projection_age) + age_income_table$age
 
   # Grow wages by (1+g)^(the number of years the income accrues after the year we have data for) / Or shrink if the exponent is negative
-  age_income_table$income_fully_adjusted <- age_income_table$income_price_adjusted * (1 + wage_growth_rate)^(age_income_table$year - 2015)
+  age_income_table$income_fully_adjusted <- age_income_table$income_price_adjusted * (1 + wage_growth_rate)^(age_income_table$year - 2010)
 
   # If the income of the control group rather than the relative income is given, we need to calculate the relative
   # income.

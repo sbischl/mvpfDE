@@ -30,22 +30,22 @@ age_income_degree[age_income_degree == 0] <- NA
 #.z  no entry                             |       34,058        22,711        42,166        50,292       104,430       112,193       117,050       124,181       150,890       224,562       245,769
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-# From the table (2010):
+# From the table column (2010):
 education_levels_frequency <- list(no_vocational_educ <- 77685,
-                         vocational_educ <-  312315,
-                         abitur <- 14043 + 28573,
-                         applied_sciences_degree <- 21861,
-                         university_degree <- 38272)
+                                   vocational_educ <- 312315,
+                                   abitur <- 14043 + 28573,
+                                   applied_sciences_degree <- 21861,
+                                   university_degree <- 38272)
 
 observations <- sum(unlist(education_levels))
 
 education_levels_shares <- unlist(education_levels_frequency) / observations
 
 age_income_cross_section <- data.frame(age = age_income_degree$age,
-                                       income = apply(age_income_degree[,2:ncol(age_income_degree)], 1, function(x) {
+                                       income = apply(age_income_degree[, 2:ncol(age_income_degree)], 1, function(x) {
                                          # Devide by the sum of shares that are not NA.
-                                         sum(x * education_levels_shares, na.rm =  TRUE) / sum(education_levels_shares * x / x, na.rm = TRUE)
+                                         sum(x * education_levels_shares, na.rm = TRUE) / sum(education_levels_shares * (x / x), na.rm = TRUE)
                                        }))
 
-write.csv(x = age_income_cross_section, file = "./income_projection/age_income_cross_section.csv", row.names =  FALSE)
+write.csv(x = age_income_cross_section, file = "./income_projection/age_income_cross_section.csv", row.names = FALSE)
 
