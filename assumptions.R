@@ -4,7 +4,7 @@
 
 # Economic Assumptions:
 discount_rate <- 0.03
-retirement_age <- 65
+retirement_age <- 64
 wage_growth_rate <- 0.005
 
 # Tax System Assumptions:

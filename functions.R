@@ -1240,7 +1240,7 @@ getEducationEffectOnEarnings <- function(education_decision = "university_degree
   # Effect
 
   if (!exists("age_income_degree_table")) {
-    age_income_degree_table <<- read.csv("./college_costs/age_income_degree.csv")
+    age_income_degree_table <<- read.csv("./income_projection/age_income_degree.csv")
   }
 
   # Construct the impact for all ages:
@@ -1267,7 +1267,7 @@ getEducationEffectOnEarnings <- function(education_decision = "university_degree
 
 getAverageIncome <- function(age, education, year) {
   if (!exists("age_income_degree_table")) {
-    age_income_degree_table <<- read.csv("./college_costs/age_income_degree.csv")
+    age_income_degree_table <<- read.csv("./income_projection/age_income_degree.csv")
   }
   if (missing(age)) {
     # average over all ages
