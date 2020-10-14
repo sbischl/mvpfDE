@@ -962,7 +962,9 @@ plotTaxRates <- function() {
 generateCIString <- function(lowerCI, upperCI) {
   lowerCI <- sapply(lowerCI, roundAndreplace)
   upperCI <- sapply(upperCI, roundAndreplace)
-  return(paste0("[", lowerCI, ", ", upperCI, "]"))
+  CIString <- paste0("[", lowerCI, ", ", upperCI, "]")
+  CIString[grepl(pattern = "-", x = CIString)] <- "-"
+  return(CIString)
 }
 
 

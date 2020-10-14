@@ -139,7 +139,6 @@ speedLimitA61 <- function (bootstrap_replication = 0, internalize_carbon_emissio
                         private_fuel_cost_saving = private_fuel_cost_saving,
                         value_added_tax_loss = value_added_tax_loss,
                         energy_tax_loss = energy_tax_loss,
-                        program_cost = 0, # the programmatic cost is 0
                         local_emission_reduction = local_emission_reduction,
                         co2_emission_reducation = co2_cost_reducation * internalize_carbon_emissions,
                         prices_year = prices_year)
