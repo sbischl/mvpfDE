@@ -540,10 +540,15 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
 getNetIncome <- function(gross_income,
                          inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
                          income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
+                         income_fraction_of_unemployment_insurance_contribution = global_income_fraction_of_unemployment_insurance_contribution,
                          income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution,
                          income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution) {
-  return(getTaxSystemEffects(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution,
-                             income_fraction_of_long_term_care_contribution, income_fraction_of_health_insurance_contribution)$net_income_yearly)
+  return(getTaxSystemEffects(gross_income,
+                             inculde_welfare_benefits_fraction,
+                             income_fraction_of_pension_contribution,
+                             income_fraction_of_unemployment_insurance_contribution,
+                             income_fraction_of_long_term_care_contribution,
+                             income_fraction_of_health_insurance_contribution)$net_income_yearly)
 }
 
 getTaxSystemEffects <- function(gross_income,
@@ -746,17 +751,23 @@ getTaxSystemEffects <- function(gross_income,
 getAverageTaxRate <- function(gross_income,
                               inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
                               income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
+                              income_fraction_of_unemployment_insurance_contribution = global_income_fraction_of_unemployment_insurance_contribution,
                               income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution,
                               income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution) {
 
   # Average Tax Rate = 1 - NetIncome(gross income) / gross income)
-  return(1 - getNetIncome(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution,
-                          income_fraction_of_long_term_care_contribution, income_fraction_of_health_insurance_contribution) / gross_income)
+  return(1 - getNetIncome(gross_income,
+                          inculde_welfare_benefits_fraction,
+                          income_fraction_of_pension_contribution,
+                          income_fraction_of_unemployment_insurance_contribution,
+                          income_fraction_of_long_term_care_contribution,
+                          income_fraction_of_health_insurance_contribution) / gross_income)
 }
 
 getTaxPayment <- function(gross_income,
                           inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
                           income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
+                          income_fraction_of_unemployment_insurance_contribution = global_income_fraction_of_unemployment_insurance_contribution,
                           income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution,
                           income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution,
                           prices_year = 2019,
@@ -775,6 +786,7 @@ getTaxPayment <- function(gross_income,
   tax_payment <- getTaxSystemEffects(gross_income_inflated,
                                      inculde_welfare_benefits_fraction,
                                      income_fraction_of_pension_contribution,
+                                     income_fraction_of_unemployment_insurance_contribution,
                                      income_fraction_of_long_term_care_contribution,
                                      income_fraction_of_health_insurance_contribution)$tax_yearly
 
@@ -787,14 +799,29 @@ getTaxPayment <- function(gross_income,
 getMarginalTaxRate <- function(gross_income,
                                inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
                                income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
+                               income_fraction_of_unemployment_insurance_contribution = global_income_fraction_of_unemployment_insurance_contribution,
                                income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution,
-                               income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution) {
+                               income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution,
+                               income_tax_only = FALSE) {
 
   # Marginal Tax Rate = 1 - (NetIncome(gross income + 1) - NetIncome(gross income))
-  return(1 - (getNetIncome(gross_income + 1, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution,
-                           income_fraction_of_long_term_care_contribution, income_fraction_of_health_insurance_contribution) -
-    getNetIncome(gross_income, inculde_welfare_benefits_fraction, income_fraction_of_pension_contribution,
-                 income_fraction_of_long_term_care_contribution, income_fraction_of_health_insurance_contribution)))
+  if (!income_tax_only) {
+    return(1 - (getNetIncome(gross_income + 1,
+                             inculde_welfare_benefits_fraction,
+                             income_fraction_of_pension_contribution,
+                             income_fraction_of_unemployment_insurance_contribution,
+                             income_fraction_of_long_term_care_contribution,
+                             income_fraction_of_health_insurance_contribution) -
+      getNetIncome(gross_income,
+                   inculde_welfare_benefits_fraction,
+                   income_fraction_of_pension_contribution,
+                   income_fraction_of_unemployment_insurance_contribution,
+                   income_fraction_of_long_term_care_contribution,
+                   income_fraction_of_health_insurance_contribution)))
+  }
+  else {
+    return(12*(getTaxSystemEffects(gross_income + 1)$income_tax_monthly - getTaxSystemEffects(gross_income)$income_tax_monthly))
+  }
 }
 
 incomeTax <- function(taxable_income) {
@@ -846,33 +873,43 @@ solidarityCharge <- function(taxable_income) {
   }
 }
 
-plotTaxRates <- function() {
+plotTaxRates <- function(income_tax_only = FALSE) {
   # Assumptions for the plots:
   inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction
   income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution
+  income_fraction_of_unemployment_insurance_contribution = global_income_fraction_of_unemployment_insurance_contribution
   income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution
   income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution
+
 
   # Calculate all the Tax Payment, Net incomes, social insurance contributions etc. for a wide range of incomes
   # Income Range
   income_range <- 0:2000*100
-  # Initialize dataframe by calculating the first row
-  taxes_and_transfers <- getTaxSystemEffects(income_range[1],
-                                             inculde_welfare_benefits_fraction,
-                                             income_fraction_of_pension_contribution,
-                                             income_fraction_of_health_insurance_contribution,
-                                             income_fraction_of_health_insurance_contribution)
 
-  # Complete the dataframe by iterating over range of incomes
-  for (i in 2:length(income_range)) {
-    taxes_and_transfers[i, ] <- getTaxSystemEffects(income_range[i],
-                                                    inculde_welfare_benefits_fraction,
-                                                    income_fraction_of_pension_contribution,
-                                                    income_fraction_of_health_insurance_contribution,
-                                                    income_fraction_of_health_insurance_contribution)
+  get_tax_and_transfer_data <- function() {
+    # Initialize dataframe by calculating the first row
+    taxes_and_transfers <- getTaxSystemEffects(income_range[1],
+                                               inculde_welfare_benefits_fraction,
+                                               income_fraction_of_pension_contribution,
+                                               income_fraction_of_unemployment_insurance_contribution,
+                                               income_fraction_of_long_term_care_contribution,
+                                               income_fraction_of_health_insurance_contribution)
+    # Complete the dataframe by iterating over range of incomes
+    for (i in 2:length(income_range)) {
+      taxes_and_transfers[i, ] <- getTaxSystemEffects(income_range[i],
+                                                      inculde_welfare_benefits_fraction,
+                                                      income_fraction_of_pension_contribution,
+                                                      income_fraction_of_unemployment_insurance_contribution,
+                                                      income_fraction_of_long_term_care_contribution,
+                                                      income_fraction_of_health_insurance_contribution)
+    }
+    return(taxes_and_transfers)
   }
 
-  # Keep the relevant information for each of the Figures:
+  taxes_and_transfers <- get_tax_and_transfer_data()
+
+
+  # Keep the relevant information for each of the figures:
   figure_net_income_data <- taxes_and_transfers %>% select(gross_income_monthly, solidarity_charge_monthly, income_tax_monthly,
                                                            long_term_care_contribution , health_insurance_contribution,
                                                            unemployment_insurance_contribution, pension_contribution,
@@ -930,17 +967,39 @@ plotTaxRates <- function() {
 
 
   # Keep the relevant information for each of the Figures:
-  figure_averge_marginal_tax_data <- taxes_and_transfers %>% select(gross_income_monthly, net_income_monthly)
-  figure_averge_marginal_tax_data$average_tax_rate <- 1 - figure_averge_marginal_tax_data$net_income_monthly /
-    figure_averge_marginal_tax_data$gross_income_monthly
-  figure_averge_marginal_tax_data$marginal_tax_rate <- sapply(figure_averge_marginal_tax_data$gross_income_monthly * 12,
-                                                              getMarginalTaxRate,
-                                                              inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction,
-                                                              income_fraction_of_pension_contribution = income_fraction_of_pension_contribution)
 
-  figure_averge_marginal_tax_data <- figure_averge_marginal_tax_data %>% select(-net_income_monthly)
 
-  figure_averge_marginal_tax_data <- gather(data = figure_averge_marginal_tax_data, key = "marginal_average", value = "tax_rate", -gross_income_monthly)
+  get_averge_marginal_tax_data <- function(taxes_and_transfers, income_tax_only = FALSE) {
+    if (income_tax_only) {
+      figure_averge_marginal_tax_data <- taxes_and_transfers %>% select(gross_income_monthly, income_tax_monthly)
+      figure_averge_marginal_tax_data$average_tax_rate <- figure_averge_marginal_tax_data$income_tax_monthly /
+        figure_averge_marginal_tax_data$gross_income_monthly
+      figure_averge_marginal_tax_data$marginal_tax_rate <- sapply(figure_averge_marginal_tax_data$gross_income_monthly * 12,
+                                                                  getMarginalTaxRate,
+                                                                  income_tax_only = TRUE)
+    }
+    else {
+      figure_averge_marginal_tax_data <- taxes_and_transfers %>% select(gross_income_monthly, net_income_monthly)
+      figure_averge_marginal_tax_data$average_tax_rate <- 1 - figure_averge_marginal_tax_data$net_income_monthly /
+        figure_averge_marginal_tax_data$gross_income_monthly
+
+      figure_averge_marginal_tax_data$marginal_tax_rate <- sapply(figure_averge_marginal_tax_data$gross_income_monthly * 12,
+                                                                  getMarginalTaxRate,
+                                                                  inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction,
+                                                                  income_fraction_of_pension_contribution = income_fraction_of_pension_contribution)
+    }
+    if (income_tax_only) {
+      figure_averge_marginal_tax_data <- figure_averge_marginal_tax_data %>% select(-income_tax_monthly)
+    }
+    else {
+      figure_averge_marginal_tax_data <- figure_averge_marginal_tax_data %>% select(-net_income_monthly)
+    }
+
+    figure_averge_marginal_tax_data <- gather(data = figure_averge_marginal_tax_data, key = "marginal_average", value = "tax_rate", -gross_income_monthly)
+    return(figure_averge_marginal_tax_data)
+  }
+
+  figure_averge_marginal_tax_data <- get_averge_marginal_tax_data(taxes_and_transfers)
 
   figure_averge_marginal_tax <- ggplot(aes(x = gross_income_monthly, y = tax_rate, color = marginal_average), data = figure_averge_marginal_tax_data) +
     geom_line() +
@@ -952,10 +1011,34 @@ plotTaxRates <- function() {
     xlab("Gross Income per Month") +
     ylab("Tax Rate")
 
-
-
   print(figure_averge_marginal_tax)
   ggsave(figure_averge_marginal_tax, filename = "marginal_and_average_taxrate.pdf", device = pdf, path = "./plots/", width = 7.6, height = 5)
+
+  # Plot Income Tax Only:
+
+  # Change Assumptions
+  inculde_welfare_benefits_fraction <- 0
+  income_fraction_of_pension_contribution <- 1
+  income_fraction_of_unemployment_insurance_contribution <- 1
+  income_fraction_of_health_insurance_contribution <- 1 #The fraction of pension contributions that is considered income
+  income_fraction_of_long_term_care_contribution <- 1
+
+  figure_averge_marginal_tax_data <- get_averge_marginal_tax_data(get_tax_and_transfer_data(), income_tax_only = TRUE)
+
+  figure_averge_marginal_income_tax <- ggplot(aes(x = gross_income_monthly * 12, y = tax_rate, color = marginal_average), data = figure_averge_marginal_tax_data) +
+    geom_line() +
+    theme_modified_minimal() +
+    scale_x_continuous(limits = c(0, 150000)) +
+    scale_y_continuous(limits = c(0, 1),
+                       expand = expansion(mult = c(0, 0))) +
+    scale_colour_discrete(name = "Legend:", labels = c("Average Tax Rate", "Marginal Tax Rate")) +
+    xlab("Gross Income per Year") +
+    ylab("Income Tax Rate")
+
+  test <<- figure_averge_marginal_tax_data
+
+  print(figure_averge_marginal_income_tax)
+  ggsave(figure_averge_marginal_income_tax, filename = "marginal_and_average_income_taxrate.pdf", device = pdf, path = "./plots/", width = 7.6, height = 5)
 
 }
 
@@ -1504,7 +1587,6 @@ setMetaAssumption <- function(key, value) {
     else if(value == "incometaxonly") {
       # Assume that only the income tax (with soli) is relevant
       global_assume_flat_tax <<- FALSE
-      global_inculde_welfare_benefits_fraction <<- 1
       global_income_fraction_of_pension_contribution <<- 1
       global_income_fraction_of_unemployment_insurance_contribution <<- 1
       global_income_fraction_of_health_insurance_contribution <<- 1 #The fraction of pension contributions that is considered income
