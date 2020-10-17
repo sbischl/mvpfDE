@@ -39,7 +39,7 @@ mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to
     # The
     lifetime_impacts <- project_lifetime_impact(impact_age = 18,
                                                 impact_magnitude_matrix = impact_magnitude_matrix,
-                                                relative_control_income = 1,
+                                                relative_control_income = getRelativeControlGroupEarnings("vocational_educ"),
                                                 start_projection_year = 2021, # 2021 since students are 10 in 2013
                                                 prices_year = prices_year,
                                                 discount_to = 2013,
@@ -50,7 +50,7 @@ mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to
     # The high track entails 2 more years of schooling.
     impact_longer_schooling <- project_lifetime_impact(impact_age = 19,
                                                        impact_magnitude = -1,
-                                                       relative_control_income = 1,
+                                                       relative_control_income = getRelativeControlGroupEarnings("vocational_educ"),
                                                        end_projection_age = 21,
                                                        start_projection_year = 2022, # 2022 since students are 10 in 2013
                                                        prices_year = prices_year,
@@ -59,7 +59,7 @@ mentoringBalu <- function (bootstrap_replication = 0, use_constant_ols_return_to
 
     impact_more_education <- project_lifetime_impact(impact_age = 21,
                                                      impact_magnitude = 2 * yearly_return_to_schooling,
-                                                     relative_control_income = 1,
+                                                     relative_control_income = getRelativeControlGroupEarnings("vocational_educ"),
                                                      start_projection_year = 2024, # 2024 since students are 10 in 2013
                                                      prices_year = prices_year,
                                                      discount_to = 2013,

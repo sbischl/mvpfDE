@@ -39,6 +39,7 @@ G8 <- function (bootstrap_replication = 0,
   # The Paper looks at G8 enactment which was spread over almost ten years.
   # Since there are no cost estimates in the paper, it does not really matter which prices are used.
   prices_year <- 2011
+  program_year <- 2011
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Program Implementation Cost
@@ -83,28 +84,28 @@ G8 <- function (bootstrap_replication = 0,
   impact_magnitude_matrix <- getEducationEffectOnEarnings(education_decision = "university_degree",
                                                           alternative = "abitur")
 
-  if (use_constant_ols_return_to_schooling) {
-    lifetime_impacts <- project_lifetime_impact(impact_age = 21,
+  if (!use_constant_ols_return_to_schooling) {
+    lifetime_impacts <- project_lifetime_impact(impact_age = age_university_enrollment,
                                                 impact_magnitude_matrix = impact_magnitude_matrix,
-                                                relative_control_income = 1,
+                                                relative_control_income = getRelativeControlGroupEarnings("abitur"),
                                                 start_projection_year = 2014,
                                                 prices_year = prices_year,
-                                                discount_to = 2011,
+                                                discount_to = program_year,
                                                 inculde_welfare_benefits_fraction = 0)
   }
   else {
-    impact_longer_schooling <- project_lifetime_impact(impact_age = 21,
+    impact_longer_schooling <- project_lifetime_impact(impact_age = age_university_enrollment + duration_of_berufsschule,
                                                        impact_magnitude = -1,
-                                                       relative_control_income = 1,
-                                                       end_projection_age = 22,
-                                                       start_projection_year = 2011,
+                                                       relative_control_income = getRelativeControlGroupEarnings("abitur"),
+                                                       end_projection_age = age_university_enrollment + duration_of_berufsschule + additional_years_of_schooling_university - 1,
+                                                       start_projection_year = 2014 + duration_of_berufsschule,
                                                        prices_year = prices_year,
                                                        inculde_welfare_benefits_fraction = 0)
 
-    impact_more_education <- project_lifetime_impact(impact_age = 23,
-                                                     impact_magnitude = 2* yearly_return_to_schooling,
-                                                     relative_control_income = 1,
-                                                     start_projection_year = 2011,
+    impact_more_education <- project_lifetime_impact(impact_age = age_university_enrollment + duration_of_berufsschule + additional_years_of_schooling_university,
+                                                     impact_magnitude = additional_years_of_schooling_university * yearly_return_to_schooling,
+                                                     relative_control_income = getRelativeControlGroupEarnings("abitur"),
+                                                     start_projection_year = 2014 + duration_of_berufsschule + additional_years_of_schooling_university,
                                                      prices_year = prices_year,
                                                      discount_to = 2011,
                                                      inculde_welfare_benefits_fraction = 0)

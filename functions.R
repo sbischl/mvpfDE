@@ -217,12 +217,20 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
 
   # Generate Category 'Other' which contains all programs that have no Category specified:
   plot_data$category <- coalesce(plot_data$category, "Other")
+  plot_data$category <- factor(plot_data$category, levels = order_of_categories)
   # Assign the Program program identifier (folder name) as program name, if none is specified:
   if (y_axis != "grouped_mvpf") {
     plot_data$program_name <- coalesce(plot_data$program_name, plot_data$program)
   }
 
+  # Finally order the plot_data so that reforms of the same category are displayed next to each other in the overview
+  # table
+  plot_data <- plot_data %>% arrange(category)
 
+  # Convert x_axis variable to factor. Otherwise the programs are plotted in alphabetical order.
+  if (x_axis == "program_name") {
+    plot_data[, x_axis] <- factor( plot_data[, x_axis], levels = plot_data[, x_axis])
+  }
 
   plot <- ggplot(aes_string(y = y_axis, x= x_axis), data = plot_data) +
     ylab(y_label) +
@@ -399,8 +407,11 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
     prices_year = start_projection_year
   }
 
-  # Import age-income relation: This should be estimated from the data, but for testing purposes use the data from Hendren & Sprung-Keyser (2020)
-  age_income_table <- read.csv("./income_projection/age_income_cross_section.csv")
+  # Import age-income relation: This is calculated from the IAB Data. see generateIncomeCrossSection.R in the income_projection folder
+  if (!exists("age_income_table")) {
+    age_income_table <<- read.csv("./income_projection/age_income_cross_section.csv")
+  }
+
 
   # Handlde impact magnitude:
 
@@ -466,7 +477,7 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
   # If the income of the control group rather than the relative income is given, we need to calculate the relative
   # income.
   if (missing(relative_control_income)) {
-    relative_control_income <- control_income / age_income_table[age_income_table$age == impact_age , "income_fully_adjusted"]
+    relative_control_income <- control_income / age_income_table[age_income_table$age == impact_age, "income_fully_adjusted"]
   }
 
   # Limit the dataset the relevant region for the projection:
@@ -1035,7 +1046,6 @@ plotTaxRates <- function(income_tax_only = FALSE) {
     xlab("Gross Income per Year") +
     ylab("Income Tax Rate")
 
-  test <<- figure_averge_marginal_tax_data
 
   print(figure_averge_marginal_income_tax)
   ggsave(figure_averge_marginal_income_tax, filename = "marginal_and_average_income_taxrate.pdf", device = pdf, path = "./plots/", width = 7.6, height = 5)
@@ -1094,9 +1104,16 @@ roundToString <- function(values, remove_trailing_zeros = TRUE) {
 exportLatexTables <- function(plot_data)  {
   # Store category names and count in a data frame
   categories <- plot_data %>% group_by(category) %>% summarize(count=n()) %>% as.data.frame()
-
+  # Define order of programs:
+  order <- order_of_categories
   # Sort programs by category
-  export_data <- plot_data %>% arrange(category)
+  export_data <- plot_data
+  export_data$category <- factor(export_data$category, levels = order)
+  export_data <- export_data %>% arrange(category)
+
+  categories$category <- factor(categories$category, levels = order)
+  categories <- categories %>% arrange(category)
+
   # Generate additional columns:
   export_data$mvpf <- sapply(export_data$mvpf, roundAndreplace)
   export_data$ci_string_mvpf <- generateCIString(export_data$mvpf_95ci_lower,
@@ -1132,40 +1149,75 @@ exportLatexTables <- function(plot_data)  {
                           align = c('l', rep('c', ncol(program_export_results) - 1))) %>%
     kable_styling(latex_options = c("hold_position", "repeat_header"), font_size = 8)
 
-  #--------------------------------------------------------------------------------------------------------------------#
-  # Table with further relevant Information
-  #--------------------------------------------------------------------------------------------------------------------#
-
   program_count <- 1
   for (i in 1:nrow(categories)) {
-    programs_table <- programs_table %>% pack_rows(categories[i, "category"], program_count, program_count + categories[i, "count"] - 1)
+    programs_table <- programs_table %>% pack_rows(categories[i, "category"], program_count, program_count + categories[i, "count"] - 1,
+                                                   latex_gap_space = "0.6m")
     program_count <- program_count + categories[i, "count"]
   }
 
   programs_table %>% save_kable("tex/programsTableResults.tex")
 
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Table with Literature & Description
+  #--------------------------------------------------------------------------------------------------------------------#
   program_export_additional_info <- export_data %>% arrange(category) %>%
-    select(program_name, average_age_beneficiary, average_earnings_beneficiary)
+    select(program_name, short_description)
 
-
-  program_export_additional_info$average_age_beneficiary <- roundToString(program_export_additional_info$average_age_beneficiary)
-  program_export_additional_info$average_earnings_beneficiary <- roundToString(program_export_additional_info$average_earnings_beneficiary)
+  program_export_additional_info$short_description <- xtable::sanitize(program_export_additional_info$short_description)
   program_export_additional_info$literature <- sapply(export_data$bibtexkeys, function(key) {
     # Return Latex Code that cites the relevant bibtex key and begins a new line for each cited paper
-    paste0("\\makecell[tl]{", paste(paste0("\\cite{",unlist(strsplit(key, ";")), "}"), collapse = " \\\\ "), "}")
+    paste(paste0("\\cite{",unlist(strsplit(key, ";")), "}"), collapse = "\\newline")
   })
 
   # Give each of the columns names without underscores
-  colnames(program_export_additional_info) <- c("Program", "Age Beneficiary", "Average Earnings", "Literature")
+  colnames(program_export_additional_info) <- c("Program", "Short Description", "Literature")
+  hihi <<- program_export_additional_info
 
   additional_info_table <- kable(program_export_additional_info, digits = 2,
                           format = "latex",
                           booktabs = TRUE,
                           escape = FALSE,
                           longtable = TRUE,
-                          caption = "Programs \\label{programsTableAdditionalInfo}",
-                          align = c('l', rep('c', ncol(program_export_results) - 1))) %>%
+                          caption = "Programs \\label{programsTableLiterature}",
+                          align = c('l','l','l')) %>%
+                          column_spec(1, width = "5cm") %>%
+                          column_spec(2, width = "11cm") %>%
+                          column_spec(3, width = "5cm") %>%
                           kable_styling(latex_options = c("hold_position", "repeat_header"))
+
+  # Add Category Headlines
+  program_count <- 1
+  for (i in 1:nrow(categories)) {
+    additional_info_table <- additional_info_table %>% pack_rows(categories[i, "category"], program_count, program_count + categories[i, "count"] - 1,
+                                                                 latex_gap_space = "0.6em", latex_wrap_text = TRUE)
+    program_count <- program_count + categories[i, "count"]
+  }
+
+  additional_info_table %>% save_kable("tex/programsTableLiterature.tex")
+
+
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Table with descriptive Statistics
+  #--------------------------------------------------------------------------------------------------------------------#
+
+  program_export_descriptives <- export_data %>% arrange(category) %>%
+    select(program_name, average_age_beneficiary , average_earnings_beneficiary)
+
+  program_export_descriptives$average_age_beneficiary <- roundToString(program_export_descriptives$average_age_beneficiary)
+  program_export_descriptives$average_earnings_beneficiary <- roundToString(program_export_descriptives$average_earnings_beneficiary)
+
+  # Give each of the columns names without underscores
+  colnames(program_export_descriptives) <- c("Program", "Age Beneficiary", "Average Earnings")
+
+  additional_info_table <- kable(program_export_descriptives, digits = 2,
+                                 format = "latex",
+                                 booktabs = TRUE,
+                                 escape = FALSE,
+                                 longtable = TRUE,
+                                 caption = "Programs \\label{programsTableDescriptive}",
+                                 align = c('l','c','c')) %>%
+    kable_styling(latex_options = c("hold_position", "repeat_header"))
 
   # Add Category Headlines
   program_count <- 1
@@ -1174,7 +1226,8 @@ exportLatexTables <- function(plot_data)  {
     program_count <- program_count + categories[i, "count"]
   }
 
-  additional_info_table %>% save_kable("tex/programsTableAdditionalInfo.tex")
+  additional_info_table %>% save_kable("tex/programsTableDescriptive.tex")
+  
 }
 
 FolderCopy <- function() {
@@ -1320,16 +1373,19 @@ getEducationEffectOnEarnings <- function(education_decision = "university_degree
 
   # assume_constant_effect_from can be used to set an age above which the impact of the considered education path remains
   # constant. This is similar to the approach by Hendren & Sprung-Keyser (2019) who extrapolate the average effect from
-  # years 7 to 14 after college enrollment into the future.
+  # years 7 to 14 after college enrollment into the future. This leads to lower returns to education. The education
+  # premium increases with age (At least in the IAB data)
 
-  # Effect
-
+  # Check if the data has already been loaded. If not load the csv file.
   if (!exists("age_income_degree_table")) {
     age_income_degree_table <<- read.csv("./income_projection/age_income_degree.csv")
   }
 
   # Construct the impact for all ages:
   impact_magnitude_matrix <- data.frame(age = age_income_degree_table$age)
+  # Higher education levels are have hard coded 0 earnings during education in the IAB data. The impact maginude is -1 in these
+  # years. This is equivalent to assuming that individuals who attained more education would have earned the average earnings
+  # of the alternative.
   impact_magnitude_matrix$impact_magnitude <- age_income_degree_table[, education_decision] / age_income_degree_table[, alternative] -1
 
 
@@ -1342,12 +1398,24 @@ getEducationEffectOnEarnings <- function(education_decision = "university_degree
 
   # If the education decision results is zero income, and the alternative implies a positive income, the impact_magnitude
   # would be infinity. But what this acutally means is that the alternative gets a zero income and and the education
-  # decision gets income as in the data. -> The impact should be 1.
-  # Maybe it is wise to avoid this problem. And
-  impact_magnitude_matrix[impact_magnitude_matrix$impact_magnitude == Inf, "impact_magnitude"] <- 1
+  # decision gets income as in the data. -> The impact should be 0.
+  impact_magnitude_matrix[impact_magnitude_matrix$impact_magnitude == Inf, "impact_magnitude"] <- 0
 
 
   return(impact_magnitude_matrix)
+}
+
+getRelativeControlGroupEarnings <- function(education_decision = "university_degree") {
+  # Check if the relevant data has already been loaded. If not load the csv file.
+  if (!exists("age_income_degree_table")) {
+    age_income_degree_table <<- read.csv("./income_projection/age_income_degree.csv")
+  }
+  if (!exists("age_income_table")) {
+    age_income_table <<- read.csv("./income_projection/age_income_cross_section.csv")
+  }
+
+  control_group_average_ratio <- age_income_degree_table[, education_decision] / age_income_table[, "income"]
+  return(mean(control_group_average_ratio))
 }
 
 getAverageIncome <- function(age, education, year) {

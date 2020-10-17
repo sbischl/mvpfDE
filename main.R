@@ -70,9 +70,10 @@ source("functions.R")
 # Load Assumptions:
 source("assumptions.R")
 
-# Prepare Bootstrap
+# List all files in the estimates folder to prepare bootstrap
 estimate_files <- list.files("./estimates", pattern = "^[^~$].*.xlsx")
 
+# Boostrap all estimates and store them in a list, which contains a dataframe of bootstrapped estimates per program
 bootstrapped_estimates <- list()
 for (i in 1:length(estimate_files)) {
   bootstrapped_estimates[[sub(".xlsx", "", estimate_files[i])]] <- drawBootstrap(paste0("./estimates/", estimate_files[i]), bootstrap_replications)
@@ -159,8 +160,6 @@ plotResults(plot_data = plot_data,
             text_labels = FALSE)
 
 
-# Exports only the result of the baseline specification
-exportPlotCSV(programs)
 # Exports all possible combinations of assumptions. Takes about 2 hours with 3 parallel threads.
 #exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)
 

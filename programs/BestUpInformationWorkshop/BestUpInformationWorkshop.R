@@ -37,30 +37,30 @@ BestUpInformationWorkshop <- function (bootstrap_replication = 0,
                                                          alternative = "abitur")
 
   if (!use_constant_ols_return_to_schooling) {
-    lifetime_impacts <- project_lifetime_impact(impact_age = 20,
+    lifetime_impacts <- project_lifetime_impact(impact_age = age_university_enrollment,
                                                 impact_magnitude_matrix = impact_magnitude_matrix,
-                                                relative_control_income = 1,
-                                                start_projection_year = 2014,
+                                                relative_control_income = getRelativeControlGroupEarnings("abitur"),
+                                                start_projection_year = program_year + 1,
                                                 prices_year = prices_year,
                                                 inculde_welfare_benefits_fraction = 0)
 
   }
   else {
     # Alternative specification assuming simply 2 more years of schooling:
-    impact_longer_schooling <- project_lifetime_impact(impact_age = 20,
+    impact_longer_schooling <- project_lifetime_impact(impact_age = age_university_enrollment + duration_of_berufsschule,
                                                        impact_magnitude = -1,
-                                                       relative_control_income = 1,
-                                                       end_projection_age = 21,
-                                                       start_projection_year = 2014,
+                                                       relative_control_income = getRelativeControlGroupEarnings("abitur"),
+                                                       end_projection_age = age_university_enrollment + duration_of_berufsschule + additional_years_of_schooling_university - 1,
+                                                       start_projection_year = program_year + duration_of_berufsschule + 1,
                                                        prices_year = prices_year,
                                                        inculde_welfare_benefits_fraction = 0)
 
-    impact_more_education <- project_lifetime_impact(impact_age = 22,
+    impact_more_education <- project_lifetime_impact(impact_age = age_university_enrollment + duration_of_berufsschule + 2,
                                                      impact_magnitude = 2* yearly_return_to_schooling,
-                                                     relative_control_income = 1,
-                                                     start_projection_year = 2016,
+                                                     relative_control_income = getRelativeControlGroupEarnings("abitur"),
+                                                     start_projection_year = program_year + 1 + duration_of_berufsschule + additional_years_of_schooling_university,
                                                      prices_year = prices_year,
-                                                     discount_to = 2014,
+                                                     discount_to = program_year + 1,
                                                      inculde_welfare_benefits_fraction = 0)
     # Add impact_longer_schooling and impact_more_education.
     lifetime_impacts <- impact_longer_schooling + impact_more_education

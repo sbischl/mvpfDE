@@ -43,6 +43,9 @@ global_use_constant_ols_return_to_schooling <- FALSE
 yearly_return_to_schooling <- 0.07
 duration_of_study <- 5
 duration_of_berufsschule <- 3
+additional_years_of_schooling_university <- duration_of_study - duration_of_berufsschule
+age_university_enrollment <- 20 #This is basically given by the IAB data. For > 20, the cost in terms of foregone
+# income of going to university is underestiamted. For there is either no change or the esimation breaks because of 0 by 0 division.
 
 # Environment Policies:
 co2_externality <- 100 # Externality in € caused by one additional ton of CO2 emissions. 86.5 is the value used by Thiedig (2018)
@@ -62,6 +65,17 @@ results_prices <- 2015 # The year to which results should be discounted
 exclude_variables_from_price_adjustment <- c("prices_year") # All variables that are returned by a program (willingness_to_pay, program_cost ...)
 disable_deflating <- FALSE
 # are deflated to results_prices automatically except those in exclude_variables_from_price_adjustment
+
+# Plots and Tables:
+order_of_categories <- c("Tax Reform",
+                         "Education",
+                         "Labor Market Policy",
+                         "Unemployment Insurance",
+                         "Family Policy",
+                         "Climate Policy",
+                         "Health Program",
+                         "Other") #This determines the order in which the reforms categories are displayed in the graphs
+# and tables.
 
 #----------------------------------------------------------------------------------------------------------------------#
 # Apply Statistical Life Assumptions: (No relevant settings / assumptions beyond this point)
