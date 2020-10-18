@@ -1405,7 +1405,7 @@ getEducationEffectOnEarnings <- function(education_decision = "university_degree
   return(impact_magnitude_matrix)
 }
 
-getRelativeControlGroupEarnings <- function(education_decision = "university_degree") {
+getRelativeControlGroupEarnings <- function(education_decision) {
   # Check if the relevant data has already been loaded. If not load the csv file.
   if (!exists("age_income_degree_table")) {
     age_income_degree_table <<- read.csv("./income_projection/age_income_degree.csv")
@@ -1413,9 +1413,12 @@ getRelativeControlGroupEarnings <- function(education_decision = "university_deg
   if (!exists("age_income_table")) {
     age_income_table <<- read.csv("./income_projection/age_income_cross_section.csv")
   }
-
-  control_group_average_ratio <- age_income_degree_table[, education_decision] / age_income_table[, "income"]
-  return(mean(control_group_average_ratio))
+  # In theory this could vary with age, but quick tests suggest that this would have a very small impact, and also
+  # cause problems where the control group has zero earnings. -> Take the ratio of the present values of the lifetime
+  # control groug earnings to the average lifetime earnings.
+  control_group_average_ratio <- sum(age_income_degree_table[, education_decision] * discountVector(length(age_income_degree_table[, education_decision] ))) /
+    sum(age_income_table[, "income"] * discountVector(length(age_income_table[, "income"])))
+  return(control_group_average_ratio)
 }
 
 getAverageIncome <- function(age, education, year) {

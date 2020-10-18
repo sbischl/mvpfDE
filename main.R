@@ -19,7 +19,8 @@ required_packages <- c("ggplot2",
                        "foreach",
                        "doParallel",
                        "knitr",
-                       "kableExtra")
+                       "kableExtra",
+                       "xtable")
 
 not_installed_packages <- required_packages[!required_packages %in% installed.packages()[, 1]]
 
