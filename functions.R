@@ -18,7 +18,7 @@ drawBootstrap <- function(path_to_xlsx, number_of_replications) {
                                      abs(point_estimate / qnorm(p_value / 2))))
 
   # Calculate correlation between estimates:
-
+c
   # Generate an identity matrix
   correlation_matrix <- diag(nrow(estimates))
 
@@ -513,6 +513,11 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
 
   age_income_table$net_earnings_impact <- age_income_table$net_earings_reform - age_income_table$net_earnings_no_reform
   age_income_table$tax_payment_impact <- age_income_table$tax_payment_reform - age_income_table$tax_payment_no_reform
+
+  whatsup <<- data.frame(income = age_income_table$earnings_reform,
+                          net_effect = age_income_table$net_earnings_impact,
+                          tax_payment_impact = age_income_table$tax_payment_impact,
+                          tax = age_income_table$tax_payment_reform)
 
   # Discount all earning impacts to the start of the projection
   age_income_table$earnings_impact_discounted <-
@@ -1435,17 +1440,6 @@ getAverageIncome <- function(age, education, year) {
   return(age_income_degree_table[age_income_degree_table$age == age, education])
 }
 
-returnsToSchool <- function(effect, schooltrack = "all") {
-  # Returns the value of an additional year of schooling.
-  # Estimates:
-  # Estimating returns to schooling is difficult. OLS is likely biased. The direction is not clear. IV Studies find vastly different
-  # results depending on the instrument.
-  # Pischke and von Wachter (OLS) estimate a slightly modified Mincerian Equation using Mikrozensus ~939736 observations:
-  # p. 595 Table 2. It is not clear whether this is a particularly good estimate but it falls in the region where most estimates are in.
-  # (7% - 10%)
-  pischke_von_wachter_estimate <- 0.074
-}
-
 getGrossIncome <- function(net_income,
                            flat_tax = global_flat_tax,
                            assume_flat_tax = global_assume_flat_tax,
@@ -1738,7 +1732,6 @@ setMetaAssumption <- function(key, value) {
     return(-1)
   }
   calculate_statistical_life_assumptions()
-  print("got here")
 }
 
 exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_assumptions = TRUE) {
@@ -1876,7 +1869,7 @@ deflateReturnValues <- function(return_values, year) {
   # This function deflates the return value of some program e.g. classRoomTraining to 'year' prices
   if (!"prices_year" %in% names(return_values)) {
     # The return values do not contain prices_year -> we don't know from which year to deflate. -> Assume that results
-    # are already in corretly deflated
+    # are already correctly deflated
     return(return_values)
   }
 
@@ -1958,9 +1951,10 @@ calculateMVPFCI <- function(willingness_to_pay_pe,
   # (2) Willingness to pay and goverment net costs are negative. In this case the MVPF measures how much WTP is lost
   # per tax revenue increase. (lower value better)
   # If the point estimate is either (1), and one of the bootstrapped estimates is (2) (or vice versa)
-  # the bootstrapped estimate is out of the sensible range and is thus not defined.
+  # the bootstrapped estimate is out of the comparable range and there is uncertainty about the sign of the effect of
+  # the policy.
   # When running the bootstrap, this possibility has to be acconted for by removing the replications where the MVPF is
-  # not defined, and adjusting the confidence intervall.
+  # out of the comparable range, and adjusting the confidence intervall.
 
   replication_defined <- rep (TRUE, bootstrap_replications)
 

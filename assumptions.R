@@ -10,7 +10,7 @@ wage_growth_rate <- 0.005
 # Tax System Assumptions:
 global_assume_flat_tax <- FALSE # If this is set to TRUE, only flat_tax is relevant. Otherwise flat_tax is only
 # used where no absolutely no income information is available.
-global_flat_tax <- 0.3
+global_flat_tax <- 0.2810786
 global_inculde_welfare_benefits_fraction <- 1 #The share of welfare_benefits 'Hartz IV' invidivudals receive.
 global_income_fraction_of_pension_contribution <- 1 #The fraction of pension contributions that is considered income
 global_income_fraction_of_unemployment_insurance_contribution <- 1 #The fraction of unemployment insurance contributions that is considered income
@@ -57,14 +57,14 @@ co2_externality <- 100 # Externality in € caused by one additional ton of CO2 
 
 # Bootstrap Settings
 bootstrap_seed <- 24135693
-bootstrap_replications <- 100
+bootstrap_replications <- 1000
 correlation_between_estimates <- 1
 
 # Prices
-results_prices <- 2015 # The year to which results should be discounted
+results_prices <- 2010 # The year to which results should be deflated
 exclude_variables_from_price_adjustment <- c("prices_year") # All variables that are returned by a program (willingness_to_pay, program_cost ...)
-disable_deflating <- FALSE
 # are deflated to results_prices automatically except those in exclude_variables_from_price_adjustment
+disable_deflating <- FALSE
 
 # Plots and Tables:
 order_of_categories <- c("Tax Reform",

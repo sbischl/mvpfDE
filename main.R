@@ -119,7 +119,7 @@ plotTaxRates()
 plot_data <- getPlotData(mvpf_results)
 category_plot_data <- getCategoryPlotData(plot_data)
 
-# Plot MVPF
+# Plot Results
 plotResults(plot_data = plot_data,
             save ="mvpf_against_year.pdf",
             y_label = "Marginal Value of Public Funds",
@@ -169,3 +169,45 @@ exportLatexTables(plot_data)
 
 # Copy Files:
 FolderCopy()
+
+# Additional Results:
+project_lifetime_impact(impact_age = age_university_enrollment,
+                        impact_magnitude_matrix =  getEducationEffectOnEarnings(education_decision = "university_degree",
+                                                                                alternative = "abitur"),
+                        relative_control_income = getRelativeControlGroupEarnings("abitur"),
+                        start_projection_year = 2010,
+                        prices_year = 2010,
+                        inculde_welfare_benefits_fraction = 0)
+
+# Average Tax Rate of someone working full time: 47928 is the average gross income of someone working full time:
+# https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Verdienste-Verdienstunterschiede/Tabellen/liste-bruttomonatsverdienste.html
+getAverageTaxRate(47928,
+                  inculde_welfare_benefits_fraction = 1,
+                  income_fraction_of_pension_contribution = 1,
+                  income_fraction_of_unemployment_insurance_contribution = 1,
+                  income_fraction_of_long_term_care_contribution = 0,
+                  income_fraction_of_health_insurance_contribution = 0)
+
+# Bafög Repayment Reform:
+(mvpf_results %>% filter(program == "bafoegRepayment"))["program_cost"]
+(mvpf_results %>% filter(program == "bafoegRepayment"))["tax_revenue_increase"]
+(mvpf_results %>% filter(program == "bafoegRepayment"))["education_cost"]
+(mvpf_results %>% filter(program == "bafoegRepayment"))["bafoeg_cost"]
+(mvpf_results %>% filter(program == "bafoegRepayment"))["net_income_increase"]
+
+(mvpf_results %>% filter(program == "bafoegRepayment"))["willingness_to_pay"]
+(mvpf_results %>% filter(program == "bafoegRepayment"))["government_net_costs"]
+
+
+0.04 * project_lifetime_impact(impact_age = age_university_enrollment,
+                        impact_magnitude_matrix = getEducationEffectOnEarnings(education_decision = "university_degree",
+                                                                               alternative = "abitur"),
+                        relative_control_income = getRelativeControlGroupEarnings("abitur"),
+                        start_projection_year = 1990,
+                        prices_year = 2010,
+                        inculde_welfare_benefits_fraction = 0)
+
+0.04 * (costOfCollege(duration_of_study = 5, year = 1990, prices_year = 2010) -
+  costOfSchool(duration_of_schooling = 3, year = 1990, prices_year = 2010, school_type = "berufsschule_dual"))
+
+596 * 0.51129 * deflate(from = 1990, to = 2010)
