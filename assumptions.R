@@ -4,7 +4,7 @@
 
 # Economic Assumptions:
 discount_rate <- 0.03
-retirement_age <- 64
+retirement_age <- 64 # This is more or less set in stone by the IAB data. We cannot go higher only lower.
 wage_growth_rate <- 0.005
 
 # Tax System Assumptions:
@@ -57,7 +57,7 @@ co2_externality <- 100 # Externality in € caused by one additional ton of CO2 
 
 # Bootstrap Settings
 bootstrap_seed <- 24135693
-bootstrap_replications <- 1000
+bootstrap_replications <- 10
 correlation_between_estimates <- 1
 
 # Prices

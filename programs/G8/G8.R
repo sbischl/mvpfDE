@@ -16,8 +16,9 @@ G8 <- function (bootstrap_replication = 0,
 
   # G8 reduces shortens high school from 9 to 8 years. As a result, students may start studying one year earlier and can
   # join the labor force earlier:
-  # Marcus & Zambre (2019) estimate that students
-  earlier_labor_force_participation <- 0.709
+  # Marcus & Zambre (2019) estimate that students enroll
+  earlier_labor_force_participation <- 0.725
+  # years earlier
 
   # The shortening of high school prolongs the time frame in which relevant incomes can be earned by
   # earlier_labor_force_participation. It is unclear what the income should be in this additional period.
@@ -25,8 +26,8 @@ G8 <- function (bootstrap_replication = 0,
   # This would generate huge gains because of lower discounting.
 
   # Assume that the value of working one year earlier is given by the income at age 30 without discounting:
-  income_during_additional_period_no_college <- getAverageIncome(age = 30, education = "abitur")
-  income_during_additional_period_college <- getAverageIncome(age = 30, education = "university_degree")
+  income_during_additional_period_no_college <- getAverageIncome(age = 30, education = "abitur") * deflate(from = 2010, to = 2011)
+  income_during_additional_period_college <- getAverageIncome(age = 30, education = "university_degree") * deflate(from = 2010, to = 2011)
 
   # College Share with G8, see Footnote 36 Marcus & Zambre (2019)
   share_college_g8 <- 0.68
@@ -58,13 +59,14 @@ G8 <- function (bootstrap_replication = 0,
   #--------------------------------------------------------------------------------------------------------------------#
   # Effects of earlier Employment
   #--------------------------------------------------------------------------------------------------------------------#
+  # Students are twenty when they start studying. Are 30, ten years after the G8 takes effect.
   one_additional_year_net_income <-
-    share_college_g8 * (income_during_additional_period_college - getTaxPayment(income_during_additional_period_college,
+    (1 / (1 + discount_rate)^10) * share_college_g8 * (income_during_additional_period_college - getTaxPayment(income_during_additional_period_college,
                                                                                 prices_year = prices_year)) +
       (1 - share_college_g8) * (income_during_additional_period_no_college - getTaxPayment(income_during_additional_period_college,
                                                                                            prices_year = prices_year))
 
-  one_additional_year_tax_payment <- share_college_g8 * getTaxPayment(income_during_additional_period_college,
+  one_additional_year_tax_payment <- (1 / (1 + discount_rate)^10) * share_college_g8 * getTaxPayment(income_during_additional_period_college,
                                                                       prices_year = prices_year) +
     (1 - share_college_g8) * getTaxPayment(income_during_additional_period_college,
                                            prices_year = prices_year)
@@ -88,9 +90,8 @@ G8 <- function (bootstrap_replication = 0,
     lifetime_impacts <- project_lifetime_impact(impact_age = age_university_enrollment,
                                                 impact_magnitude_matrix = impact_magnitude_matrix,
                                                 relative_control_income = getRelativeControlGroupEarnings("abitur"),
-                                                start_projection_year = 2014,
+                                                start_projection_year = program_year,
                                                 prices_year = prices_year,
-                                                discount_to = program_year,
                                                 inculde_welfare_benefits_fraction = 0)
   }
   else {
@@ -98,16 +99,16 @@ G8 <- function (bootstrap_replication = 0,
                                                        impact_magnitude = -1,
                                                        relative_control_income = getRelativeControlGroupEarnings("abitur"),
                                                        end_projection_age = age_university_enrollment + duration_of_berufsschule + additional_years_of_schooling_university - 1,
-                                                       start_projection_year = 2014 + duration_of_berufsschule,
+                                                       start_projection_year = program_year + duration_of_berufsschule,
                                                        prices_year = prices_year,
                                                        inculde_welfare_benefits_fraction = 0)
 
     impact_more_education <- project_lifetime_impact(impact_age = age_university_enrollment + duration_of_berufsschule + additional_years_of_schooling_university,
                                                      impact_magnitude = additional_years_of_schooling_university * yearly_return_to_schooling,
                                                      relative_control_income = getRelativeControlGroupEarnings("abitur"),
-                                                     start_projection_year = 2014 + duration_of_berufsschule + additional_years_of_schooling_university,
+                                                     start_projection_year = program_year + duration_of_berufsschule + additional_years_of_schooling_university,
                                                      prices_year = prices_year,
-                                                     discount_to = 2011,
+                                                     discount_to = program_year,
                                                      inculde_welfare_benefits_fraction = 0)
 
     lifetime_impacts <- impact_longer_schooling + impact_more_education

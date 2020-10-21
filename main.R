@@ -198,6 +198,11 @@ getAverageTaxRate(47928,
 (mvpf_results %>% filter(program == "bafoegRepayment"))["willingness_to_pay"]
 (mvpf_results %>% filter(program == "bafoegRepayment"))["government_net_costs"]
 
+#MVPF with enevlope theorem:
+((mvpf_results %>% filter(program == "bafoegRepayment"))["willingness_to_pay"] -
+  (mvpf_results %>% filter(program == "bafoegRepayment"))["net_income_increase"]) /
+   (mvpf_results %>% filter(program == "bafoegRepayment"))["government_net_costs"]
+
 
 0.04 * project_lifetime_impact(impact_age = age_university_enrollment,
                         impact_magnitude_matrix = getEducationEffectOnEarnings(education_decision = "university_degree",
