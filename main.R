@@ -198,7 +198,7 @@ getAverageTaxRate(47928,
 (mvpf_results %>% filter(program == "bafoegRepayment"))["willingness_to_pay"]
 (mvpf_results %>% filter(program == "bafoegRepayment"))["government_net_costs"]
 
-#MVPF with enevlope theorem:
+#MVPF with envelope theorem:
 ((mvpf_results %>% filter(program == "bafoegRepayment"))["willingness_to_pay"] -
   (mvpf_results %>% filter(program == "bafoegRepayment"))["net_income_increase"]) /
    (mvpf_results %>% filter(program == "bafoegRepayment"))["government_net_costs"]
@@ -215,4 +215,15 @@ getAverageTaxRate(47928,
 0.04 * (costOfCollege(duration_of_study = 5, year = 1990, prices_year = 2010) -
   costOfSchool(duration_of_schooling = 3, year = 1990, prices_year = 2010, school_type = "berufsschule_dual"))
 
+# Bafög
 596 * 0.51129 * deflate(from = 1990, to = 2010)
+
+# Retraining:
+(mvpf_results %>% filter(program == "retraining"))["willingness_to_pay"]
+(mvpf_results %>% filter(program == "retraining"))["government_net_costs"]
+(mvpf_results %>% filter(program == "retraining"))["program_cost"]
+(mvpf_results %>% filter(program == "retraining"))["tax_revenue_increase"]
+(mvpf_results %>% filter(program == "retraining"))["net_income_increase"]
+
+
+(mvpf_results %>% filter(program == "retraining"))["willingness_to_pay"] / (mvpf_results %>% filter(program == "retraining"))["government_net_costs"]

@@ -63,7 +63,7 @@ unemploymentBenefits2006 <- function (bootstrap_replication = 0) {
   # Schmieder & von Wachter (2016) derive a formula for the fiscal externality:
   # FE = d(unemployment_duration) / d(max_benefit_duration) * (1 / exhaustion_rate) * (chi + tax_rate / replacement_rate)
   # where chi = 1 - (1 + max_benefit_duration * job_finding_hazard_rate) * exp(-job_finding_hazard_rate * max_benefit_duration)
-  # see p. 560 & 561
+  # see p. 560 & 562
 
   # The formula derived by Schmieder & von Wachter (2016) assumes a constant hazard rate of job finding.
   job_finding_hazard_rate <- 1 / non_employment_duration

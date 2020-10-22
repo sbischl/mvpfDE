@@ -412,7 +412,6 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
     age_income_table <<- read.csv("./income_projection/age_income_cross_section.csv")
   }
 
-
   # Handlde impact magnitude:
 
   # There are two options to specifiy the impact magnitude.
@@ -513,11 +512,6 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
 
   age_income_table$net_earnings_impact <- age_income_table$net_earings_reform - age_income_table$net_earnings_no_reform
   age_income_table$tax_payment_impact <- age_income_table$tax_payment_reform - age_income_table$tax_payment_no_reform
-
-  whatsup <<- data.frame(income = age_income_table$earnings_reform,
-                          net_effect = age_income_table$net_earnings_impact,
-                          tax_payment_impact = age_income_table$tax_payment_impact,
-                          tax = age_income_table$tax_payment_reform)
 
   # Discount all earning impacts to the start of the projection
   age_income_table$earnings_impact_discounted <-

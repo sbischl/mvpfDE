@@ -45,7 +45,7 @@ duration_of_study <- 5
 duration_of_berufsschule <- 3
 additional_years_of_schooling_university <- duration_of_study - duration_of_berufsschule
 age_university_enrollment <- 20 #This is basically given by the IAB data. For > 20, the cost in terms of foregone
-# income of going to university is underestiamted. For there is either no change or the esimation breaks because of 0 by 0 division.
+# income of going to university is underestiamted. For < 20 there is either no change or the esimation breaks because of 0 by 0 division.
 
 # Environment Policies:
 co2_externality <- 100 # Externality in € caused by one additional ton of CO2 emissions. 86.5 is the value used by Thiedig (2018)

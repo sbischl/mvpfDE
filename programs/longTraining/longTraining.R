@@ -41,7 +41,7 @@ longTraining <- function (bootstrap_replication = 0, extend_effect = 0) {
   # Simple earnings projection by evenly splitting the cumulative earnings gain over 8 years and adding
   # the gain to the control group average income
 
-  reform_impact <- project_medium_run_impact(absolute_impact_magnitude = earnings_effect / 8,
+  reform_impact <- project_medium_run_impact(absolute_impact_magnitude = c(0, rep(earnings_effect / 7, 7)),
                                              yearly_control_income = employment_rate * earnings_control_group * 12,
                                              number_of_periods = 8 + extend_effect,
                                              prices_year = prices_year)
