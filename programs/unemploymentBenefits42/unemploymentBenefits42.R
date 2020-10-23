@@ -22,6 +22,7 @@ unemploymentBenefits42 <- function (bootstrap_replication = 0) {
   max_benefit_duration <- 18
   max_benefit_duration_before_cutoff <- 12
 
+
   prices_year <- (1987 + 1999) / 2 # Autors use a dataset containing observations between July 1987 and March 1999
 
   non_employment_duration <-  16.5 # Schmieder et al. (2012) Online Appendix Table W1
@@ -83,8 +84,7 @@ unemploymentBenefits42 <- function (bootstrap_replication = 0) {
                         government_net_costs = government_net_costs,
                         fiscal_externality = fiscal_externality,
                         valuation_reduced_risk = relative_risk_aversion * consumption_drop,
-                        program_cost = 1,
-                        prices_year = prices_year)
+                        program_cost = 1)
 
   return(return_values)
 }

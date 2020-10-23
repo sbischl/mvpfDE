@@ -26,7 +26,7 @@ homeCareSubsidy <- function (bootstrap_replication = 0) {
   subsidy_amount <- 100
 
   # Fiscal cost of child care:
-  fiscal_childcare_cost <- 620
+  fiscal_childcare_cost <- 620 #Collischon et al. (2020) p. 22
 
   # Subsidy period in months
   subsidy_period <- 22
@@ -46,10 +46,10 @@ homeCareSubsidy <- function (bootstrap_replication = 0) {
   # Still it is difficult to calculate the marginal tax rate, since a large share of the mothers is probably married
   # and the tax rate would also depend on the income of the husband. -> Use linear tax rate assumption
 
-  tax_revenue_increase <- labor_income_effect_36months * global_flat_tax
-  government_net_costs <- -tax_revenue_increase
+  tax_revenue_effect <- labor_income_effect_36months * global_flat_tax
+  government_net_costs <- -tax_revenue_effect
 
-  # The govermnet does not have to pay for the child care:
+  # The govermnet does not have to pay for child care:
   child_care_cost_reduction <- - subsidized_childcare_takeup * discountMonthlyCashFlow(fiscal_childcare_cost, subsidy_period)
   government_net_costs <- government_net_costs - child_care_cost_reduction
 
@@ -68,8 +68,8 @@ homeCareSubsidy <- function (bootstrap_replication = 0) {
 
   return_values <- list(willingness_to_pay =  subsidy_valuation,
                         government_net_costs = government_net_costs,
-                        child_care_cost_reduction = child_care_cost_reduction,
-                        tax_revenue_increase = - tax_revenue_increase,
+                        child_care_cost_reduction = -child_care_cost_reduction,
+                        tax_revenue_increase = tax_revenue_effect,
                         program_cost = program_cost,
                         prices_year = prices_year)
 

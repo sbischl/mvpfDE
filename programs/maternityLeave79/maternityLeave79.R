@@ -47,7 +47,7 @@ maternityLeave79 <- function (bootstrap_replication = 0) {
   # In case of a marginal reform the envelope theorem would imply that the valuation is zero.
 
   # The subsidy has to be payed for by the government:
-  program_cost <- maternity_benefit * 4
+  program_cost <- share_of_benefit_receivers * maternity_benefit * 4
   government_net_costs <- program_cost
   # In addition the mothers who stay at home do not receive a labor income. Dustmann & Schönberg (2011) do not report
   # the effect on labor income. Instead, they report the effect on available income defined as "income is defined as

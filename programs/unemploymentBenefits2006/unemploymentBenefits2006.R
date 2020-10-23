@@ -17,6 +17,7 @@ unemploymentBenefits2006 <- function (bootstrap_replication = 0) {
   #--------------------------------------------------------------------------------------------------------------------#
   # Assumptions:
   #--------------------------------------------------------------------------------------------------------------------#
+
   prices_year <-2006
 
   non_employment_duration <- 20.5 # Petrunyk & Pfeifer (2018) do not have data on the average unemployment duration.
@@ -86,8 +87,7 @@ unemploymentBenefits2006 <- function (bootstrap_replication = 0) {
                         government_net_costs = government_net_costs,
                         fiscal_externality = -fiscal_externality,
                         valuation_reduced_risk = -relative_risk_aversion * consumption_drop,
-                        program_cost = -1,
-                        prices_year = prices_year)
+                        program_cost = -1)
 
   return(return_values)
 }

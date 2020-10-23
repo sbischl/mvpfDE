@@ -227,3 +227,21 @@ getAverageTaxRate(47928,
 
 
 (mvpf_results %>% filter(program == "retraining"))["willingness_to_pay"] / (mvpf_results %>% filter(program == "retraining"))["government_net_costs"]
+
+# Unemployment Benefits:
+(mvpf_results %>% filter(program == "unemploymentBenefits42"))["willingness_to_pay"]
+(mvpf_results %>% filter(program == "unemploymentBenefits42"))["fiscal_externality"]
+
+(mvpf_results %>% filter(program == "unemploymentBenefits42"))["willingness_to_pay"] /
+  ((mvpf_results %>% filter(program == "unemploymentBenefits42"))["fiscal_externality"] + 1)
+
+# Maternity Leave:
+deflate(from = 1992, to = 2010) * 750 * 0.51129
+1713.59 * 0.51129 * deflate(from = 1992, to = 2010)
+# FE
+sum((mvpf_results %>% filter(program == "maternityLeave79"))[c("tax_revenue_increase","tax_revenue_increase_children")])
+
+
+# 2007 Parental Leave:
+deflateReturnValues(parentalLeave2007(), 2010)
+deflateReturnValues(homeCareSubsidy(), 2010)

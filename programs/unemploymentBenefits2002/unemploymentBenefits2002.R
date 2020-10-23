@@ -91,8 +91,7 @@ unemploymentBenefits2002 <- function (bootstrap_replication = 0) {
                         government_net_costs = government_net_costs,
                         fiscal_externality = fiscal_externality,
                         valuation_reduced_risk = relative_risk_aversion * consumption_drop,
-                        program_cost = 1,
-                        prices_year = prices_year)
+                        program_cost = 1)
 
   return(return_values)
 }
