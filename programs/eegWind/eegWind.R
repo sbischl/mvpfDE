@@ -34,20 +34,6 @@ eegWind <- function (bootstrap_replication = 0, carbon_leakage_rate = 0) {
   # while raising money at same time because the subsidy has a strongly negative effect on electricity prices.
   consumer_cost <- -20.9
 
-  # Abrell et al. (2019) do no report standard erros for their final estimation of the abatement costs. In
-  # Table 5 they calculate standard erros for the total margianal CO2 offset. This is the denominator of both producer_cost
-  # & consumer_cost. See equation (21) and (22). When assuming that the numerator is constant we can caluclate a confidence
-  # interval. This is obviously not ideal, but it won't get any better. Reverse engineering the entire calculation is
-  # too complicated and maybe also be impossible.
-  denominator_point_estimate <- -175.2
-  denominator <- estimates$denominator
-
-  # cost = numerator / denominator -> the numerator implied by the point estimate is:
-  numerator_consumer_cost <- denominator_point_estimate * consumer_cost
-  numerator_producer_cost <- denominator_point_estimate * producer_cost
-
-  producer_cost <- numerator_producer_cost / denominator
-  consumer_cost <- numerator_consumer_cost / denominator
   # The consumer cost (in the paper) is actually equal to the subsidy. See explanation above
   subsidy_cost <- consumer_cost
 
