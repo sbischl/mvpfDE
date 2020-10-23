@@ -245,3 +245,7 @@ sum((mvpf_results %>% filter(program == "maternityLeave79"))[c("tax_revenue_incr
 # 2007 Parental Leave:
 deflateReturnValues(parentalLeave2007(), 2010)
 deflateReturnValues(homeCareSubsidy(), 2010)
+
+# Climate Policy:
+deflateReturnValues(eegSolar(), 2010)
+deflateReturnValues(eegWind(), 2010)

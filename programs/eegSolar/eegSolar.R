@@ -20,20 +20,44 @@ eegSolar <- function (bootstrap_replication = 0, carbon_leakage_rate = 0) {
   prices_year <- floor((2015+2010) / 2) # Abrell et al. (2019) use data from multiple sources. It looks like their estimation
   # takes the years 2010-2015 into account (see Figure 2)
 
-  # Abrell et al. (2019) estimate the producer cost and consumer cost associated with reducing carbon emissions by one
-  # ton in the production of electricity. In their model, they assume that consumers pay for the subsidy as the subsidy
-  # is financed by a tax on electricity. To translate these estimates into a MVPF it has to be assumed that the government
-  # pays for the subsidy. Which makes sense given that the revenue from EEG could at least in theory be used elsewhere.
-  # Electricity producers pay for what  Abrell et al. (2019) call a price effect. Subsidized green energy pushes
-  # conventinal producers with high margial costs out of the market and thus lowers the electricity price.
+  # Abrell et al. (2019) differentiates between consumer and producer costs. This is inconvenient to calculate the MVPF
+  # because the consumer costs are combination of price changes (due to the subsidy) and the cost of paying the tax.
+  # But we need to isolate these two effects. The price changes are part of the willingness to pay, the tax is
+  # the net cost. There is no table that displays these two effects separately. But I think I have found away to
+  # calculate these:
 
   # Producer Cost (lower bound) Abrell et al. (2019) Table 7
   producer_cost <- 181.5
-  # Subsidy Cost labelled as consumer cost in Abrell et al. (2019) Table 7.
+  # Consumer cost Abrell et al. (2019) Table 7.
   consumer_cost <- 780.2
 
-  # The consumer cost (in the paper) is actually equal to the subsidy. See explanation above
-  subsidy_cost <- consumer_cost
+  # From Table 7 we know that Solar is subsidized by 286.3€ per megawatt hour.
+  subsidy_per_MWh <- 286.3
+
+  # From Table 5 we know the CO2 offset per MWh for different scenarios. Since the paper calculates producer and consumer
+  # cost only for the "Domestic and hydro/PSP offsets only" scenario, we can only assume this scenario.
+  # The Table is in kg, so we need to divide by 1000 to get tons
+  co2_offset_per_MWh <- - estimates$co2_offset_per_MWh / 1000
+
+  # -> we need 1/co2_offset_per_MWh to reduce carbon emissions by one ton.
+  # and therefore the subsidy per ton of emission reduction is given by:
+  subsidy_per_ton_co2_reduction <- subsidy_per_MWh / co2_offset_per_MWh
+
+  # Since the price effect and subsidy_per_ton_co2_reduction sum to the consumer cost, we can calculate the
+  # price effect as. The paper claims that this effect has to be negative because ineffient producers are pushed out
+  # of the market. As a sanity check, we check if this negative .... it is negative
+  price_effect <- consumer_cost - subsidy_per_ton_co2_reduction
+
+  # To summarize: 1) We have the price effect which lowers prices for consumers
+  # 2) we have the producer cost which is incurredy producers due to lower prices (and maybe also other channels)
+  # 3) we have the cost of the subsidy
+
+  subsidy_cost <- subsidy_per_ton_co2_reduction
+
+  # The CO2 abatament cost is:
+  subsidy_cost + price_effect + producer_cost
+  # which is pretty close to the values reported in Table 7.
+  # -> Calculation should be valid.
 
   #--------------------------------------------------------------------------------------------------------------------#
   # MVPF Calculation
@@ -44,7 +68,7 @@ eegSolar <- function (bootstrap_replication = 0, carbon_leakage_rate = 0) {
   # In addition, co2 emissions can leak to other countries because of the European Emissions Trading System. If firms
   # are rational, and sell their certificates the leakage rate should be 1. Yet, a leakage rate of 0 is assumed. It does
   # not really matter since these policies provide very little value independently of the leakage problem.
-  willingness_to_pay <- -producer_cost + co2_externality * carbon_leakage_rate
+  willingness_to_pay <- -price_effect - producer_cost + co2_externality * carbon_leakage_rate
   # The government has to pays for the subsidy that induces emission reductions
   government_net_costs <- subsidy_cost
 
@@ -52,6 +76,7 @@ eegSolar <- function (bootstrap_replication = 0, carbon_leakage_rate = 0) {
                         government_net_costs = government_net_costs,
                         program_cost = subsidy_cost,
                         income_loss = -producer_cost,
+                        price_effect = -price_effect,
                         co2_emission_reducation = co2_externality,
                         prices_year = prices_year)
   return(return_values)
