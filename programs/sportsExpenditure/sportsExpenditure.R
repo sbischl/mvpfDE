@@ -15,7 +15,7 @@ sportsExpenditure <- function (bootstrap_replication = 0) {
 
   # Program Cost is the difference in per capita sports expenditure between the high and low category as defined by
   # Pawlowski et al. (2019), see p. 14
-  program_cost <- (85 + 31) / 2 - (20 + 0) / 2
+  program_cost <- ((85 + 31) / 2 - (20 + 0) / 2) * 12
 
   # Pawlowski et al. (2019) do not report the average age. Only age brackets in their share in each of the subsamples:
   # Try to guess average age from those brackets:
@@ -34,7 +34,8 @@ sportsExpenditure <- function (bootstrap_replication = 0) {
 
   # Effect of relocation Assistance on log wage 24 months after transition to employment:
   # This effect is crazy high. Spending about 50 € more on sports per capita per year increases gross earnings of men by
-  # 260€ per month. This seems pretty ridicilous, but this is the effect that is suggested by the paper.
+  # 260€ per month. No significant effect for women. This seems pretty ridicilous, but this is the effect that is suggested by the paper.
+  # And yes this is the monthly effect not yearly.
   gross_wage_effect_men <- estimates$earnings_effect_high_vs_low
   gross_wage_effect_women <- 0
   gross_wage_effect <- share_men * gross_wage_effect_men + (1- share_men) * gross_wage_effect_women

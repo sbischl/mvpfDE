@@ -9,8 +9,11 @@ wage_growth_rate <- 0.005
 
 # Tax System Assumptions:
 global_assume_flat_tax <- FALSE # If this is set to TRUE, only flat_tax is relevant. Otherwise flat_tax is only
-# used where no absolutely no income information is available.
+# used where no income information is available.
 global_flat_tax <- 0.2810786
+global_income_tax_only <- FALSE # If this is set to TRUE, the income tax is the only tax
+global_flat_tax_income_tax_only <- 0.1827759 # Irrelevant unless global_income_tax_only is set to TRUE
+
 global_inculde_welfare_benefits_fraction <- 1 #The share of welfare_benefits 'Hartz IV' invidivudals receive.
 global_income_fraction_of_pension_contribution <- 1 #The fraction of pension contributions that is considered income
 global_income_fraction_of_unemployment_insurance_contribution <- 1 #The fraction of unemployment insurance contributions that is considered income
@@ -78,9 +81,9 @@ order_of_categories <- c("Tax Reform",
 # and tables.
 
 #----------------------------------------------------------------------------------------------------------------------#
-# Apply Statistical Life Assumptions: (No relevant settings / assumptions beyond this point)
+# Apply Assumptgions: (No relevant settings / assumptions beyond this point)
 #----------------------------------------------------------------------------------------------------------------------#
-calculate_statistical_life_assumptions <- function() {
+applyAssumptions <- function() {
   # Each of the assumptions relative to the sum of resource cost and risk value
   if (use_single_statistical_life_value) {
     # This scales all the injury valuation as they are in Thiedig (2018)
@@ -101,5 +104,10 @@ calculate_statistical_life_assumptions <- function() {
     global_risk_value_severe <<- share_global_risk_value_severe * value_of_statistical_life
     global_risk_value_light <<-  share_global_risk_value_light * value_of_statistical_life
   }
+
+  if (global_income_tax_only) {
+    global_flat_tax <<- global_flat_tax_income_tax_only
+  }
 }
-calculate_statistical_life_assumptions()
+applyAssumptions()
+

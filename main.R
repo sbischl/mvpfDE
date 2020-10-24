@@ -188,6 +188,9 @@ getAverageTaxRate(47928,
                   income_fraction_of_long_term_care_contribution = 0,
                   income_fraction_of_health_insurance_contribution = 0)
 
+getAverageTaxRate(47928,
+                  income_tax_only = TRUE)
+
 # Bafög Repayment Reform:
 (mvpf_results %>% filter(program == "bafoegRepayment"))["program_cost"]
 (mvpf_results %>% filter(program == "bafoegRepayment"))["tax_revenue_increase"]

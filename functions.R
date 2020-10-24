@@ -763,15 +763,16 @@ getAverageTaxRate <- function(gross_income,
                               income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
                               income_fraction_of_unemployment_insurance_contribution = global_income_fraction_of_unemployment_insurance_contribution,
                               income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution,
-                              income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution) {
+                              income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution,
+                              income_tax_only = global_income_tax_only) {
 
-  # Average Tax Rate = 1 - NetIncome(gross income) / gross income)
-  return(1 - getNetIncome(gross_income,
-                          inculde_welfare_benefits_fraction,
-                          income_fraction_of_pension_contribution,
-                          income_fraction_of_unemployment_insurance_contribution,
-                          income_fraction_of_long_term_care_contribution,
-                          income_fraction_of_health_insurance_contribution) / gross_income)
+  return(getTaxPayment(gross_income,
+                       inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction,
+                       income_fraction_of_pension_contribution = income_fraction_of_pension_contribution,
+                       income_fraction_of_unemployment_insurance_contribution = income_fraction_of_unemployment_insurance_contribution,
+                       income_fraction_of_long_term_care_contribution = income_fraction_of_long_term_care_contribution,
+                       income_fraction_of_health_insurance_contribution = income_fraction_of_health_insurance_contribution,
+                       income_tax_only = income_tax_only) / gross_income)
 }
 
 getTaxPayment <- function(gross_income,
@@ -782,7 +783,8 @@ getTaxPayment <- function(gross_income,
                           income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution,
                           prices_year = 2019,
                           flat_tax = global_flat_tax,
-                          assume_flat_tax = global_assume_flat_tax) {
+                          assume_flat_tax = global_assume_flat_tax,
+                          income_tax_only = global_income_tax_only) {
   # gross_income should be in prices_year euros. This assumes that the tax system is regularly adjusted to make it independent
   # from prices. I.e. there are no inflation incuded tax increases ("Kalte Progression")
 
@@ -793,12 +795,22 @@ getTaxPayment <- function(gross_income,
   # Inflate gross income to the year for which the tax system is modeled
   gross_income_inflated <- deflate(prices_year, 2019) * gross_income
 
-  tax_payment <- getTaxSystemEffects(gross_income_inflated,
-                                     inculde_welfare_benefits_fraction,
-                                     income_fraction_of_pension_contribution,
-                                     income_fraction_of_unemployment_insurance_contribution,
-                                     income_fraction_of_long_term_care_contribution,
-                                     income_fraction_of_health_insurance_contribution)$tax_yearly
+  if (!income_tax_only) {
+    tax_payment <- getTaxSystemEffects(gross_income_inflated,
+                                       inculde_welfare_benefits_fraction,
+                                       income_fraction_of_pension_contribution,
+                                       income_fraction_of_unemployment_insurance_contribution,
+                                       income_fraction_of_long_term_care_contribution,
+                                       income_fraction_of_health_insurance_contribution)$tax_yearly
+  }
+  else {
+    tax_payment <- 12 * getTaxSystemEffects(gross_income_inflated,
+                                            inculde_welfare_benefits_fraction,
+                                            income_fraction_of_pension_contribution,
+                                            income_fraction_of_unemployment_insurance_contribution,
+                                            income_fraction_of_long_term_care_contribution,
+                                            income_fraction_of_health_insurance_contribution)$income_tax_monthly
+  }
 
   # Deflate tax_payment back to initial year:
   tax_payment_deflated <-  deflate(2019, prices_year) * tax_payment
@@ -812,7 +824,7 @@ getMarginalTaxRate <- function(gross_income,
                                income_fraction_of_unemployment_insurance_contribution = global_income_fraction_of_unemployment_insurance_contribution,
                                income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution,
                                income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution,
-                               income_tax_only = FALSE) {
+                               income_tax_only = global_income_tax_only) {
 
   # Marginal Tax Rate = 1 - (NetIncome(gross income + 1) - NetIncome(gross income))
   if (!income_tax_only) {
@@ -1644,13 +1656,8 @@ setMetaAssumption <- function(key, value) {
       global_income_fraction_of_long_term_care_contribution <<- 0
     }
     else if(value == "incometaxonly") {
-      # Assume that only the income tax (with soli) is relevant
-      global_assume_flat_tax <<- FALSE
-      global_income_fraction_of_pension_contribution <<- 1
-      global_income_fraction_of_unemployment_insurance_contribution <<- 1
-      global_income_fraction_of_health_insurance_contribution <<- 1 #The fraction of pension contributions that is considered income
-      global_income_fraction_of_long_term_care_contribution <<- 1
-      global_inculde_welfare_benefits_fraction <<- 0
+      # Assume that only the income tax (without soli) is relevant
+      global_income_tax_only <<- FALSE
     }
     else {
       warning(paste("Value", value, "of assumption", key, "not found"))
@@ -1725,7 +1732,7 @@ setMetaAssumption <- function(key, value) {
     warning(paste("Assumption", key, "not found"))
     return(-1)
   }
-  calculate_statistical_life_assumptions()
+  applyAssumptions()
 }
 
 exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_assumptions = TRUE) {

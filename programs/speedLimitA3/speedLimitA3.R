@@ -5,7 +5,7 @@
 # Relevant Literature:
 # Thiedig (2018)
 
-speedLimitA3 <- function (bootstrap_replication = 0, internalize_carbon_emissions = 1) {
+speedLimitA3 <- function (bootstrap_replication = 0, internalize_carbon_emissions = 1, rational_drivers = TRUE) {
   program_name <- toString(match.call()[1])
   # This paper does not report any confidence intervalls. The effect of the speed limit on the number and severity of
   # accidents is based on comparing means between a highway that's partly in germany (no speed limit) and in
@@ -107,13 +107,18 @@ speedLimitA3 <- function (bootstrap_replication = 0, internalize_carbon_emission
       change_severe_accidents * tax_rate * resource_cost_severe +
       change_light_accidents  * tax_rate * resource_cost_light)
 
-  willingness_to_pay <- willingness_to_pay + private_safer_traffic_valuation
+  if (!rational_drivers) {
+    willingness_to_pay <- willingness_to_pay + private_safer_traffic_valuation
+  }
   government_net_costs <- - public_safer_traffic_valuation
 
   # Effects of lower fuel consumption on private and public budgets:
   private_fuel_cost_saving = gasoline_liter_consumption_decrease * gasoline_price +
     diesel_tons_consumption_decrease * diesel_price
-  willingness_to_pay <- willingness_to_pay + private_fuel_cost_saving
+  if (!rational_drivers) {
+    willingness_to_pay <- willingness_to_pay + private_fuel_cost_saving
+  }
+
 
 
   # Goverment looses tax revenue

@@ -66,9 +66,9 @@ eegSolar <- function (bootstrap_replication = 0, carbon_leakage_rate = 0) {
   # The MVPF Calculation is really simple in this case.
   # Individuals value the reduction in CO2 emissions & the effect on producer costs
   # In addition, co2 emissions can leak to other countries because of the European Emissions Trading System. If firms
-  # are rational, and sell their certificates the leakage rate should be 1. Yet, a leakage rate of 0 is assumed. It does
-  # not really matter since these policies provide very little value independently of the leakage problem.
-  willingness_to_pay <- -price_effect - producer_cost + co2_externality * carbon_leakage_rate
+  # are rational, and sell their certificates the leakage rate should be 1. Yet, a leakage rate of 0 is assumed.
+  co2_reducation_valuation <- co2_externality * (1 - carbon_leakage_rate) * deflate(from = 2010, to = prices_year)
+  willingness_to_pay <- -price_effect - producer_cost + co2_reducation_valuation
   # The government has to pays for the subsidy that induces emission reductions
   government_net_costs <- subsidy_cost
 
@@ -77,7 +77,7 @@ eegSolar <- function (bootstrap_replication = 0, carbon_leakage_rate = 0) {
                         program_cost = subsidy_cost,
                         income_loss = -producer_cost,
                         price_effect = -price_effect,
-                        co2_emission_reducation = co2_externality,
+                        co2_emission_reducation = co2_reducation_valuation,
                         prices_year = prices_year)
   return(return_values)
 }
