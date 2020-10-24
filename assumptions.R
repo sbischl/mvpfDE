@@ -21,6 +21,7 @@ global_income_fraction_of_health_insurance_contribution <- 0 #The fraction of pe
 global_income_fraction_of_long_term_care_contribution <- 0 #The fraction of unemployment insurance contributions that is considered income
 global_welfare_benefit_monthly <- 700
 value_added_tax <- 0.19
+cost_of_raising_public_funds <- 0.3 # Relevant for the more traditional cost benefit ratio
 
 # Preferences
 global_relative_risk_aversion <- 2
@@ -60,7 +61,7 @@ co2_externality <- 100 # Externality in € caused by one additional ton of CO2 
 
 # Bootstrap Settings
 bootstrap_seed <- 24135693
-bootstrap_replications <- 10
+bootstrap_replications <- 100
 correlation_between_estimates <- 1
 
 # Prices

@@ -135,7 +135,8 @@ discountMonthlyCashFlow <- function(amount, months) {
 
 plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_label = "Year",
                         plot_data, category_plot_data, save = "", lower_cutoff = -1, upper_cutoff = 6, confidence_intervalls = TRUE,
-                        text_labels = TRUE, legend_label = "Category", vertical_x_axis_labels = FALSE) {
+                        text_labels = TRUE, legend_label = "Category", vertical_x_axis_labels = FALSE,
+                        x_lim_min, x_lim_max) {
 
   # Define Colors. These are the same as in the web application:
   colors <- c(rgb(46,139,87, maxColorValue = 255),
@@ -231,6 +232,15 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
   if (x_axis == "program_name") {
     plot_data[, x_axis] <- factor( plot_data[, x_axis], levels = plot_data[, x_axis])
   }
+
+  else if (x_axis == "cost_benefit_ratio") {
+    # We need to censor the data otherwise we dont see anything. This removes 3 programs.
+    plot_data[,"cost_benefit_ratio"] <- ifelse(plot_data[,"cost_benefit_ratio"] > 6, 6, plot_data[,"cost_benefit_ratio"])
+    # And cost benefit ratio does not make sense for programs with negative costs:
+    plot_data <- plot_data %>% filter(program_cost > 0)
+  }
+
+
 
   plot <- ggplot(aes_string(y = y_axis, x= x_axis), data = plot_data) +
     ylab(y_label) +
@@ -1506,11 +1516,13 @@ getPlotData <- function(mvpf_results) {
     mvpf_results$willingness_to_pay_per_program_cost_95ci_upper <- mvpf_results$willingness_to_pay_95ci_upper / mvpf_results$program_cost
   }
 
-  mvpf_results$fiscal_externality_per_euro <- mvpf_results$government_net_costs / mvpf_results$program_cost - 1
+  mvpf_results$fiscal_externality_per_euro <- 1 - mvpf_results$government_net_costs / mvpf_results$program_cost
   if ("government_net_costs_95ci_lower" %in% colnames(mvpf_results)) {
-    mvpf_results$fiscal_externality_per_euro_95ci_lower <- mvpf_results$government_net_costs_95ci_lower / mvpf_results$program_cost - 1
-    mvpf_results$fiscal_externality_per_euro_95ci_upper <- mvpf_results$government_net_costs_95ci_upper / mvpf_results$program_cost - 1
+    mvpf_results$fiscal_externality_per_euro_95ci_lower <-1 - mvpf_results$government_net_costs_95ci_lower / mvpf_results$program_cost
+    mvpf_results$fiscal_externality_per_euro_95ci_upper <-1 - mvpf_results$government_net_costs_95ci_upper / mvpf_results$program_cost
   }
+
+  mvpf_results$cost_benefit_ratio <- (mvpf_results$willingness_to_pay + mvpf_results$fiscal_externality_per_euro) / ((1 + cost_of_raising_public_funds) * mvpf_results$program_cost)
 
   return(left_join(mvpf_results, program_information, by = c("program" = "program_identifier")))
 }
@@ -1552,7 +1564,7 @@ getCategoryPlotData <- function(plot_data) {
 
     # Get fiscal_externality_per_euro from each bootstrap repilcation (rows) for each program beloning to the category (columns)
     fiscal_externality_per_euro <- sapply(all_bootstrap_replications_results[programs_in_category$program], function(bootstrap_results) {
-      return(bootstrap_results$government_net_costs / bootstrap_results$program_cost - 1)
+      return(1 - bootstrap_results$government_net_costs / bootstrap_results$program_cost)
     })
 
     # Calculate numerator and denominator as before expcet that the result now is a vectow with number of bootstrap replications rows:

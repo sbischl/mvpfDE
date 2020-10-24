@@ -134,6 +134,12 @@ plotResults(plot_data = plot_data,
             confidence_intervalls = FALSE,
             text_labels = TRUE)
 plotResults(plot_data = plot_data,
+            y_label = "Marginal Value of Public Funds",
+            x_axis = "cost_benefit_ratio", x_label = "Cost Benefit Ratio",
+            save = "mvpf_against_cbr.pdf",
+            confidence_intervalls = FALSE,
+            text_labels = TRUE)
+plotResults(plot_data = plot_data,
             y_axis = "willingness_to_pay_per_program_cost",
             y_label = "Willingness to Pay per Euro Progammatic Expenditure",
             x_axis = "year", x_label = "Year",
