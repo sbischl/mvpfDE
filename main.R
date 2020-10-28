@@ -1,4 +1,4 @@
-t#----------------------------------------------------------------------------------------------------------------------#
+#----------------------------------------------------------------------------------------------------------------------#
 # Unified Welfare Analysis for Germany using MVPFs (Marginal Value of Public Funds)
 #----------------------------------------------------------------------------------------------------------------------#
 
@@ -20,6 +20,7 @@ required_packages <- c("ggplot2",
                        "doParallel",
                        "knitr",
                        "kableExtra",
+                       "patchwork",
                        "xtable")
 
 not_installed_packages <- required_packages[!required_packages %in% installed.packages()[, 1]]
@@ -117,13 +118,13 @@ plotTaxRates()
 
 # Augment results with additional information for plotting
 plot_data <- getPlotData(mvpf_results)
-category_plot_data <- getCategoryPlotData(plot_data)
+category_plot_data <- getCategoryPlotData(plot_data, all_bootstrap_replications_results)
 
 # Plot Results
 plotResults(plot_data = plot_data,
             save ="mvpf_against_year.pdf",
             y_label = "Marginal Value of Public Funds",
-            confidence_intervalls = FALSE)
+            confidence_intervalls = TRUE)
 plotResults(plot_data = plot_data,
             y_axis = "government_net_costs_per_program_cost",
             y_label = "Government Net Costs per Euro Progammatic Expenditure",
@@ -138,7 +139,7 @@ plotResults(plot_data = plot_data,
             x_axis = "cost_benefit_ratio", x_label = "Cost Benefit Ratio",
             save = "mvpf_against_cbr.pdf",
             confidence_intervalls = FALSE,
-            text_labels = TRUE)
+            text_labels = FALSE)
 plotResults(plot_data = plot_data,
             y_axis = "willingness_to_pay_per_program_cost",
             y_label = "Willingness to Pay per Euro Progammatic Expenditure",
@@ -162,13 +163,59 @@ plotResults(plot_data = plot_data,
             y_label = "Marginal Value of Public Funds",
             x_axis = "average_age_beneficiary",
             x_label = "Age of Beneficiaries",
-            save = "mvpf_categories.pdf",
+            save = "mvpf_categories_age.pdf",
+            confidence_intervalls = TRUE,
+            text_labels = FALSE)
+plotResults(plot_data = plot_data,
+            category_plot_data = category_plot_data,
+            y_axis = "mvpf",
+            y_label = "Marginal Value of Public Funds",
+            x_axis = "average_earnings_beneficiary",
+            x_label = "Average Earnings of Beneficiaries",
+            save = "mvpf_categories_earnings.pdf",
             confidence_intervalls = TRUE,
             text_labels = FALSE)
 
 
 # Exports all possible combinations of assumptions. Takes about 2 hours with 3 parallel threads.
-#exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)
+#exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)#
+robustnessCheck(programs,
+                robustnesscheck_assumptions = function(specification) {
+                  if (specification == 1) {
+                    discount_rate <<- 0
+                  }
+                  else if (specification == 2) {
+                    discount_rate <<- 0.01
+                  }
+                  else if (specification == 3) {
+                    discount_rate <<- 0.03
+                  }
+                  else if (specification == 4) {
+                    discount_rate <<- 0.07
+                  }
+                },
+                headlines = c("ρ = 0", "ρ = 0.01", "ρ = 0.03", "ρ = 0.07"),
+                save = "robustness_check_discount_rate.pdf")
+
+robustnessCheck(programs,
+                robustnesscheck_assumptions = function(specification) {
+                  if (specification == 1) {
+                    global_assume_flat_tax <<- TRUE
+                    global_flat_tax <<- 0.1
+                  }
+                  else if (specification == 2) {
+                    # nothing baseline
+                  }
+                  else if (specification == 3) {
+                    global_income_tax_only <<- TRUE
+                  }
+                  else if (specification == 4) {
+                    global_assume_flat_tax <<- TRUE
+                    global_flat_tax <<- 0.5
+                  }
+                },
+                headlines = c("τ = 0.1", "Effective Tax", "Only Income Tax", "τ = 0.5"),
+                save = "robustness_check_tax_rate.pdf")
 
 # Export Tables:
 exportLatexTables(plot_data)

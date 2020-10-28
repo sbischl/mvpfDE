@@ -5,7 +5,7 @@
 # Relevant Literature:
 # Biewen et al. (2014)
 
-classRoomTraining <- function (bootstrap_replication = 0, extend_effect = 6) {
+classRoomTraining <- function (bootstrap_replication = 0, extend_effect = 0) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)
 
@@ -32,6 +32,8 @@ classRoomTraining <- function (bootstrap_replication = 0, extend_effect = 6) {
     number_women_stratum_2 + number_men_stratum_2 +
     number_women_stratum_3 + number_men_stratum_3
 
+  share_men <- (number_men_stratum_3 + number_men_stratum_2 + number_men_stratum_1) / total_number_class_room_training
+
   # Load all the earnigs effect for all the subpopulations
   earnings_effect_1year_women_strat3 <- estimates$earnings_effect_1year_women_strat3
   earnings_effect_2year_women_strat3 <- estimates$earnings_effect_2year_women_strat3
@@ -49,9 +51,8 @@ classRoomTraining <- function (bootstrap_replication = 0, extend_effect = 6) {
   # Average age of training participants:
   average_age <- 37 # About 37, see Online Appendix of Biewen et al. (2014) Table A2, A3
 
-  control_income <- 1700 # There is no information about this in the paper. In the appendix
-  # log wage earnings are reported. But these seem implausible.
-  # The control income only matters if the marginal tax rate is not constant.
+  # Use daily log earnings from last job. Online Appendix Table A2 & A3
+  control_income <- share_men * (exp(4.04) * 365 / 12)  + (1 - share_men) * (exp(3.81) * 365 / 12)
 
   # Training cost:
   enrollment_length <- 7.5 # Biewen et al. (2014), p. 850

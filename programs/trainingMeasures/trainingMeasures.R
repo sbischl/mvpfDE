@@ -5,7 +5,7 @@
 # Relevant Literature:
 # Biewen et al. (2014)
 
-trainingMeasures <- function (bootstrap_replication = 0, extend_effect = 6) {
+trainingMeasures <- function (bootstrap_replication = 0, extend_effect = 0) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)
 
@@ -32,6 +32,8 @@ trainingMeasures <- function (bootstrap_replication = 0, extend_effect = 6) {
     number_women_stratum_2 + number_men_stratum_2 +
     number_women_stratum_3 + number_men_stratum_3
 
+  share_men <- (number_men_stratum_3 + number_men_stratum_2 + number_men_stratum_1) / total_number_class_room_training
+
   # Load all the earnigs effect for all the subpopulations
   earnings_effect_1year_women_strat3 <- estimates$earnings_effect_1year_women_strat3
   earnings_effect_2year_women_strat3 <- estimates$earnings_effect_2year_women_strat3
@@ -45,6 +47,9 @@ trainingMeasures <- function (bootstrap_replication = 0, extend_effect = 6) {
   earnings_effect_2year_women_strat1 <- estimates$earnings_effect_2year_women_strat1
   earnings_effect_1year_men_strat1 <- estimates$earnings_effect_1year_men_strat1
   earnings_effect_2year_men_strat1 <- estimates$earnings_effect_2year_men_strat1
+
+  # Use daily log earnings from last job. Online Appendix Table A2 & A3
+  control_income <- share_men * (exp(4.02) * 365 / 12)  + (1 - share_men) * (exp(3.81) * 365 / 12)
 
   # Average age of training participants:
   average_age <- 37 # About 37, see Online Appendix of Biewen et al. (2014) Table A2, A3

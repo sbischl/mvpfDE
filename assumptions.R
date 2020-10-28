@@ -61,7 +61,7 @@ co2_externality <- 100 # Externality in € caused by one additional ton of CO2 
 
 # Bootstrap Settings
 bootstrap_seed <- 24135693
-bootstrap_replications <- 100
+bootstrap_replications <- 25
 correlation_between_estimates <- 1
 
 # Prices
@@ -71,15 +71,21 @@ exclude_variables_from_price_adjustment <- c("prices_year") # All variables that
 disable_deflating <- FALSE
 
 # Plots and Tables:
-order_of_categories <- c("Tax Reform",
+order_of_categories <- c("Top Tax Reform",
                          "Education",
+                         "Job Training",
+                         "Subsidized Employment",
                          "Labor Market Policy",
                          "Unemployment Insurance",
                          "Family Policy",
                          "Climate Policy",
                          "Health Program",
-                         "Other") #This determines the order in which the reforms categories are displayed in the graphs
+                         "Start up Subsidy") #This determines the order in which the reforms categories are displayed in the graphs
 # and tables.
+# Exclude Programs from category average:
+excluded_from_category_average <- c("bicycleHelmet", "coronavirusLockdownR1")
+excluded_from_all_plots <- c("bicycleHelmet")
+
 
 #----------------------------------------------------------------------------------------------------------------------#
 # Apply Assumptgions: (No relevant settings / assumptions beyond this point)

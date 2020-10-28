@@ -18,7 +18,7 @@ drawBootstrap <- function(path_to_xlsx, number_of_replications) {
                                      abs(point_estimate / qnorm(p_value / 2))))
 
   # Calculate correlation between estimates:
-c
+
   # Generate an identity matrix
   correlation_matrix <- diag(nrow(estimates))
 
@@ -134,9 +134,8 @@ discountMonthlyCashFlow <- function(amount, months) {
 }
 
 plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_label = "Year",
-                        plot_data, category_plot_data, save = "", lower_cutoff = -1, upper_cutoff = 6, confidence_intervalls = TRUE,
-                        text_labels = TRUE, legend_label = "Category", vertical_x_axis_labels = FALSE,
-                        x_lim_min, x_lim_max) {
+                        plot_data, category_plot_data, save = "", lower_cutoff = -1, upper_cutoff = 6, confidence_intervalls = FALSE,
+                        text_labels = FALSE, legend_label = "Category", vertical_x_axis_labels = FALSE) {
 
   # Define Colors. These are the same as in the web application:
   colors <- c(rgb(46,139,87, maxColorValue = 255),
@@ -148,7 +147,8 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
               rgb(255,20,147, maxColorValue = 255),
               rgb(165,42,42, maxColorValue = 255),
               rgb(0,255,127, maxColorValue = 255),
-              rgb(72,61,139, maxColorValue = 255))
+              rgb(72,61,139, maxColorValue = 255),
+              rgb(65,91,199, maxColorValue = 255))
 
 
   # Check if y_axis and x_axis actually exist in the plot_data
@@ -223,6 +223,9 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
   if (y_axis != "grouped_mvpf") {
     plot_data$program_name <- coalesce(plot_data$program_name, plot_data$program)
   }
+  # Generate missing program costs:
+  plot_data <- impute_missing_program_costs(plot_data)
+  plot_data2 <<- plot_data
 
   # Finally order the plot_data so that reforms of the same category are displayed next to each other in the overview
   # table
@@ -246,6 +249,11 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
     ylab(y_label) +
     xlab(x_label) +
     labs(color = legend_label)
+
+  if (x_axis == "cost_benefit_ratio") {
+    plot <- plot + geom_hline(yintercept = 1, linetype = "longdash", alpha = 1) +
+      geom_vline(xintercept = 1, linetype = "longdash", alpha = 1)
+  }
 
   if (text_labels) {
     plot <- plot + geom_text_repel(aes(label = program_name),
@@ -315,6 +323,21 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
   if (save != "") {
     ggsave(plot, filename = save, device = pdf, path = "./plots/", width = 12, height = 8)
   }
+
+  return(plot)
+}
+
+impute_missing_program_costs <- function(plot_data) {
+  # This replaces the program cost values and also calculates the derived program costs
+  plot_data$program_cost <- coalesce(plot_data$program_cost,
+                                     plot_data$government_net_costs)
+  plot_data$willingness_to_pay_per_program_cost <- coalesce(plot_data$willingness_to_pay_per_program_cost,
+                                                            plot_data$willingness_to_pay / plot_data$program_cost)
+  plot_data$government_net_costs_per_program_cost <- coalesce(plot_data$government_net_costs_per_program_cost,
+                                                            plot_data$government_net_costs / plot_data$program_cost)
+  plot_data$fiscal_externality_per_euro <- 1 - plot_data$government_net_costs / plot_data$program_cost
+  plot_data$cost_benefit_ratio <- (plot_data$willingness_to_pay + plot_data$fiscal_externality_per_euro) / ((1 + cost_of_raising_public_funds))
+  return(plot_data)
 }
 
 # Define custom ggplot theme:
@@ -1524,52 +1547,106 @@ getPlotData <- function(mvpf_results) {
 
   mvpf_results$cost_benefit_ratio <- (mvpf_results$willingness_to_pay + mvpf_results$fiscal_externality_per_euro) / ((1 + cost_of_raising_public_funds) * mvpf_results$program_cost)
 
-  return(left_join(mvpf_results, program_information, by = c("program" = "program_identifier")))
+  # Join with additional information
+  joined_dataset <- left_join(mvpf_results, program_information, by = c("program" = "program_identifier"))
+
+  # Remove excluded programs
+  joined_dataset <- joined_dataset %>% filter(!(program %in% excluded_from_all_plots))
+  return(joined_dataset)
 }
 
-getCategoryPlotData <- function(plot_data) {
+getCategoryPlotData <- function(plot_data, bootstrap_results, include_additional_programs = TRUE) {
   # Calculates average mvpf (with CI) for each category specified in programs.xlsx and returns a dataframe that can be used
-  # to plot the result. Requires plot_data returned by getPlotData as input
+  # to plot the result. Requires plot_data returned by getPlotData as input and bootstrap results
 
   categories <- unique(plot_data$category)
   category_plot_data <- foreach(i = 1:length(categories), .combine = rbind) %do% {
-    # Select all programs that belong the current category & deselect those which have zero, negative or no program cost.
-    # Unlike in Hendren & Sprung-Keyser (2020) some reforms have negative program costs
-    # i.e. implementing the program (before any fiscal externalities) saves the government money. If in addition, the WTP
-    # is also negative the interpretation of the MVPF changes. The MVPF still measures how much WTP is generated when more money is
-    # spent on the reform. However, spending more in this context means retracting the reform. Hence, a reform with a high MVPF
-    # would be a reform for which retracting the reform would generate a lot of WTP. If retracting the reform is profitable, this
-    # implies that the reform that was actually implemented generates little value. As a result, the interpretation of the MVPF is
-    # reversed for reforms that reduce government spending and the utility of the individuals affected by the reform.
-    # -> It does not make sense to group reforms that reduced spending with reforms that increased spending
-    programs_in_category <- plot_data %>% filter(category == categories[i], !(is.na(program_cost) | program_cost <= 0))
+    # Calculating the category average MVPF is not trivial. Because the MVPF can be infinite we cannot just take the average.
+    # Instead we imagine a policy that spends one euro on each policy of a category. Where spending means the programmatic spending.
+      # There are two problems:
+      programs <- plot_data %>% filter(category == categories[i]) %>% pull(program)
 
+    if (include_additional_programs == TRUE) {
+      for (j in 1:length(programs)) {
+
+        current_program_name <- programs[j]
+        current_program_row <- plot_data %>% filter(program == current_program_name)
+        # 1) Some Programs have no programmatic spending. I.e. it costs nothing to implement G8 (Although there are externalities)
+        # In this case we cannot use the trick above of looking at a one euro increase in programmatic spending. For reforms
+        # with MPVF < infinity we can assume that the program cost is equal to the externalities. If the MVPF is infinity,
+        # we cannot spend more on a policy as it costs nothing. These retain their missing value.
+        if (is.na(current_program_row$program_cost)) {
+          if (current_program_row$government_net_costs > 0 |
+            (current_program_row$government_net_costs <= 0 & current_program_row$willingness_to_pay < 0)) {
+            # MVPF cannot be infinite
+            # Set Program Cost equal to the net cost
+            plot_data[plot_data$program == current_program_name, "program_cost"] <- current_program_row$government_net_costs
+            # Fiscal Externality equal to zero
+            plot_data[plot_data$program == current_program_name, "fiscal_externality_per_euro"] <- 0
+            # And the willingness to pay per program cost is equal to the finite MVPF
+            plot_data[plot_data$program == current_program_name, "willingness_to_pay_per_program_cost"] <-
+              current_program_row$willingness_to_pay / current_program_row$government_net_costs
+
+            # Add this program cost to the bootstrap results
+            bootstrap_results[[current_program_name]]$program_cost <- bootstrap_results[[current_program_name]]$government_net_costs
+          }
+        }
+
+        # Update Program row
+        current_program_row <- plot_data %>% filter(program == current_program_name)
+        # 2) Programs with negative WTP and Cost generate money. To fix this we need to multiply wtp
+        # by -1. Now we get the mvpf of not conducting the reform, i.e. spending money on not doing the reform.
+        # fiscal_externality_per_euro & willingness_to_pay_per_program_cost have the correct sign.
+        # But we need to flip the sign of program_cost and government_net_costs:
+        if (current_program_row$willingness_to_pay < 0 & current_program_row$program_cost < 0) {
+          plot_data[plot_data$program == current_program_name, "willingness_to_pay"] <- -current_program_row$willingness_to_pay
+          plot_data[plot_data$program == current_program_name, "program_cost"] <- -current_program_row$program_cost
+          plot_data[plot_data$program == current_program_name, "government_net_costs"] <- -current_program_row$government_net_costs
+
+          # We also have to do this for the bootstrap
+          bootstrap_results[[current_program_name]]$program_cost <- (-1) *bootstrap_results[[current_program_name]]$program_cost
+          bootstrap_results[[current_program_name]]$willingness_to_pay <- (-1) * bootstrap_results[[current_program_name]]$willingness_to_pay
+          bootstrap_results[[current_program_name]]$government_net_costs <- (-1) * bootstrap_results[[current_program_name]]$government_net_costs
+        }
+      }
+    }
+
+    # Programs that still have a negative or no program cost need to be removed. There is only one program for which
+    # this currently applies.
+    programs_in_category <- plot_data %>% filter(category == categories[i], !(is.na(program_cost) | program_cost <= 0 | program %in% excluded_from_category_average))
+
+    print(plot_data %>% filter(category == categories[i], (is.na(program_cost) | program_cost <= 0 | program %in% excluded_from_category_average)) %>% pull(program_name))
     # If some category only consists of reforms with negative costs, skip it.
     if (nrow(programs_in_category) == 0) {
       # All programs in the category have zero cost or cost is NA.
       # Skip this category
       return(NULL)
     }
+
     # This is a implementation of Hendren & Sprung-Keyser (2020) Equation 8.
+    # There is something weird going on with the sign of fiscal externalities in Hendren & Sprung-Keyser (2020).
+    # In equation 4 fiscal externalities which increase government revenue have a positive sign.
+    # In equation 8 these FEs must have a negative sign. Not sure if this is intended or a oversight.
+    # Here, externalities are positive. I.e. we need to substract the FE in the denominator.
     numerator <- (1 / nrow(programs_in_category)) * sum(programs_in_category$willingness_to_pay_per_program_cost)
-    denominator <- (1 / nrow(programs_in_category)) * sum(1 + programs_in_category$fiscal_externality_per_euro)
+    denominator <- (1 / nrow(programs_in_category)) * sum(1 - programs_in_category$fiscal_externality_per_euro)
     grouped_mvpf <- calculateMVPF(numerator, denominator)
 
     # For the confidence intervall we need to calculate the grouped_mvpf for each bootstrap replication. These are stored in
     # bootstrapped_estimates
     # Get willingness_to_pay_per_program_cost from each bootstrap repilcation (rows) for each program beloning to the category (columns)
-    willingness_to_pay_per_euro <- sapply(all_bootstrap_replications_results[programs_in_category$program], function(bootstrap_results) {
+    willingness_to_pay_per_euro <- sapply(bootstrap_results[programs_in_category$program], function(bootstrap_results) {
       return(bootstrap_results$willingness_to_pay / bootstrap_results$program_cost)
     })
 
     # Get fiscal_externality_per_euro from each bootstrap repilcation (rows) for each program beloning to the category (columns)
-    fiscal_externality_per_euro <- sapply(all_bootstrap_replications_results[programs_in_category$program], function(bootstrap_results) {
+    fiscal_externality_per_euro <- sapply(bootstrap_results[programs_in_category$program], function(bootstrap_results) {
       return(1 - bootstrap_results$government_net_costs / bootstrap_results$program_cost)
     })
 
-    # Calculate numerator and denominator as before expcet that the result now is a vectow with number of bootstrap replications rows:
+    # Calculate numerator and denominator as before expcet that the result now is a vector with number of bootstrap replications rows:
     numerator_bootstrap <- 1 / ncol(willingness_to_pay_per_euro) * rowSums(willingness_to_pay_per_euro)
-    denominator_bootstrap <- 1 / ncol(willingness_to_pay_per_euro) * (rowSums(fiscal_externality_per_euro) + ncol(fiscal_externality_per_euro))
+    denominator_bootstrap <- 1 / ncol(willingness_to_pay_per_euro) * (-rowSums(fiscal_externality_per_euro) + ncol(fiscal_externality_per_euro))
 
     mvpf_ci_grouped <- calculateMVPFCI(willingness_to_pay_pe = numerator,
                                        willingness_to_pay_boostrap = numerator_bootstrap,
@@ -1581,11 +1658,69 @@ getCategoryPlotData <- function(plot_data) {
                       category = categories[i],
                       grouped_mvpf_95ci_upper = mvpf_ci_grouped[["mvpf_95ci_upper"]],
                       grouped_mvpf_95ci_lower = mvpf_ci_grouped[["mvpf_95ci_lower"]],
-                      average_age_beneficiary = mean(programs_in_category$average_age_beneficiary, na.rm = TRUE)))
+                      average_age_beneficiary = mean(programs_in_category$average_age_beneficiary, na.rm = TRUE),
+                      year = mean(programs_in_category$year, na.rm = TRUE),
+                      average_earnings_beneficiary = mean(programs_in_category$average_earnings_beneficiary, na.rm = TRUE)))
   }
   # There are some unnecessary row names that do not make sense -> remove those
   rownames(category_plot_data) <- NULL
   return(category_plot_data)
+}
+
+robustnessCheck <- function(programs,
+                            robustnesscheck_assumptions,
+                            headlines,
+                            save = "") {
+  # programs is the vector of programs returned by getCompletePrograms
+  # robustnesscheck_assumptions is function which takes the specification number 1 to n and stores the assumptions
+  # in the global environment
+  # headLines is vector containing the headlines of each of the subplots. This is not optional.
+
+  plots <- lapply(1:length(headlines), function(specification) {
+    # Reset assumptions to be save:
+    source("assumptions.R")
+
+    # Load Assumptions
+    robustnesscheck_assumptions(specification)
+    applyAssumptions()
+
+    # Pont Estimates
+    mvpf_results <- getPointEstimates(programs)
+
+    # Bootstrap
+    mvpf_results <- addBootstrappedConfidenceIntervalls(mvpf_results)
+
+    # Additional Data for Plots
+    plot_data <- getPlotData(mvpf_results)
+
+    # Category Plot data
+    category_plot_data <- getCategoryPlotData(plot_data, all_bootstrap_replications_results)
+    plot <- plotResults(plot_data = plot_data,
+                        category_plot_data = category_plot_data,
+                        x_axis = "average_age_beneficiary",
+                        confidence_intervalls =  TRUE)
+    plot <- plot + ggtitle(headlines[specification]) + theme(plot.title = element_text(size=10))
+    source("assumptions.R")
+    return(plot)
+  })
+
+  combined <- (wrap_plots(plots) & theme(legend.position = "bottom"))
+  combined <- combined + plot_annotation(tag_levels = 'A')
+  combined <- combined + plot_layout(guides = "collect", ncol = 2)
+  print(combined)
+
+  if (save != "") {
+    ggsave(combined, filename = save, device = pdf, path = "./plots/", width = 9, height = 7)
+  }
+}
+
+calculateAverageMVPF <- function(plot_data) {
+  # This is not a true average. The average is infinity once one program has an infinite MVPF.
+  # This is the MVPF of spending one euro on every policy
+  plot_data <- plot_data %>% filter(!(is.na(program_cost) | program_cost <= 0))
+  numerator <- (1 / nrow(plot_data)) * sum(plot_data$willingness_to_pay)
+  denominator <- (1 / nrow(plot_data)) * sum(1 - plot_data$fiscal_externality_per_euro)
+  return(calculateMVPF(numerator, denominator))
 }
 
 getListOfAllMetaAssumptions <- function() {

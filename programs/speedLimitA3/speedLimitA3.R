@@ -5,7 +5,7 @@
 # Relevant Literature:
 # Thiedig (2018)
 
-speedLimitA3 <- function (bootstrap_replication = 0, internalize_carbon_emissions = 1, rational_drivers = TRUE) {
+speedLimitA3 <- function (bootstrap_replication = 0, internalize_carbon_emissions = 1, rational_drivers = FALSE) {
   program_name <- toString(match.call()[1])
   # This paper does not report any confidence intervalls. The effect of the speed limit on the number and severity of
   # accidents is based on comparing means between a highway that's partly in germany (no speed limit) and in
