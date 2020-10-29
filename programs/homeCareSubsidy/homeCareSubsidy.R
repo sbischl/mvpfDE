@@ -69,7 +69,7 @@ homeCareSubsidy <- function (bootstrap_replication = 0) {
   return_values <- list(willingness_to_pay =  subsidy_valuation,
                         government_net_costs = government_net_costs,
                         child_care_cost_reduction = -child_care_cost_reduction,
-                        tax_revenue_increase = tax_revenue_effect,
+                        tax_revenue_increase = -tax_revenue_effect,
                         program_cost = program_cost,
                         prices_year = prices_year)
 
