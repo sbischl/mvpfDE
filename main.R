@@ -136,7 +136,7 @@ plotResults(plot_data = plot_data,
             text_labels = TRUE)
 plotResults(plot_data = plot_data,
             y_label = "Marginal Value of Public Funds",
-            x_axis = "cost_benefit_ratio", x_label = "Cost Benefit Ratio",
+            x_axis = "cost_benefit_ratio", x_label = "Benefit Cost Ratio",
             save = "mvpf_against_cbr.pdf",
             confidence_intervalls = FALSE,
             text_labels = FALSE)
@@ -154,6 +154,7 @@ plotResults(plot_data = plot_data,
             x_label = "Program Name",
             y_label = "Marginal Value of Public Funds",
             save = "mvpf_overview.pdf",
+            landscape = TRUE,
             confidence_intervalls = TRUE,
             text_labels = FALSE,
             vertical_x_axis_labels =  TRUE)
@@ -179,6 +180,7 @@ plotResults(plot_data = plot_data,
 
 # Exports all possible combinations of assumptions. Takes about 2 hours with 3 parallel threads.
 #exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)#
+
 robustnessCheck(programs,
                 robustnesscheck_assumptions = function(specification) {
                   if (specification == 1) {
@@ -188,13 +190,14 @@ robustnessCheck(programs,
                     discount_rate <<- 0.01
                   }
                   else if (specification == 3) {
+                    # baseline
                     discount_rate <<- 0.03
                   }
                   else if (specification == 4) {
                     discount_rate <<- 0.07
                   }
                 },
-                headlines = c("ρ = 0", "ρ = 0.01", "ρ = 0.03", "ρ = 0.07"),
+                headlines = c("ρ = 0", "ρ = 0.01", "ρ = 0.03 (Baseline)", "ρ = 0.07"),
                 save = "robustness_check_discount_rate.pdf")
 
 robustnessCheck(programs,
@@ -204,17 +207,17 @@ robustnessCheck(programs,
                     global_flat_tax <<- 0.1
                   }
                   else if (specification == 2) {
-                    # nothing baseline
+                    global_income_tax_only <<- TRUE
                   }
                   else if (specification == 3) {
-                    global_income_tax_only <<- TRUE
+                    # nothing baseline
                   }
                   else if (specification == 4) {
                     global_assume_flat_tax <<- TRUE
                     global_flat_tax <<- 0.5
                   }
                 },
-                headlines = c("τ = 0.1", "Effective Tax", "Only Income Tax", "τ = 0.5"),
+                headlines = c("τ = 0.1", "Only Income Tax", "Taxes and Transfers (Baseline)", "τ = 0.5"),
                 save = "robustness_check_tax_rate.pdf")
 
 # Export Tables:
@@ -305,3 +308,16 @@ deflateReturnValues(homeCareSubsidy(), 2010)
 # Climate Policy:
 deflateReturnValues(eegSolar(), 2010)
 deflateReturnValues(eegWind(), 2010)
+
+# Approximate share of co2 reduction
+plot_data %>%
+  filter(category == "Climate Policy") %>%
+  mutate(emission_share = co2_emission_reducation / willingness_to_pay) %>%
+  select(mvpf, program, emission_share) %>%
+  pull(emission_share) %>% mean()
+
+# Average MVPF of 2000s tax reforms.
+getCategoryPlotData(plot_data %>% filter(program != "taxReform1990", category == "Top Tax Reform"), bootstrap_results = all_bootstrap_replications_results)
+
+# Comparison of Cost Benefit Ratio and MVPF
+impute_missing_program_costs(plot_data) %>% filter(mvpf != Inf) %>% select(cost_benefit_ratio, mvpf, program) %>% arrange(-cost_benefit_ratio)

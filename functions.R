@@ -135,7 +135,7 @@ discountMonthlyCashFlow <- function(amount, months) {
 
 plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_label = "Year",
                         plot_data, category_plot_data, save = "", lower_cutoff = -1, upper_cutoff = 6, confidence_intervalls = FALSE,
-                        text_labels = FALSE, legend_label = "Category", vertical_x_axis_labels = FALSE) {
+                        text_labels = FALSE, legend_label = "Category", vertical_x_axis_labels = FALSE, landscape = FALSE, smaller_scale = FALSE) {
 
   # Define Colors. These are the same as in the web application:
   colors <- c(rgb(46,139,87, maxColorValue = 255),
@@ -225,8 +225,6 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
   }
   # Generate missing program costs:
   plot_data <- impute_missing_program_costs(plot_data)
-  plot_data2 <<- plot_data
-
   # Finally order the plot_data so that reforms of the same category are displayed next to each other in the overview
   # table
   plot_data <- plot_data %>% arrange(category)
@@ -239,11 +237,10 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
   else if (x_axis == "cost_benefit_ratio") {
     # We need to censor the data otherwise we dont see anything. This removes 3 programs.
     plot_data[,"cost_benefit_ratio"] <- ifelse(plot_data[,"cost_benefit_ratio"] > 6, 6, plot_data[,"cost_benefit_ratio"])
+    plot_data[,"cost_benefit_ratio"] <- ifelse(plot_data[,"cost_benefit_ratio"] < -1, -1, plot_data[,"cost_benefit_ratio"])
     # And cost benefit ratio does not make sense for programs with negative costs:
     plot_data <- plot_data %>% filter(program_cost > 0)
   }
-
-
 
   plot <- ggplot(aes_string(y = y_axis, x= x_axis), data = plot_data) +
     ylab(y_label) +
@@ -252,12 +249,15 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
 
   if (x_axis == "cost_benefit_ratio") {
     plot <- plot + geom_hline(yintercept = 1, linetype = "longdash", alpha = 1) +
-      geom_vline(xintercept = 1, linetype = "longdash", alpha = 1)
+      geom_vline(xintercept = 1, linetype = "longdash", alpha = 1) +
+      scale_x_continuous(breaks = -1:6, labels = c(paste("\u2264", -1),
+                                                   as.character(0:5),
+                                                   paste("\u2265", 6)))
   }
 
   if (text_labels) {
     plot <- plot + geom_text_repel(aes(label = program_name),
-                                   size = 1.95,
+                                   size = 2,
                                    direction = "both",
                                    box.padding = 0.4,
                                    nudge_x = 0.1,
@@ -271,8 +271,16 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
   plot <- plot + geom_point(aes_string(y = y_axis,
                                        x= x_axis,
                                        color = "category"),
+                            size = 2.75,
                             alpha = ifelse(missing(category_plot_data), 1,0.4)) +
-    theme_modified_minimal() + scale_color_manual(values=colors)
+    scale_color_manual(values=colors)
+
+  if(smaller_scale) {
+    plot <- plot + theme_modified_minimal_small()
+  }
+  else {
+    plot <- plot + theme_modified_minimal()
+  }
 
   if (confidence_intervalls) {
     if (missing(category_plot_data)) {
@@ -280,7 +288,8 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
                                               ymax = paste0(y_axis, "_95ci_upper"),
                                               color = "category"),
                                               show.legend=FALSE,
-                                              width = 0.2)
+                                              size = 0.7,
+                                              width = 0.3)
     }
     else {
       plot <- plot + geom_errorbar(aes_string(ymin = "grouped_mvpf_95ci_lower",
@@ -290,24 +299,27 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
                                               color = "category"),
                                               data = category_plot_data,
                                               show.legend=FALSE,
-                                              width = 0.2)
+                                              size = 0.9,
+                                              width = ifelse(x_axis == "average_age_beneficiary", 0.4, 100))
     }
   }
 
   if (!missing(category_plot_data)) {
-    plot <- plot + geom_point(aes(y = grouped_mvpf, color = category), data = category_plot_data, size = 3.2)
+    plot <- plot + geom_point(aes(y = grouped_mvpf, color = category), data = category_plot_data, size = 4.5)
   }
 
   if (y_axis == "mvpf" | y_axis == "grouped_mvpf") {
     plot <- plot + scale_y_continuous(breaks = lower_cutoff:(upper_cutoff + 1),
                                       expand = expansion(mult = c(0.05, 0.05)),
                                       minor_breaks = (lower_cutoff:(upper_cutoff - 1)) + 0.5,
+                                      limits = c(lower_cutoff, upper_cutoff + 1),
                                       labels = c(paste("\u2264", lower_cutoff),
                                                  as.character((lower_cutoff + 1):(upper_cutoff -1)),
                                                  paste("\u2265", upper_cutoff), "\u221E"))
   }
   else {
     plot <- plot + scale_y_continuous(breaks = lower_cutoff:upper_cutoff,
+                                      limits = c(lower_cutoff, upper_cutoff),
                                       labels = c(paste("\u2264", lower_cutoff),
                                                  as.character((lower_cutoff + 1):(upper_cutoff -1)),
                                                  paste("\u2265", upper_cutoff)))
@@ -320,9 +332,17 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
 
   print(plot)
 
-  if (save != "") {
-    ggsave(plot, filename = save, device = pdf, path = "./plots/", width = 12, height = 8)
+  if (landscape == FALSE) {
+    if (save != "") {
+      ggsave(plot, filename = save, device = pdf, path = "./plots/", width = 10, height = 7.5)
+    }
   }
+  else {
+    if (save != "") {
+      ggsave(plot, filename = save, device = pdf, path = "./plots/", width = 15, height = 11)
+    }
+  }
+
 
   return(plot)
 }
@@ -336,7 +356,7 @@ impute_missing_program_costs <- function(plot_data) {
   plot_data$government_net_costs_per_program_cost <- coalesce(plot_data$government_net_costs_per_program_cost,
                                                             plot_data$government_net_costs / plot_data$program_cost)
   plot_data$fiscal_externality_per_euro <- 1 - plot_data$government_net_costs / plot_data$program_cost
-  plot_data$cost_benefit_ratio <- (plot_data$willingness_to_pay + plot_data$fiscal_externality_per_euro) / ((1 + cost_of_raising_public_funds))
+  plot_data$cost_benefit_ratio <- (plot_data$willingness_to_pay_per_program_cost + plot_data$fiscal_externality_per_euro) / ((1 + cost_of_raising_public_funds))
   return(plot_data)
 }
 
@@ -344,17 +364,54 @@ impute_missing_program_costs <- function(plot_data) {
 theme_modified_minimal <- function() {
   # Set the font here. This only works if the font is installed on the system and it is available in R.
   # To make the font available use font_add("font name", "file name") and showtext_auto() from the 'showtext' package.
-  theme_minimal(base_size=12, base_family=plot_font) %+replace%
+  theme_minimal(base_size=13, base_family=plot_font) %+replace%
     theme (
-      axis.line.y = element_blank(),
-      axis.line.x = element_line(color = "darkgrey", size = 0.5),
+      # axis.line.x|y control whether the x and y axis are drawn. It can look stylish to omit one or both:
+      # axis.line.y = element_blank() to omit
+      # e.g: axis.line.x = element_line(color = "darkgrey", size = 0.5) to draw
+      axis.line.y = element_line(color = "grey", size = 0.75),
+      axis.line.x = element_line(color = "grey", size = 0.75),
       panel.border = element_blank(),
       panel.grid.minor.x = element_blank(),
       panel.grid.major.x = element_blank(),
-      axis.ticks = element_blank(),
+      # Enable or Disable Axis ticks:
+      # axis.ticks = element_blank() to omit
+      axis.ticks = element_line(color = "grey", size = 0.75),
+      # Removes Legend Explanation:
       legend.title=element_blank(),
-      legend.position = "bottom"
+      # Set location of legend:
+      legend.position = "bottom",
+      # Legend font size
+      legend.text = element_text(size=10.5),
+      # Axis (ticks) size
+      axis.text = element_text(size=11.5),
+      # Axis label size
+      axis.title = element_text(size=14)
     )
+}
+
+theme_modified_minimal_small <- function() {
+  # Set the font here. This only works if the font is installed on the system and it is available in R.
+  # To make the font available use font_add("font name", "file name") and showtext_auto() from the 'showtext' package.
+  theme_minimal(base_size=12, base_family=plot_font) %+replace%
+    theme (
+    # axis.line.x|y control whether the x and y axis are drawn. It can look stylish to omit one or both:
+    # axis.line.y = element_blank() to omit
+    # e.g: axis.line.x = element_line(color = "darkgrey", size = 0.5) to draw
+    axis.line.y = element_line(color = "grey", size = 0.5),
+    axis.line.x = element_line(color = "grey", size = 0.5),
+    panel.border = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.x = element_blank(),
+    # Enable or Disable Axis ticks:
+    # axis.ticks = element_blank() to omit
+    axis.ticks = element_line(color = "grey", size = 0.5),
+    # Removes Legend Explanation:
+    legend.title=element_blank(),
+    # Set location of legend:
+    legend.position = "bottom",
+    # Axis label size
+    axis.title = element_text(size=10))
 }
 
 project_medium_run_impact <- function(impact_magnitude, # can be either scalar or a vector containing the effect for each period
@@ -1128,7 +1185,7 @@ roundToString <- function(values, remove_trailing_zeros = TRUE) {
     }
     rounded_string <- paste0("", round(value,2))
     if (remove_trailing_zeros) {
-      while(nchar(rounded_string) > 1) {
+      while(nchar(rounded_string) > 1 & grepl(",", rounded_string)) {
         if (substr(rounded_string, nchar(rounded_string), nchar(rounded_string)) != "0") {
           break
         }
@@ -1172,12 +1229,22 @@ exportLatexTables <- function(plot_data)  {
   export_data$ci_string_fe  <- generateCIString(export_data$fiscal_externality_per_euro_95ci_upper,
                                                 export_data$fiscal_externality_per_euro_95ci_lower)
 
+  # Set the font size of tables here:
+  table_font_size <- 11
+
+  # Put the first column in a mini page environment to fix the non-indented second line:
+  # as it's done here: https://stackoverflow.com/questions/50859270/
+  fixKableLineBreaks <- function(width, font_size, column) {
+    paste0("\\begin{minipage}[t]{", width ,"}\\raggedright\\setstretch{1}\\fontsize{",font_size,"}{",font_size * 1.2,"}\\selectfont ", column, "\\vspace{1.2ex}\\end{minipage}")
+  }
+  export_data$program_name <- fixKableLineBreaks("5cm", table_font_size, export_data$program_name)
+
   #--------------------------------------------------------------------------------------------------------------------#
   # Table with main results & CIs
   #--------------------------------------------------------------------------------------------------------------------#
 
   # Select columns to be shown in resulting table
-  program_export_results <- export_data %>%
+  program_export_results <- export_data %>% arrange(category) %>%
     select(program_name, mvpf, ci_string_mvpf, government_net_costs_per_program_cost, ci_string_cost, willingness_to_pay_per_program_cost, ci_string_wtp)
 
 
@@ -1191,12 +1258,11 @@ exportLatexTables <- function(plot_data)  {
                           longtable = T,
                           caption = "List of all programs \\label{programsTableResults}",
                           align = c('l', rep('c', ncol(program_export_results) - 1))) %>%
-    kable_styling(latex_options = c("hold_position", "repeat_header"), font_size = 8)
+    kable_styling(latex_options = c("hold_position", "repeat_header"), font_size = table_font_size)
 
   program_count <- 1
   for (i in 1:nrow(categories)) {
-    programs_table <- programs_table %>% pack_rows(categories[i, "category"], program_count, program_count + categories[i, "count"] - 1,
-                                                   latex_gap_space = "0.6m")
+    programs_table <- programs_table %>% pack_rows(categories[i, "category"], program_count, program_count + categories[i, "count"] - 1)
     program_count <- program_count + categories[i, "count"]
   }
 
@@ -1216,7 +1282,6 @@ exportLatexTables <- function(plot_data)  {
 
   # Give each of the columns names without underscores
   colnames(program_export_additional_info) <- c("Program", "Short Description", "Literature")
-  hihi <<- program_export_additional_info
 
   additional_info_table <- kable(program_export_additional_info, digits = 2,
                           format = "latex",
@@ -1225,10 +1290,9 @@ exportLatexTables <- function(plot_data)  {
                           longtable = TRUE,
                           caption = "Programs \\label{programsTableLiterature}",
                           align = c('l','l','l')) %>%
-                          column_spec(1, width = "5cm") %>%
                           column_spec(2, width = "11cm") %>%
-                          column_spec(3, width = "5cm") %>%
-                          kable_styling(latex_options = c("hold_position", "repeat_header"))
+                          column_spec(3, width = "6cm") %>%
+                          kable_styling(latex_options = c("hold_position", "repeat_header"), font_size = table_font_size)
 
   # Add Category Headlines
   program_count <- 1
@@ -1246,13 +1310,13 @@ exportLatexTables <- function(plot_data)  {
   #--------------------------------------------------------------------------------------------------------------------#
 
   program_export_descriptives <- export_data %>% arrange(category) %>%
-    select(program_name, average_age_beneficiary , average_earnings_beneficiary)
+    select(program_name, average_age_beneficiary , average_earnings_beneficiary, year)
 
   program_export_descriptives$average_age_beneficiary <- roundToString(program_export_descriptives$average_age_beneficiary)
   program_export_descriptives$average_earnings_beneficiary <- roundToString(program_export_descriptives$average_earnings_beneficiary)
 
   # Give each of the columns names without underscores
-  colnames(program_export_descriptives) <- c("Program", "Age Beneficiary", "Average Earnings")
+  colnames(program_export_descriptives) <- c("Program", "Age Beneficiary", "Average Earnings", "Year")
 
   additional_info_table <- kable(program_export_descriptives, digits = 2,
                                  format = "latex",
@@ -1260,8 +1324,8 @@ exportLatexTables <- function(plot_data)  {
                                  escape = FALSE,
                                  longtable = TRUE,
                                  caption = "Programs \\label{programsTableDescriptive}",
-                                 align = c('l','c','c')) %>%
-    kable_styling(latex_options = c("hold_position", "repeat_header"))
+                                 align = c('l','c','c', 'c')) %>%
+    kable_styling(latex_options = c("hold_position", "repeat_header"), font_size = table_font_size)
 
   # Add Category Headlines
   program_count <- 1
@@ -1615,7 +1679,6 @@ getCategoryPlotData <- function(plot_data, bootstrap_results, include_additional
     # this currently applies.
     programs_in_category <- plot_data %>% filter(category == categories[i], !(is.na(program_cost) | program_cost <= 0 | program %in% excluded_from_category_average))
 
-    print(plot_data %>% filter(category == categories[i], (is.na(program_cost) | program_cost <= 0 | program %in% excluded_from_category_average)) %>% pull(program_name))
     # If some category only consists of reforms with negative costs, skip it.
     if (nrow(programs_in_category) == 0) {
       # All programs in the category have zero cost or cost is NA.
@@ -1698,8 +1761,10 @@ robustnessCheck <- function(programs,
     plot <- plotResults(plot_data = plot_data,
                         category_plot_data = category_plot_data,
                         x_axis = "average_age_beneficiary",
+                        x_label = "Average Age of Beneficiaries",
+                        smaller_scale = TRUE,
                         confidence_intervalls =  TRUE)
-    plot <- plot + ggtitle(headlines[specification]) + theme(plot.title = element_text(size=10))
+    plot <- plot + ggtitle(headlines[specification]) + theme(plot.title = element_text(size=12))
     source("assumptions.R")
     return(plot)
   })
@@ -1710,7 +1775,7 @@ robustnessCheck <- function(programs,
   print(combined)
 
   if (save != "") {
-    ggsave(combined, filename = save, device = pdf, path = "./plots/", width = 9, height = 7)
+    ggsave(combined, filename = save, device = pdf, path = "./plots/", width = 11, height = 8.5)
   }
 }
 

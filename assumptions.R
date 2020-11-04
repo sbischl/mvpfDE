@@ -74,13 +74,13 @@ disable_deflating <- FALSE
 order_of_categories <- c("Top Tax Reform",
                          "Education",
                          "Job Training",
+                         "Start up Subsidy",
                          "Subsidized Employment",
-                         "Labor Market Policy",
+                         "Other Labor Market Policies",
                          "Unemployment Insurance",
-                         "Family Policy",
+                         "Parental Leave Reform",
                          "Climate Policy",
-                         "Health Program",
-                         "Start up Subsidy") #This determines the order in which the reforms categories are displayed in the graphs
+                         "Health Program") #This determines the order in which the reforms categories are displayed in the graphs
 # and tables.
 # Exclude Programs from category average:
 excluded_from_category_average <- c("bicycleHelmet", "coronavirusLockdownR1")
