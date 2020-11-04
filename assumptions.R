@@ -69,6 +69,17 @@ results_prices <- 2010 # The year to which results should be deflated
 exclude_variables_from_price_adjustment <- c("prices_year") # All variables that are returned by a program (willingness_to_pay, program_cost ...)
 # are deflated to results_prices automatically except those in exclude_variables_from_price_adjustment
 disable_deflating <- FALSE
+# Exclude programs from deflaiting where all effects are stated per euro. E.g for tax reform we are always looking at
+# the effects of a one euro tax cut. These effects do not depend on prices and it would be weird if every tax reform
+# had a different WTP depending on the year it was implemented.
+excluded_from_deflating <- c("taxReform2005",
+                             "taxReform2004",
+                             "taxReform2001",
+                             "taxReform1990",
+                             "unemploymentBenefits2006",
+                             "unemploymentBenefits42",
+                             "unemploymentBenefits44",
+                             "unemploymentBenefits49")
 
 # Plots and Tables:
 order_of_categories <- c("Top Tax Reform",

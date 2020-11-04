@@ -42,7 +42,7 @@ if (length(not_installed_packages) > 0) {
   }
 }
 
-#Load libraries
+# Load all libraries specified above in 'required_packages'
 invisible(lapply(required_packages, FUN = library, character.only = TRUE))
 
 # Try to load the alternative font that is used in the pdf exports.
@@ -54,7 +54,6 @@ tryCatch({
   warning("Font is not installed. Plots are going to use the standard font instead.")
   plot_font <<- "sans"
 })
-
 showtext_auto()
 
 # Initilialize parallel environment
@@ -87,13 +86,14 @@ programs <- getCompletePrograms()
 # Run each program with default settings to get the point estimates
 mvpf_results <- getPointEstimates(programs)
 
-# Bootstrap
+# Calculate Bootstrap and add bootstrapped CIs to the results
 mvpf_results <- addBootstrappedConfidenceIntervalls(mvpf_results)
 
 # Display runtime of the estimation procedure
 cat("Estimation completed in ", difftime(Sys.time(), start_time, units='mins'), " minutes \n")
 
-# Print results:
+# Print all results to console
+
 for (i in 1:length(programs)) {
 
   message("Printing results for ", programs[i], ":")
@@ -106,14 +106,14 @@ for (i in 1:length(programs)) {
     cat(names(point_estimates[j]), " = ", point_estimates[[j]], "\t 95% CI [", nonNA_results[[paste0(names(point_estimates[j]),"_95ci_lower")]],
         ",", nonNA_results[[paste0(names(point_estimates[j]),"_95ci_upper")]], "]\n", sep = "")
   }
-
   cat("\n")
 }
 
+#----------------------------------------------------------------------------------------------------------------------#
+# Present Results
+#----------------------------------------------------------------------------------------------------------------------#
 
-# Present results:
-
-# Tax and Transfer System
+# Plot Tax and Transfer System
 plotTaxRates()
 
 # Augment results with additional information for plotting
@@ -121,25 +121,25 @@ plot_data <- getPlotData(mvpf_results)
 category_plot_data <- getCategoryPlotData(plot_data, all_bootstrap_replications_results)
 
 # Plot Results
+# Figure that plots the MVPF of all policies against the year they were implemented (with text lables)
 plotResults(plot_data = plot_data,
             save ="mvpf_against_year.pdf",
             y_label = "Marginal Value of Public Funds",
-            confidence_intervalls = TRUE)
+            confidence_intervalls = FALSE,
+            text_labels =  TRUE)
+
+# Figure that plots the Net Costs of all policies against the year they were implemented (with text lables)
 plotResults(plot_data = plot_data,
             y_axis = "government_net_costs_per_program_cost",
-            y_label = "Government Net Costs per Euro Progammatic Expenditure",
+            y_label = "Net Costs per Euro Progammatic Expenditure",
             x_axis = "year", x_label = "Year",
             save = "cost_against_year.pdf",
             lower_cutoff = 0,
-            upper_cutoff = 4,
+            upper_cutoff = 3,
             confidence_intervalls = FALSE,
             text_labels = TRUE)
-plotResults(plot_data = plot_data,
-            y_label = "Marginal Value of Public Funds",
-            x_axis = "cost_benefit_ratio", x_label = "Benefit Cost Ratio",
-            save = "mvpf_against_cbr.pdf",
-            confidence_intervalls = FALSE,
-            text_labels = FALSE)
+
+# Figure that plots the WTP of all policies against the year they were implemented (with text lables)
 plotResults(plot_data = plot_data,
             y_axis = "willingness_to_pay_per_program_cost",
             y_label = "Willingness to Pay per Euro Progammatic Expenditure",
@@ -149,6 +149,16 @@ plotResults(plot_data = plot_data,
             upper_cutoff = 4,
             confidence_intervalls = FALSE,
             text_labels = TRUE)
+
+# Figure that plots the MVPF against the BCR
+plotResults(plot_data = plot_data,
+            y_label = "Marginal Value of Public Funds",
+            x_axis = "cost_benefit_ratio", x_label = "Benefit Cost Ratio",
+            save = "mvpf_against_bcr.pdf",
+            confidence_intervalls = FALSE,
+            text_labels = FALSE)
+
+# Figure that plots the MVPF of all policies with 95% CIs
 plotResults(plot_data = plot_data,
             x_axis = "program_name",
             x_label = "Program Name",
@@ -158,15 +168,8 @@ plotResults(plot_data = plot_data,
             confidence_intervalls = TRUE,
             text_labels = FALSE,
             vertical_x_axis_labels =  TRUE)
-plotResults(plot_data = plot_data,
-            category_plot_data = category_plot_data,
-            y_axis = "mvpf",
-            y_label = "Marginal Value of Public Funds",
-            x_axis = "average_age_beneficiary",
-            x_label = "Age of Beneficiaries",
-            save = "mvpf_categories_age.pdf",
-            confidence_intervalls = TRUE,
-            text_labels = FALSE)
+
+# Figure that plots the MVPF against the average earnings of beneficiaries with category-averages
 plotResults(plot_data = plot_data,
             category_plot_data = category_plot_data,
             y_axis = "mvpf",
@@ -177,10 +180,18 @@ plotResults(plot_data = plot_data,
             confidence_intervalls = TRUE,
             text_labels = FALSE)
 
+# Figure that plots the MVPF against the average age of beneficiaries with category-averages
+plotResults(plot_data = plot_data,
+            category_plot_data = category_plot_data,
+            y_axis = "mvpf",
+            y_label = "Marginal Value of Public Funds",
+            x_axis = "average_age_beneficiary",
+            x_label = "Age of Beneficiaries",
+            save = "mvpf_categories_age.pdf",
+            confidence_intervalls = TRUE,
+            text_labels = FALSE)
 
-# Exports all possible combinations of assumptions. Takes about 2 hours with 3 parallel threads.
-#exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)#
-
+# Robustness Check that re-estimates everything with various discount rates and displays each specifiction in a combined plot
 robustnessCheck(programs,
                 robustnesscheck_assumptions = function(specification) {
                   if (specification == 1) {
@@ -200,6 +211,7 @@ robustnessCheck(programs,
                 headlines = c("ρ = 0", "ρ = 0.01", "ρ = 0.03 (Baseline)", "ρ = 0.07"),
                 save = "robustness_check_discount_rate.pdf")
 
+# Robustness Check that re-estimates everything with various tax rate asumptions and displays each specifiction in a combined plot
 robustnessCheck(programs,
                 robustnesscheck_assumptions = function(specification) {
                   if (specification == 1) {
@@ -219,6 +231,11 @@ robustnessCheck(programs,
                 },
                 headlines = c("τ = 0.1", "Only Income Tax", "Taxes and Transfers (Baseline)", "τ = 0.5"),
                 save = "robustness_check_tax_rate.pdf")
+
+
+# Exports all possible combinations of assumptions specified in getListOfAllMetaAssumptions().
+# Takes about 2 hours with 3 parallel threads. Only relevant for the web visualization.
+# exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)#
 
 # Export Tables:
 exportLatexTables(plot_data)

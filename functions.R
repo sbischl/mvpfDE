@@ -1048,7 +1048,7 @@ plotTaxRates <- function(income_tax_only = FALSE) {
     geom_area() +
     theme_modified_minimal() +
     coord_equal() +
-    xlab("Gross Income per Month") +
+    xlab("Gross Earnings per Month") +
     ylab("Euro per Month") +
     scale_x_continuous(limits = c(0, 10000)) +
     scale_y_continuous(limits = c(-1000, 9000),
@@ -1066,7 +1066,7 @@ plotTaxRates <- function(income_tax_only = FALSE) {
   figure_net_income_reduced <- ggplot(aes(x = gross_income_monthly, y = Euro, color = net_income_tax), data = figure_net_income_data_reduced) +
     geom_line() +
     theme_modified_minimal() +
-    xlab("Gross Income per Month") +
+    xlab("Gross Earnings per Month") +
     ylab("Euro per Month") +
     scale_x_continuous(limits = c(0, 7000)) +
     scale_y_continuous(limits = c(-1000, 4000),
@@ -1113,14 +1113,15 @@ plotTaxRates <- function(income_tax_only = FALSE) {
 
   figure_averge_marginal_tax_data <- get_averge_marginal_tax_data(taxes_and_transfers)
 
-  figure_averge_marginal_tax <- ggplot(aes(x = gross_income_monthly, y = tax_rate, color = marginal_average), data = figure_averge_marginal_tax_data) +
+  figure_averge_marginal_tax <- ggplot(aes(x = gross_income_monthly * 12, y = tax_rate, color = marginal_average), data = figure_averge_marginal_tax_data) +
     geom_line() +
     theme_modified_minimal() +
-    scale_x_continuous(limits = c(0, 7000)) +
+    scale_x_continuous(limits = c(0, 150000)) +
     scale_y_continuous(limits = c(0, 1.2),
+                       breaks = c(0, 0.25, 0.5 ,0.75, 1),
                        expand = expansion(mult = c(0, 0))) +
     scale_colour_discrete(name = "Legend:", labels = c("Average Tax Rate", "Marginal Tax Rate")) +
-    xlab("Gross Income per Month") +
+    xlab("Gross Earnings per Year") +
     ylab("Tax Rate")
 
   print(figure_averge_marginal_tax)
@@ -1142,9 +1143,10 @@ plotTaxRates <- function(income_tax_only = FALSE) {
     theme_modified_minimal() +
     scale_x_continuous(limits = c(0, 150000)) +
     scale_y_continuous(limits = c(0, 1),
+                       breaks = c(0, 0.25, 0.5, 0.75),
                        expand = expansion(mult = c(0, 0))) +
     scale_colour_discrete(name = "Legend:", labels = c("Average Tax Rate", "Marginal Tax Rate")) +
-    xlab("Gross Income per Year") +
+    xlab("Gross Earnings per Year") +
     ylab("Income Tax Rate")
 
 
@@ -1325,7 +1327,16 @@ exportLatexTables <- function(plot_data)  {
                                  longtable = TRUE,
                                  caption = "Programs \\label{programsTableDescriptive}",
                                  align = c('l','c','c', 'c')) %>%
-    kable_styling(latex_options = c("hold_position", "repeat_header"), font_size = table_font_size)
+    kable_styling(latex_options = c("hold_position", "repeat_header"), font_size = table_font_size) %>%
+    footnote(general = "Average Earnings are deflated to 2010 Euro prices using the consumer price index from destatis \\cite{destatiscpi}.
+    If possible, we take all descriptive statistics from the papers listed in Table \\ref{programsTableLiterature}.
+    In some cases, we assume the average age based on the affected population. For the marternity leave reforms 1992,
+     we take the average of mothers in Germany from \\cite{destatisMothersAge}. The average age is missing
+     for the 1979 and 1986 maternal leave reforms since the dataset from Detatis only reaches back till 1990.
+    The average earnigs and average age of individuals who pay the top tax rate is approximately calculated from \\cite{destatisTax2004},
+    \\cite{destatisTax2001} and \\cite{destatisTax1995}. The EEG climate policies and the pontential speed limtis affect almost the entire
+     adult population. We assume the average age of the German population aged 20 to 85, and 20 to 75, which we calculate from
+     \\cite{destatisAgePopulation}.")
 
   # Add Category Headlines
   program_count <- 1
@@ -1613,6 +1624,9 @@ getPlotData <- function(mvpf_results) {
 
   # Join with additional information
   joined_dataset <- left_join(mvpf_results, program_information, by = c("program" = "program_identifier"))
+
+  # The average_earnings_beneficiary column needs to be deflated:
+  joined_dataset <- joined_dataset %>% mutate(average_earnings_beneficiary = Vectorize(deflate)(from = prices_year, to = results_prices) * average_earnings_beneficiary)
 
   # Remove excluded programs
   joined_dataset <- joined_dataset %>% filter(!(program %in% excluded_from_all_plots))
@@ -2060,7 +2074,11 @@ getPointEstimates <- function(programs) {
   for (i in 1:length(programs)) {
     message(paste("Running", programs[i], "once to get the point estimate."))
     return_values <- do.call(programs[i], list())
-    return_values <- deflateReturnValues(return_values, results_prices)
+
+    if (!programs[i] %in% excluded_from_deflating) {
+      return_values <- deflateReturnValues(return_values, results_prices)
+    }
+
     # Check if return_values include the necessary "willingness_to_pay" and "government_net_costs"
     if (!all(c("willingness_to_pay", "government_net_costs") %in% names(return_values))) {
       warning(paste0(programs[i], "does not include willingness_to_pay and / or government_net_costs. Cannot calculate MVPF"))
