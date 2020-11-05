@@ -252,7 +252,8 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
       geom_vline(xintercept = 1, linetype = "longdash", alpha = 1) +
       scale_x_continuous(breaks = -1:6, labels = c(paste("\u2264", -1),
                                                    as.character(0:5),
-                                                   paste("\u2265", 6)))
+                                                   paste("\u2265", 6))) +
+      coord_fixed() + coord_flip()
   }
 
   if (text_labels) {
@@ -386,7 +387,9 @@ theme_modified_minimal <- function() {
       # Axis (ticks) size
       axis.text = element_text(size=11.5),
       # Axis label size
-      axis.title = element_text(size=14)
+      axis.title = element_text(size=14),
+      # Change Legend Stacking to vertical:
+      legend.box="vertical"
     )
 }
 
@@ -1117,7 +1120,7 @@ plotTaxRates <- function(income_tax_only = FALSE) {
     geom_line() +
     theme_modified_minimal() +
     scale_x_continuous(limits = c(0, 150000)) +
-    scale_y_continuous(limits = c(0, 1.2),
+    scale_y_continuous(limits = c(0, 1.1),
                        breaks = c(0, 0.25, 0.5 ,0.75, 1),
                        expand = expansion(mult = c(0, 0))) +
     scale_colour_discrete(name = "Legend:", labels = c("Average Tax Rate", "Marginal Tax Rate")) +
@@ -1142,7 +1145,7 @@ plotTaxRates <- function(income_tax_only = FALSE) {
     geom_line() +
     theme_modified_minimal() +
     scale_x_continuous(limits = c(0, 150000)) +
-    scale_y_continuous(limits = c(0, 1),
+    scale_y_continuous(limits = c(0, 0.75),
                        breaks = c(0, 0.25, 0.5, 0.75),
                        expand = expansion(mult = c(0, 0))) +
     scale_colour_discrete(name = "Legend:", labels = c("Average Tax Rate", "Marginal Tax Rate")) +
@@ -1159,7 +1162,8 @@ generateCIString <- function(lowerCI, upperCI) {
   lowerCI <- sapply(lowerCI, roundAndreplace)
   upperCI <- sapply(upperCI, roundAndreplace)
   CIString <- paste0("[", lowerCI, ", ", upperCI, "]")
-  CIString[grepl(pattern = "-", x = CIString)] <- "-"
+  CIString[grepl(pattern = "-", x = CIString) & is.na(lowerCI) & is.na(upperCI)] <- "-"
+  CIString[grepl(pattern = "\\[-, -\\]", x = CIString)] <- "-"
   return(CIString)
 }
 
@@ -1209,8 +1213,10 @@ exportLatexTables <- function(plot_data)  {
   categories <- plot_data %>% group_by(category) %>% summarize(count=n()) %>% as.data.frame()
   # Define order of programs:
   order <- order_of_categories
+
+  # Add program cost = fiscal externalities to programs with no program cost
+  export_data <- impute_missing_program_costs(plot_data)
   # Sort programs by category
-  export_data <- plot_data
   export_data$category <- factor(export_data$category, levels = order)
   export_data <- export_data %>% arrange(category)
 
@@ -1240,7 +1246,6 @@ exportLatexTables <- function(plot_data)  {
     paste0("\\begin{minipage}[t]{", width ,"}\\raggedright\\setstretch{1}\\fontsize{",font_size,"}{",font_size * 1.2,"}\\selectfont ", column, "\\vspace{1.2ex}\\end{minipage}")
   }
   export_data$program_name <- fixKableLineBreaks("5cm", table_font_size, export_data$program_name)
-
   #--------------------------------------------------------------------------------------------------------------------#
   # Table with main results & CIs
   #--------------------------------------------------------------------------------------------------------------------#
@@ -1277,6 +1282,8 @@ exportLatexTables <- function(plot_data)  {
     select(program_name, short_description)
 
   program_export_additional_info$short_description <- xtable::sanitize(program_export_additional_info$short_description)
+  # Add space to make table more structured
+  program_export_additional_info$short_description <- paste0(program_export_additional_info$short_description, "\\vspace{0.35cm}")
   program_export_additional_info$literature <- sapply(export_data$bibtexkeys, function(key) {
     # Return Latex Code that cites the relevant bibtex key and begins a new line for each cited paper
     paste(paste0("\\cite{",unlist(strsplit(key, ";")), "}"), collapse = "\\newline")
@@ -1327,16 +1334,7 @@ exportLatexTables <- function(plot_data)  {
                                  longtable = TRUE,
                                  caption = "Programs \\label{programsTableDescriptive}",
                                  align = c('l','c','c', 'c')) %>%
-    kable_styling(latex_options = c("hold_position", "repeat_header"), font_size = table_font_size) %>%
-    footnote(general = "Average Earnings are deflated to 2010 Euro prices using the consumer price index from destatis \\cite{destatiscpi}.
-    If possible, we take all descriptive statistics from the papers listed in Table \\ref{programsTableLiterature}.
-    In some cases, we assume the average age based on the affected population. For the marternity leave reforms 1992,
-     we take the average of mothers in Germany from \\cite{destatisMothersAge}. The average age is missing
-     for the 1979 and 1986 maternal leave reforms since the dataset from Detatis only reaches back till 1990.
-    The average earnigs and average age of individuals who pay the top tax rate is approximately calculated from \\cite{destatisTax2004},
-    \\cite{destatisTax2001} and \\cite{destatisTax1995}. The EEG climate policies and the pontential speed limtis affect almost the entire
-     adult population. We assume the average age of the German population aged 20 to 85, and 20 to 75, which we calculate from
-     \\cite{destatisAgePopulation}.")
+    kable_styling(latex_options = c("hold_position", "repeat_header"), font_size = table_font_size)
 
   # Add Category Headlines
   program_count <- 1

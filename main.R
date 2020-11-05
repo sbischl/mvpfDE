@@ -48,8 +48,8 @@ invisible(lapply(required_packages, FUN = library, character.only = TRUE))
 # Try to load the alternative font that is used in the pdf exports.
 # If this font is not installed / cannot be found, the standard one will be used
 tryCatch({
-  plot_font <<- "Open Sans"
-  font_add(plot_font, "OpenSans-Regular.ttf")
+  plot_font <<- "Arial"
+  font_add(plot_font, "Arial.ttf")
 }, error = function(e) {
   warning("Font is not installed. Plots are going to use the standard font instead.")
   plot_font <<- "sans"
