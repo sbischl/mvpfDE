@@ -148,7 +148,7 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
               rgb(165,42,42, maxColorValue = 255),
               rgb(0,255,127, maxColorValue = 255),
               rgb(72,61,139, maxColorValue = 255),
-              rgb(65,91,199, maxColorValue = 255))
+              rgb(189,189,189, maxColorValue = 255))
 
 
   # Check if y_axis and x_axis actually exist in the plot_data
@@ -161,6 +161,34 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
   if (!all(c(paste0(y_axis,"_95ci_lower"), paste0(y_axis,"_95ci_upper")) %in% colnames(plot_data))) {
     confidence_intervalls <- FALSE
   }
+
+  # Generate Category 'Other' which contains all programs that have no Category specified:
+  plot_data$category <- coalesce(plot_data$category, "Other")
+  plot_data$category <- factor(plot_data$category, levels = order_of_categories)
+  # Assign the Program program identifier (folder name) as program name, if none is specified:
+  if (y_axis != "grouped_mvpf") {
+    plot_data$program_name <- coalesce(plot_data$program_name, plot_data$program)
+  }
+
+  # Order the plot_data so that reforms of the same category are displayed next to each other in the overview table
+  plot_data <- plot_data %>% arrange(category)
+
+  # Generate missing program costs:
+  plot_data <- impute_missing_program_costs(plot_data)
+
+  # Convert x_axis variable to factor. Otherwise the programs are plotted in alphabetical order.
+  if (x_axis == "program_name") {
+    plot_data[, x_axis] <- factor( plot_data[, x_axis], levels = plot_data[, x_axis])
+  }
+  else if (x_axis == "cost_benefit_ratio") {
+    # We need to censor the data otherwise we dont see anything. This removes 3 programs.
+    plot_data[,"cost_benefit_ratio"] <- ifelse(plot_data[,"cost_benefit_ratio"] > 6, 6, plot_data[,"cost_benefit_ratio"])
+    plot_data[,"cost_benefit_ratio"] <- ifelse(plot_data[,"cost_benefit_ratio"] < -1, -1, plot_data[,"cost_benefit_ratio"])
+    # And cost benefit ratio does not make sense for programs with negative costs:
+    plot_data <- plot_data %>% filter(program_cost > 0)
+  }
+
+  # Censor all values to match the specified cut-offs. Handle the extra infinity level for the MVPF
 
   if (y_axis == "mvpf" | y_axis == "grouped_mvpf") {
     # Censor all values that are larger than the the infinity_cutoff and use infinity_cutoff + 1 as 'infinity'
@@ -216,32 +244,10 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
     }
   }
 
-  # Generate Category 'Other' which contains all programs that have no Category specified:
-  plot_data$category <- coalesce(plot_data$category, "Other")
-  plot_data$category <- factor(plot_data$category, levels = order_of_categories)
-  # Assign the Program program identifier (folder name) as program name, if none is specified:
-  if (y_axis != "grouped_mvpf") {
-    plot_data$program_name <- coalesce(plot_data$program_name, plot_data$program)
-  }
-  # Generate missing program costs:
-  plot_data <- impute_missing_program_costs(plot_data)
-  # Finally order the plot_data so that reforms of the same category are displayed next to each other in the overview
-  # table
-  plot_data <- plot_data %>% arrange(category)
+  # Censoring Done
 
-  # Convert x_axis variable to factor. Otherwise the programs are plotted in alphabetical order.
-  if (x_axis == "program_name") {
-    plot_data[, x_axis] <- factor( plot_data[, x_axis], levels = plot_data[, x_axis])
-  }
-
-  else if (x_axis == "cost_benefit_ratio") {
-    # We need to censor the data otherwise we dont see anything. This removes 3 programs.
-    plot_data[,"cost_benefit_ratio"] <- ifelse(plot_data[,"cost_benefit_ratio"] > 6, 6, plot_data[,"cost_benefit_ratio"])
-    plot_data[,"cost_benefit_ratio"] <- ifelse(plot_data[,"cost_benefit_ratio"] < -1, -1, plot_data[,"cost_benefit_ratio"])
-    # And cost benefit ratio does not make sense for programs with negative costs:
-    plot_data <- plot_data %>% filter(program_cost > 0)
-  }
-
+  # Start to construct the plot. There is some common structure, but also quite a few special cases that need to be
+  # considered
   plot <- ggplot(aes_string(y = y_axis, x= x_axis), data = plot_data) +
     ylab(y_label) +
     xlab(x_label) +
@@ -274,7 +280,8 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
                                        color = "category"),
                             size = 2.75,
                             alpha = ifelse(missing(category_plot_data), 1,0.4)) +
-    scale_color_manual(values=colors)
+    scale_color_manual(values=colors,
+                       breaks = unique(plot_data$category)[!unique(plot_data$category) %in% "Other"])
 
   if(smaller_scale) {
     plot <- plot + theme_modified_minimal_small()

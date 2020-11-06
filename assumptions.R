@@ -91,11 +91,13 @@ order_of_categories <- c("Top Tax Reform",
                          "Unemployment Insurance",
                          "Parental Leave Reform",
                          "Climate Policy",
-                         "Health Program") #This determines the order in which the reforms categories are displayed in the graphs
+                         "Health Program",
+                         "Other") #This determines the order in which the reforms categories are displayed in the graphs
 # and tables.
+
 # Exclude Programs from category average:
 excluded_from_category_average <- c("bicycleHelmet", "coronavirusLockdownR1")
-excluded_from_all_plots <- c("bicycleHelmet")
+excluded_from_all_plots <- c()
 
 
 #----------------------------------------------------------------------------------------------------------------------#
