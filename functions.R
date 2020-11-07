@@ -1815,12 +1815,12 @@ getListOfAllMetaAssumptions <- function() {
   # Update this function when updating setMetaAssumptions!
   list_of_all_meta_assumptions <- list(
     discount_rate = c("7", "3", "1"),
-    tax_rate = c("0", "15", "30", "45", "60", "nonlinear", "incometaxonly"),
+    tax_rate = c("0", "10", "30", "50", "incometaxonly", "nonlinear"),
     returns_to_schooling = c("5","7", "11", "IAB"),
     value_of_statistical_life = c("1million", "2.5million", "5million"),
     co2_externality = c("0","50","100","250"),
     wage_growth_rate = c("0", "05", "1", "15"),
-    relative_risk_aversion = c("1", "2", "5")
+    base = c("base","0", "3", "6")
   )
 }
 
@@ -1865,21 +1865,17 @@ setMetaAssumption <- function(key, value) {
       global_assume_flat_tax <<- TRUE
       global_flat_tax <<- 0
     }
-    else if (value == "15") {
+    else if (value == "10") {
       global_assume_flat_tax <<- TRUE
-      global_flat_tax <<- 0.15
+      global_flat_tax <<- 0.1
     }
     else if (value == "30" ) {
       global_assume_flat_tax <<- TRUE
       global_flat_tax <<- 0.3
     }
-    else if(value == "45") {
+    else if(value == "50") {
       global_assume_flat_tax <<- TRUE
-      global_flat_tax <<- 0.45
-    }
-    else if(value == "60") {
-      global_assume_flat_tax <<- TRUE
-      global_flat_tax <<- 0.60
+      global_flat_tax <<- 0.5
     }
     else if(value == "nonlinear") {
       # Assume the german tax system with pension contributions as income
@@ -1949,15 +1945,21 @@ setMetaAssumption <- function(key, value) {
       warning(paste("Value", value, "of assumption", key, "not found"))
     }
   }
-  else if (key == "relative_risk_aversion") {
-    if (value == "1") {
-      global_relative_risk_aversion <<- 1
+  else if (key == "eti") {
+    if (value == "base") {
+      # Baseline
     }
-    else if (value == "2") {
-      global_relative_risk_aversion <<- 2
+    else if (value == "0") {
+      overwrite_eti <<- TRUE
+      global_eti <<- 0
     }
-    else if (value == "5") {
-      global_relative_risk_aversion <<- 5
+    else if (value == "3") {
+      overwrite_eti <<- TRUE
+      global_eti <<- 0.3
+    }
+    else if (value == "6") {
+      overwrite_eti <<- TRUE
+      global_eti <<- 0.6
     }
     else {
       warning(paste("Value", value, "of assumption", key, "not found"))
@@ -2025,7 +2027,11 @@ exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_as
 
     # Now that the assumptions have been set, we can run the estimation
     results <- quietelyRunPrograms(programs, bootstrap)
-    write.csv(x = getPlotData(results),
+    # load the additional data
+    plot_data <- getPlotData(results)
+    # remove columns not needed for visualization
+    plot_data <- plot_data %>% select(-c(bibtexkeys, notes))
+    write.csv(x = plot_data,
               file = paste0("./csv_export/", assumptions_string, ".csv"),
               row.names = FALSE,
               fileEncoding = "UTF-8")

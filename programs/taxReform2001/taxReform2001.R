@@ -13,9 +13,14 @@ taxReform2001 <- function (bootstrap_replication = 0, year_difference = 3) {
   marginal_top_tax_rate_before <- 0.53
   marginal_top_tax_rate_after <- 0.485
 
-  # We have 3 estimates for the elasticity of taxable income with respect to the net-of-tax rate depending on the
-  # elapsed time between tax rate change and the income reaction.
-  elasticity_of_taxable_income <- c(estimates$eti_1year, estimates$eti_2year, estimates$eti_3year)[year_difference]
+  if (overwrite_eti) {
+    elasticity_of_taxable_income <- global_eti
+  }
+  else {
+    # We have 3 estimates for the elasticity of taxable income with respect to the net-of-tax rate depending on the
+    # elapsed time between tax rate change and the income reaction.
+    elasticity_of_taxable_income <- c(estimates$eti_1year, estimates$eti_2year, estimates$eti_3year)[year_difference]
+  }
 
   # The way the MVPF is contructed for tax reforms, the willingness to pay is always one
   willingness_to_pay <- 1

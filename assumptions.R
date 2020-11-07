@@ -14,14 +14,19 @@ global_flat_tax <- 0.2810786
 global_income_tax_only <- FALSE # If this is set to TRUE, the income tax is the only tax
 global_flat_tax_income_tax_only <- 0.1827759 # Irrelevant unless global_income_tax_only is set to TRUE
 
-global_inculde_welfare_benefits_fraction <- 1 #The share of welfare_benefits 'Hartz IV' invidivudals receive.
-global_income_fraction_of_pension_contribution <- 1 #The fraction of pension contributions that is considered income
-global_income_fraction_of_unemployment_insurance_contribution <- 1 #The fraction of unemployment insurance contributions that is considered income
-global_income_fraction_of_health_insurance_contribution <- 0 #The fraction of pension contributions that is considered income
-global_income_fraction_of_long_term_care_contribution <- 0 #The fraction of unemployment insurance contributions that is considered income
+global_inculde_welfare_benefits_fraction <- 1 # The share of welfare_benefits 'Hartz IV' that is considered income.
+global_income_fraction_of_pension_contribution <- 1 # The fraction of pension contributions that is considered income
+global_income_fraction_of_unemployment_insurance_contribution <- 1 # The fraction of unemployment insurance contributions that is considered income
+global_income_fraction_of_health_insurance_contribution <- 0 # The fraction of pension contributions that is considered income
+global_income_fraction_of_long_term_care_contribution <- 0 # The fraction of unemployment insurance contributions that is considered income
 global_welfare_benefit_monthly <- 700
 value_added_tax <- 0.19
-cost_of_raising_public_funds <- 0.3 # Relevant for the more traditional cost benefit ratio
+
+# Behaviroal reponses to taxation
+cost_of_raising_public_funds <- 0.3 # Relevant for the more traditional benefit cost ratio
+# Elasticity of Taxable Income
+overwrite_eti <- FALSE # If set to true the ETI specified below is used for all tax reforms
+global_eti <- 0.3 # Irrelevant unless overwrite_eti == TRUE
 
 # Preferences
 global_relative_risk_aversion <- 2
@@ -69,8 +74,8 @@ results_prices <- 2010 # The year to which results should be deflated
 exclude_variables_from_price_adjustment <- c("prices_year") # All variables that are returned by a program (willingness_to_pay, program_cost ...)
 # are deflated to results_prices automatically except those in exclude_variables_from_price_adjustment
 disable_deflating <- FALSE
-# Exclude programs from deflaiting where all effects are stated per euro. E.g for tax reform we are always looking at
-# the effects of a one euro tax cut. These effects do not depend on prices and it would be weird if every tax reform
+# Exclude programs from deflating where all effects are stated per euro. E.g for tax reform we are always looking at
+# the effects of a 1€ tax cut. These effects do not depend on prices and it would be unintuitive if every tax reform
 # had a different WTP depending on the year it was implemented.
 excluded_from_deflating <- c("taxReform2005",
                              "taxReform2004",
@@ -130,4 +135,3 @@ applyAssumptions <- function() {
   }
 }
 applyAssumptions()
-

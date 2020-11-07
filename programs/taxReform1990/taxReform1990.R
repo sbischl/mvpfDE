@@ -17,12 +17,20 @@ taxReform1990 <- function (bootstrap_replication = 0) {
   # The way the MVPF is contructed for tax reforms, the willingness to pay is always one
   willingness_to_pay <- 1
 
+  # Elasticity of taxable income:
+  if (overwrite_eti) {
+    elasticity_of_taxable_income <- global_eti
+  }
+  else {
+    elasticity_of_taxable_income <- estimates$elasticity_of_taxable_income
+  }
+
   # Calculate the fiscal externality given the tax rate before the reform and after the reform
   fiscal_externality_before <-
-    marginal_top_tax_rate_before / (1 - marginal_top_tax_rate_before) * estimates$pareto_coefficient_1989 * estimates$elasticity_of_taxable_income
+    marginal_top_tax_rate_before / (1 - marginal_top_tax_rate_before) * estimates$pareto_coefficient_1989 * elasticity_of_taxable_income
 
   fiscal_externality_after <-
-    marginal_top_tax_rate_after / (1 - marginal_top_tax_rate_after) * estimates$pareto_coefficient_1989 * estimates$elasticity_of_taxable_income
+    marginal_top_tax_rate_after / (1 - marginal_top_tax_rate_after) * estimates$pareto_coefficient_1989 * elasticity_of_taxable_income
 
   # Calculate lowest ETI which makes this reform self financing.
   break_even_eti <- 2 / (estimates$pareto_coefficient_1989) /
