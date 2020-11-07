@@ -119,7 +119,7 @@ jobCreationSchemes <- function (bootstrap_replication = 0, extend_effect = 0) {
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs,
-                        tax_revenue_increase = -tax_revenue_increase,
+                        tax_revenue_increase = tax_revenue_increase,
                         net_income_increase = net_income_increase,
                         program_cost = discounted_program_cost,
                         benefit_receipt = cumulated_discounted_effect_on_benefits,
