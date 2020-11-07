@@ -4,7 +4,7 @@
 
 # Relevant Literature:
 # Dorn et al. (2020)
-coronavirusLockdownR1 <- function (bootstrap_replication = 0, only_risk_value = FALSE) {
+coronavirusRestrictions <- function (bootstrap_replication = 0, only_risk_value = FALSE) {
   program_name <- toString(match.call()[1])
   estimates <- getEstimates(program_name, bootstrap_replication)
 
