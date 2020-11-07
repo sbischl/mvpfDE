@@ -436,6 +436,10 @@ project_medium_run_impact <- function(impact_magnitude, # can be either scalar o
   # It is intened for reforms for reforms whose beneficiaries vary greatly.
   # Also this method does not assume wage growth
 
+  if (missing(yearly_control_income)) {
+    yearly_control_income = deflate(from = 2010, to = prices_year) * 30415.17 # average earnings across all ages from the age income cross section
+  }
+
   if (missing(impact_magnitude)) {
     impact_magnitude <- absolute_impact_magnitude / yearly_control_income
   }
