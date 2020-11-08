@@ -162,9 +162,6 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
     confidence_intervalls <- FALSE
   }
 
-  # Generate Category 'Other' which contains all programs that have no Category specified:
-  plot_data$category <- coalesce(plot_data$category, "Other")
-  plot_data$category <- factor(plot_data$category, levels = order_of_categories)
   # Assign the Program program identifier (folder name) as program name, if none is specified:
   if (y_axis != "grouped_mvpf") {
     plot_data$program_name <- coalesce(plot_data$program_name, plot_data$program)
@@ -1639,6 +1636,12 @@ getPlotData <- function(mvpf_results) {
 
   # Remove excluded programs
   joined_dataset <- joined_dataset %>% filter(!(program %in% excluded_from_all_plots))
+
+  # Generate Category 'Other' which contains all programs that have no Category specified:
+  joined_dataset$category <- coalesce(joined_dataset$category, "Other")
+  # Convert the category column into a factor. This is convenient for plotting
+  joined_dataset$category <- factor(joined_dataset$category, levels = order_of_categories)
+
   return(joined_dataset)
 }
 

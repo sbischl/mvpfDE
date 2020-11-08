@@ -232,6 +232,26 @@ robustnessCheck(programs,
                 headlines = c("τ = 0.1", "Only Income Tax", "Taxes and Transfers (Baseline)", "τ = 0.5"),
                 save = "robustness_check_tax_rate.pdf")
 
+robustnessCheck(programs,
+                robustnesscheck_assumptions = function(specification) {
+                  if (specification == 1) {
+                    global_use_constant_ols_return_to_schooling <<- TRUE
+                    yearly_return_to_schooling <<- 0.05
+                  }
+                  else if (specification == 2) {
+                    global_use_constant_ols_return_to_schooling <<- TRUE
+                    yearly_return_to_schooling <<- 0.08
+                  }
+                  else if (specification == 3) {
+                    global_use_constant_ols_return_to_schooling <<- TRUE
+                    yearly_return_to_schooling <<- 0.11
+                  }
+                  else if (specification == 4) {
+                    # Baseline
+                  }
+                },
+                headlines = c("RTS = 5%", "RTS = 8%", " RTS = 11%", "IAB Data (Baseline)"),
+                save = "robustness_check_schooling.pdf")
 
 # Exports all possible combinations of assumptions specified in getListOfAllMetaAssumptions().
 # Takes about 2 hours with 3 parallel threads. Only relevant for the web visualization.
