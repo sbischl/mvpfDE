@@ -1,4 +1,4 @@
-# UnifiedWelfareAnalysisGER
+# mvpfDE
 This is a implementation of the "Marginal Value of Public Funds" Methodology for Germany. 
 See https://github.com/OpportunityInsights/welfare_analysis or their paper Hendren & Sprung-Keyser (2020): A Unified Welfare Analysis of Government Policies - Quarterly Journal of Economics 2020
 ## How to generate results & modify the assumptions:
