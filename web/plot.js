@@ -46,7 +46,27 @@ var variable_mapping = [
         }
     },
     {
-        program: "taxReform2000",
+        program: "taxReform2001",
+        willingness_to_pay: {
+            willingness_to_pay: "Tax Reduction",
+        },
+        government_net_costs: {
+            willingness_to_pay: "Tax Reduction",
+            fiscal_externality: "Fiscal Externality"
+        }
+    },
+    {
+        program: "taxReform2004",
+        willingness_to_pay: {
+            willingness_to_pay: "Tax Reduction",
+        },
+        government_net_costs: {
+            willingness_to_pay: "Tax Reduction",
+            fiscal_externality: "Fiscal Externality"
+        }
+    },
+    {
+        program: "taxReform2005",
         willingness_to_pay: {
             willingness_to_pay: "Tax Reduction",
         },
@@ -64,7 +84,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Workshop Cost",
-            tax_revenue_increase: "Lifteime Tax Revenue Increase",
+            tax_revenue_increase: "Lifteime Tax Revenue Effect",
             education_cost: "Education Cost Difference",
             bafoeg_cost: "Bafög Payment",
             bafoeg_repayment: "Bafög Repayment"
@@ -77,7 +97,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Cost of Mentor, Mentee pair",
-            tax_revenue_increase: "Lifteime Tax Revenue Increase",
+            tax_revenue_increase: "Lifteime Tax Revenue Effect",
             education_cost: "Education Cost Difference"
         }
     },
@@ -89,7 +109,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             earlier_labor_market_participation_tax_revenue: "Tax Revenue from Earlier Labor Force Participation",
-            tax_revenue_increase: "Lifteime Tax Revenue Decrease",
+            tax_revenue_increase: "Lifteime Tax Revenue Effect",
             education_cost: "Education Cost Difference"
         }
     },
@@ -102,7 +122,7 @@ var variable_mapping = [
         government_net_costs: {
             program_cost: "Tuition Fees",
             education_cost: "Education Cost Difference",
-            tax_revenue_increase: "Lifteime Tax Revenue Decrease",
+            tax_revenue_increase: "Lifteime Tax Revenue Effect",
         }
     },
     {
@@ -112,7 +132,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Training Cost",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
@@ -122,7 +142,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Training Cost",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
@@ -132,7 +152,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Participation Cost",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
@@ -142,7 +162,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Training Cost",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
@@ -152,7 +172,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Training Cost",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
@@ -162,7 +182,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Training Cost",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
@@ -172,7 +192,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Cost of Paying Subsidy",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
@@ -182,7 +202,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Cost of Paying Subsidy",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
@@ -192,7 +212,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Cost of Paying Start up Grant",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
@@ -202,7 +222,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Training Cost",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
@@ -242,7 +262,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Cost of Job Creation Scheme",
-            tax_revenue_increase: "Tax Revenue Increase",
+            tax_revenue_increase: "Tax Revenue Effect",
             benefit_receipt: "Effect on Welfare Benefits"
         }
     },
@@ -253,7 +273,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Cost of Job Creation Scheme",
-            tax_revenue_increase: "Tax Revenue Increase",
+            tax_revenue_increase: "Tax Revenue Effect",
             benefit_receipt: "Effect on Welfare Benefits"
         }
     },
@@ -264,10 +284,11 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Cost of Job Creation Scheme",
-            tax_revenue_increase: "Tax Revenue Increase",
+            tax_revenue_increase: "Tax Revenue Effect",
             benefit_receipt: "Effect on Welfare Benefits"
         }
     },
+    /* commented out because temporary removed, need to put it in again on final build.
     {
         program: "bicycleHelmet",
         willingness_to_pay: {
@@ -283,6 +304,7 @@ var variable_mapping = [
             value_added_tax_loss: "VAT Gain"
         }
     },
+    */
     {
         program: "maternityLeave79",
         willingness_to_pay: {
@@ -340,8 +362,9 @@ var variable_mapping = [
             tax_revenue_increase: "Effect on Tax Revenue from Mothers"
         }
     },
+    /* renamed an therefore temporary removed
     {
-        program: "coronavirusLockdown",
+        program: "coronavirusRestrictions",
         willingness_to_pay: {
             valuation_lower_risk_of_dying: "Valuation Lower Risk of Dying",
             income_loss: "Income Loss"
@@ -351,28 +374,7 @@ var variable_mapping = [
             tax_revenue_increase: "Resource Cost of averted Deaths"
         }
     },
-    {
-        program: "coronavirusLockdownR1",
-        willingness_to_pay: {
-            valuation_lower_risk_of_dying: "Valuation Lower Risk of Dying",
-            income_loss: "Income Loss"
-        },
-        government_net_costs: {
-            program_cost: "Fiscal Cost of Lockdown",
-            tax_revenue_increase: "Resource Cost of averted Deaths"
-        }
-    },
-    {
-        program: "coronavirusLockdown",
-        willingness_to_pay: {
-            valuation_lower_risk_of_dying: "Valuation Lower Risk of Dying",
-            income_loss: "Income Loss"
-        },
-        government_net_costs: {
-            program_cost: "Fiscal Cost of Lockdown",
-            tax_revenue_increase: "Resource Cost of averted Deaths"
-        }
-    },
+    */
     {
         program: "bafoegRepayment",
         willingness_to_pay: {
@@ -381,7 +383,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Only Partial Repayment",
-            tax_revenue_increase: "Lifteime Tax Revenue Increase",
+            tax_revenue_increase: "Lifteime Tax Revenue Effect",
             education_cost: "Education Cost Difference",
             bafoeg_cost: "Additional Bafög Recipients",
         }
@@ -394,7 +396,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Additional Bafög Recipients",
-            tax_revenue_increase: "Lifteime Tax Revenue Increase",
+            tax_revenue_increase: "Lifteime Tax Revenue Effect",
             education_cost: "Education Cost Difference"
         }
     },
@@ -460,7 +462,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Brochure Cost",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
@@ -470,7 +472,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Subsidy Cost",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
@@ -480,7 +482,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Sports Expenditure",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
@@ -511,7 +513,7 @@ var variable_mapping = [
         },
         government_net_costs: {
             program_cost: "Letter Cost",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
@@ -521,14 +523,15 @@ var variable_mapping = [
         },
         government_net_costs: {
             benefit_receipt: "Cost of Paying Unemployment Benefits",
-            tax_revenue_increase: "Tax Revenue Increase"
+            tax_revenue_increase: "Tax Revenue Effect"
         }
     },
     {
         program: "eegWind",
         willingness_to_pay: {
-            net_income_increase: "Less CO2 Emissions",
-            income_loss: "Energy Producer Losses"
+            co2_emission_reducation: "Less CO2 Emissions",
+            income_loss: "Effect on Producer Rents",
+            price_effect: "Effect on Electricity Prices"
         },
         government_net_costs: {
             program_cost: "Subsidy Cost"
@@ -537,8 +540,9 @@ var variable_mapping = [
     {
         program: "eegSolar",
         willingness_to_pay: {
-            net_income_increase: "Less CO2 Emissions",
-            income_loss: "Energy Producer Losses"
+            co2_emission_reducation: "Less CO2 Emissions",
+            income_loss: "Effect on Producer Rents",
+            price_effect: "Effect on Electricity Prices"
         },
         government_net_costs: {
             program_cost: "Subsidy Cost"
@@ -899,7 +903,7 @@ function getCSVLocation(specifiedAssumptions) {
 function getGraphAssumptions() {
     // The assumption Select Box Ids have to be in the correct order!!
     // The correct order is given by order of the assumptions in the csv files
-    var assumptionSelectBoxesIds = ["discountRateAssumption", "taxRateAssumption", "returnsToSchoolingAssumption", "valueOfStatisticalLifeAssumption", "co2externality", "wage_growth_rate", "relative_risk_aversion"];
+    var assumptionSelectBoxesIds = ["discountRateAssumption", "taxRateAssumption", "returnsToSchoolingAssumption", "valueOfStatisticalLifeAssumption", "co2externality", "wage_growth_rate", "eti"];
     var specifiedAssumptions = [];
 
     var i;
@@ -1068,7 +1072,6 @@ function selectColor(number, background = false) {
             return "rgba(169,169,169," + foreground_opa + ")"
         }
     }
-
 }
 
 function addAllPositivesSubtractAllNegatives(array) {
@@ -1186,6 +1189,7 @@ function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
             responsive: true,
             maintainAspectRatio: false,
             aspectRatio: smallscreen ? 2 : 4,
+            //devicePixelRatio: 4, //Set this to save a high res png. Otherwise leave default
             legend: {
                 position: 'bottom',
                 usePointStyle: true,
@@ -1476,7 +1480,6 @@ function populatePrograms() {
     var i;
     for (i in variable_mapping) {
         var current_program = getUnmodifiedbyIdentProgram(variable_mapping[i].program);
-        console.log(current_program);
         var option = document.createElement("option");
         option.value = current_program.program;
         option.innerHTML = current_program.program_name;
