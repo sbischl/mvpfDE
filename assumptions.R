@@ -66,7 +66,7 @@ co2_externality <- 100 # Externality in € caused by one additional ton of CO2 
 
 # Bootstrap Settings
 bootstrap_seed <- 24135693
-bootstrap_replications <- 25
+bootstrap_replications <- 1000
 correlation_between_estimates <- 1
 
 # Prices

@@ -150,6 +150,9 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
               rgb(72,61,139, maxColorValue = 255),
               rgb(189,189,189, maxColorValue = 255))
 
+  # The text labels may be stochastic:
+  set.seed(1)
+
 
   # Check if y_axis and x_axis actually exist in the plot_data
   if (!all(c(y_axis, x_axis) %in% colnames(plot_data))) {
@@ -1759,6 +1762,7 @@ getCategoryPlotData <- function(plot_data, bootstrap_results, include_additional
 robustnessCheck <- function(programs,
                             robustnesscheck_assumptions,
                             headlines,
+                            overwrite_bootstrap_replications = bootstrap_replications,
                             save = "") {
   # programs is the vector of programs returned by getCompletePrograms
   # robustnesscheck_assumptions is function which takes the specification number 1 to n and stores the assumptions
@@ -1768,6 +1772,8 @@ robustnessCheck <- function(programs,
   plots <- lapply(1:length(headlines), function(specification) {
     # Reset assumptions to be save:
     source("assumptions.R")
+
+    bootstrap_replications <<- overwrite_bootstrap_replications
 
     # Load Assumptions
     robustnesscheck_assumptions(specification)
@@ -1823,7 +1829,7 @@ getListOfAllMetaAssumptions <- function() {
     value_of_statistical_life = c("1million", "2.5million", "5million"),
     co2_externality = c("0","50","100","250"),
     wage_growth_rate = c("0", "05", "1", "15"),
-    base = c("base","0", "3", "6")
+    eti = c("base","0", "3", "6")
   )
 }
 

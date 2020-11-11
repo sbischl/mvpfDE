@@ -67,7 +67,7 @@ eegSolar <- function (bootstrap_replication = 0, carbon_leakage_rate = 0) {
   # Individuals value the reduction in CO2 emissions & the effect on producer costs
   # In addition, co2 emissions can leak to other countries because of the European Emissions Trading System. If firms
   # are rational, and sell their certificates the leakage rate should be 1. Yet, a leakage rate of 0 is assumed.
-  co2_reducation_valuation <- co2_externality * (1 - carbon_leakage_rate) * deflate(from = 2010, to = prices_year)
+  co2_reducation_valuation <- co2_externality * (1 - carbon_leakage_rate)
   willingness_to_pay <- -price_effect - producer_cost + co2_reducation_valuation
   # The government has to pays for the subsidy that induces emission reductions
   government_net_costs <- subsidy_cost

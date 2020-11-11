@@ -91,7 +91,12 @@ speedLimitA61 <- function (bootstrap_replication = 0, internalize_carbon_emissio
   #--------------------------------------------------------------------------------------------------------------------#
 
   # Trips take longer:
-  willingness_to_pay <- - cost_increased_travel_time
+  if (!rational_drivers) {
+    willingness_to_pay <- - cost_increased_travel_time
+  }
+  else {
+    willingness_to_pay <- 0
+  }
 
   # Traffic is more secure (This matches the result from Thiedig 2018):
   # Some of the resource cost of accidents goes to the government. Since no income information is avaiable, the flat_tax

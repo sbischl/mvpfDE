@@ -48,8 +48,8 @@ invisible(lapply(required_packages, FUN = library, character.only = TRUE))
 # Try to load the alternative font that is used in the pdf exports.
 # If this font is not installed / cannot be found, the standard one will be used
 tryCatch({
-  plot_font <<- "Arial"
-  font_add(plot_font, "Arial.ttf")
+  plot_font <<- "Open Sans"
+  font_add(plot_font, "OpenSans-Regular.ttf")
 }, error = function(e) {
   warning("Font is not installed. Plots are going to use the standard font instead.")
   plot_font <<- "sans"
@@ -191,6 +191,14 @@ plotResults(plot_data = plot_data,
             confidence_intervalls = TRUE,
             text_labels = FALSE)
 
+#----------------------------------------------------------------------------------------------------------------------#
+# Robustness Checks
+#----------------------------------------------------------------------------------------------------------------------#
+# This is a lengthy process, we reduce the bootstrap replications to 100.
+
+# Again, measure runtime
+start_time <- Sys.time()
+
 # Robustness Check that re-estimates everything with various discount rates and displays each specifiction in a combined plot
 robustnessCheck(programs,
                 robustnesscheck_assumptions = function(specification) {
@@ -209,9 +217,10 @@ robustnessCheck(programs,
                   }
                 },
                 headlines = c("ρ = 0", "ρ = 0.01", "ρ = 0.03 (Baseline)", "ρ = 0.07"),
+                overwrite_bootstrap_replications = 100,
                 save = "robustness_check_discount_rate.pdf")
 
-# Robustness Check that re-estimates everything with various tax rate asumptions and displays each specifiction in a combined plot
+# Robustness check that re-estimaates everything with various tax rate asumptions and displays each specifiction in a combined plot
 robustnessCheck(programs,
                 robustnesscheck_assumptions = function(specification) {
                   if (specification == 1) {
@@ -230,6 +239,7 @@ robustnessCheck(programs,
                   }
                 },
                 headlines = c("τ = 0.1", "Only Income Tax", "Taxes and Transfers (Baseline)", "τ = 0.5"),
+                overwrite_bootstrap_replications = 100,
                 save = "robustness_check_tax_rate.pdf")
 
 robustnessCheck(programs,
@@ -251,11 +261,15 @@ robustnessCheck(programs,
                   }
                 },
                 headlines = c("RTS = 5%", "RTS = 8%", " RTS = 11%", "IAB Data (Baseline)"),
+                overwrite_bootstrap_replications = 100,
                 save = "robustness_check_schooling.pdf")
+
+# Display runtime of the robustness checks procedure
+cat("Robustness checks completed in ", difftime(Sys.time(), start_time, units='mins'), " minutes \n")
 
 # Exports all possible combinations of assumptions specified in getListOfAllMetaAssumptions().
 # Takes about 2 hours with 3 parallel threads. Only relevant for the web visualization.
-# exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)#
+exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)
 
 # Export Tables:
 exportLatexTables(plot_data)
