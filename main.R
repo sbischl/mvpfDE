@@ -56,11 +56,8 @@ tryCatch({
 })
 showtext_auto()
 
-# Initilialize parallel environment
+# Initilialize parallel environment to have bootstrap run multi-threaded
 registerDoParallel(detectCores(all.tests = FALSE, logical = TRUE) - 1)
-
-# Set up table export
-options(knitr.kable.NA = '-')
 
 # Measure runtime
 start_time <- Sys.time()
@@ -93,7 +90,6 @@ mvpf_results <- addBootstrappedConfidenceIntervalls(mvpf_results)
 cat("Estimation completed in ", difftime(Sys.time(), start_time, units='mins'), " minutes \n")
 
 # Print all results to console
-
 for (i in 1:length(programs)) {
 
   message("Printing results for ", programs[i], ":")
@@ -103,6 +99,7 @@ for (i in 1:length(programs)) {
   point_estimates <- nonNA_results[!grepl(pattern = "_95ci_(upper|lower)", names(nonNA_results))]
 
   for (j in 1:length(point_estimates)) {
+    # Print point estimate followed by the 95% CI
     cat(names(point_estimates[j]), " = ", point_estimates[[j]], "\t 95% CI [", nonNA_results[[paste0(names(point_estimates[j]),"_95ci_lower")]],
         ",", nonNA_results[[paste0(names(point_estimates[j]),"_95ci_upper")]], "]\n", sep = "")
   }
@@ -116,8 +113,9 @@ for (i in 1:length(programs)) {
 # Plot Tax and Transfer System
 plotTaxRates()
 
-# Augment results with additional information for plotting
+# Augment results with additional information for plotting. This loads programs.xlsx
 plot_data <- getPlotData(mvpf_results)
+# Aggregate results by category, i.e. calculate category averages.
 category_plot_data <- getCategoryPlotData(plot_data, all_bootstrap_replications_results)
 
 # Plot Results
@@ -269,106 +267,10 @@ cat("Robustness checks completed in ", difftime(Sys.time(), start_time, units='m
 
 # Exports all possible combinations of assumptions specified in getListOfAllMetaAssumptions().
 # Takes about 2 hours with 3 parallel threads. Only relevant for the web visualization.
-exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)
+#exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)
 
 # Export Tables:
 exportLatexTables(plot_data)
 
 # Copy Files:
 FolderCopy()
-
-# Additional Results:
-project_lifetime_impact(impact_age = age_university_enrollment,
-                        impact_magnitude_matrix =  getEducationEffectOnEarnings(education_decision = "university_degree",
-                                                                                alternative = "abitur"),
-                        relative_control_income = getRelativeControlGroupEarnings("abitur"),
-                        start_projection_year = 2010,
-                        prices_year = 2010,
-                        inculde_welfare_benefits_fraction = 0)
-
-# Average Tax Rate of someone working full time: 47928 is the average gross income of someone working full time:
-# https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Verdienste-Verdienstunterschiede/Tabellen/liste-bruttomonatsverdienste.html
-getAverageTaxRate(47928,
-                  inculde_welfare_benefits_fraction = 1,
-                  income_fraction_of_pension_contribution = 1,
-                  income_fraction_of_unemployment_insurance_contribution = 1,
-                  income_fraction_of_long_term_care_contribution = 0,
-                  income_fraction_of_health_insurance_contribution = 0)
-
-getAverageTaxRate(47928,
-                  income_tax_only = TRUE)
-
-# Bafög Repayment Reform:
-(mvpf_results %>% filter(program == "bafoegRepayment"))["program_cost"]
-(mvpf_results %>% filter(program == "bafoegRepayment"))["tax_revenue_increase"]
-(mvpf_results %>% filter(program == "bafoegRepayment"))["education_cost"]
-(mvpf_results %>% filter(program == "bafoegRepayment"))["bafoeg_cost"]
-(mvpf_results %>% filter(program == "bafoegRepayment"))["net_income_increase"]
-
-(mvpf_results %>% filter(program == "bafoegRepayment"))["willingness_to_pay"]
-(mvpf_results %>% filter(program == "bafoegRepayment"))["government_net_costs"]
-
-#MVPF with envelope theorem:
-((mvpf_results %>% filter(program == "bafoegRepayment"))["willingness_to_pay"] -
-  (mvpf_results %>% filter(program == "bafoegRepayment"))["net_income_increase"]) /
-   (mvpf_results %>% filter(program == "bafoegRepayment"))["government_net_costs"]
-
-
-0.04 * project_lifetime_impact(impact_age = age_university_enrollment,
-                        impact_magnitude_matrix = getEducationEffectOnEarnings(education_decision = "university_degree",
-                                                                               alternative = "abitur"),
-                        relative_control_income = getRelativeControlGroupEarnings("abitur"),
-                        start_projection_year = 1990,
-                        prices_year = 2010,
-                        inculde_welfare_benefits_fraction = 0)
-
-0.04 * (costOfCollege(duration_of_study = 5, year = 1990, prices_year = 2010) -
-  costOfSchool(duration_of_schooling = 3, year = 1990, prices_year = 2010, school_type = "berufsschule_dual"))
-
-# Bafög
-596 * 0.51129 * deflate(from = 1990, to = 2010)
-
-# Retraining:
-(mvpf_results %>% filter(program == "retraining"))["willingness_to_pay"]
-(mvpf_results %>% filter(program == "retraining"))["government_net_costs"]
-(mvpf_results %>% filter(program == "retraining"))["program_cost"]
-(mvpf_results %>% filter(program == "retraining"))["tax_revenue_increase"]
-(mvpf_results %>% filter(program == "retraining"))["net_income_increase"]
-
-
-(mvpf_results %>% filter(program == "retraining"))["willingness_to_pay"] / (mvpf_results %>% filter(program == "retraining"))["government_net_costs"]
-
-# Unemployment Benefits:
-(mvpf_results %>% filter(program == "unemploymentBenefits42"))["willingness_to_pay"]
-(mvpf_results %>% filter(program == "unemploymentBenefits42"))["fiscal_externality"]
-
-(mvpf_results %>% filter(program == "unemploymentBenefits42"))["willingness_to_pay"] /
-  ((mvpf_results %>% filter(program == "unemploymentBenefits42"))["fiscal_externality"] + 1)
-
-# Maternity Leave:
-deflate(from = 1992, to = 2010) * 750 * 0.51129
-1713.59 * 0.51129 * deflate(from = 1992, to = 2010)
-# FE
-sum((mvpf_results %>% filter(program == "maternityLeave79"))[c("tax_revenue_increase","tax_revenue_increase_children")])
-
-
-# 2007 Parental Leave:
-deflateReturnValues(parentalLeave2007(), 2010)
-deflateReturnValues(homeCareSubsidy(), 2010)
-
-# Climate Policy:
-deflateReturnValues(eegSolar(), 2010)
-deflateReturnValues(eegWind(), 2010)
-
-# Approximate share of co2 reduction
-plot_data %>%
-  filter(category == "Climate Policy") %>%
-  mutate(emission_share = co2_emission_reducation / willingness_to_pay) %>%
-  select(mvpf, program, emission_share) %>%
-  pull(emission_share) %>% mean()
-
-# Average MVPF of 2000s tax reforms.
-getCategoryPlotData(plot_data %>% filter(program != "taxReform1990", category == "Top Tax Reform"), bootstrap_results = all_bootstrap_replications_results)
-
-# Comparison of Cost Benefit Ratio and MVPF
-impute_missing_program_costs(plot_data) %>% filter(mvpf != Inf) %>% select(cost_benefit_ratio, mvpf, program) %>% arrange(-cost_benefit_ratio)

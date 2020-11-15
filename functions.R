@@ -1,3 +1,183 @@
+#----------------------------------------------------------------------------------------------------------------------#
+# Core Functions
+#----------------------------------------------------------------------------------------------------------------------#
+
+# Get all programs that are complete in the sense that a correctly named .R file, function and estimates file exists
+getCompletePrograms <- function() {
+  # Get List of all programs
+  programs <- list.dirs("./programs", full.names = FALSE, recursive = FALSE)
+  complete_programs <- NULL
+  for (i in 1:length(programs)) {
+
+    # Check if *.xlsx file in estimates folder exists
+    if (!file.exists(paste0("./estimates/", programs[i], ".xlsx"))) {
+      warning(paste0("No correctly named .xlsx file for program \"", programs[i], "\" was found. ",
+                     "Make sure that for each program there exists a Excel (.xlsx) file in the \"estimates\" folder."))
+      next
+    }
+
+
+    # Check if .R file exists
+    current_program_path <- paste0("./programs/", programs[i],  "/", programs[i], ".R")
+    if (!file.exists(current_program_path)) {
+      warning(paste0("No correctly named .R file for program \"", programs[i], "\" was found. ",
+                     "Make sure that for each directory there exists a .R file within this directory with the same name."))
+      next
+    }
+
+    # Check if the required function exists
+    source(current_program_path)
+    if (!exists(programs[i])) {
+      warning(paste0("The file \"", programs[i], ".R\" does not contain a function named \"", programs[i],
+                     "\". Make sure that the function that should be called to calculate the MVPF is correctly named."))
+      next
+    }
+    complete_programs <- c(complete_programs, programs[i])
+  }
+  return(complete_programs)
+}
+
+# getEstimates takes the program identifier and the bootstrap replication as inputs and returns a one row dataframe
+# of (potentially) bootstrapped estimates. bootstrap_replication = 0 returns the point estimate.
+getEstimates <- function(program, bootstrap_replication) {
+
+  if (bootstrap_replication == 0) {
+    estimates <- read_xlsx(paste0("./estimates/", program, ".xlsx"))
+    point_estimates <- data.frame(t(estimates$point_estimate))
+    colnames(point_estimates) <- estimates$estimate
+    return(point_estimates)
+  }
+  return(as.data.frame(bootstrapped_estimates[[program]][bootstrap_replication, , drop = FALSE]))
+}
+
+# Calculates the MVPF taking WTP and Net Cost as inputs
+calculateMVPF <- function(willingness_to_pay , government_net_costs) {
+  # the inputs can either be a scalar or a vector. In case of a vector multiple MVPF are returned.
+  # This is useful for boostrapping the MVPF
+  mvpf <- rep(NA, length(willingness_to_pay))
+  for (j in 1:length(willingness_to_pay)) {
+    if (willingness_to_pay[j] > 0 & government_net_costs[j] <= 0) {
+      mvpf[j] <- Inf
+    }
+    else if (willingness_to_pay[j] < 0 & government_net_costs[j] == 0) {
+      mvpf[j] <- -Inf
+    }
+    else {
+      mvpf[j] <- willingness_to_pay[j] / government_net_costs[j]
+    }
+  }
+  return(mvpf)
+}
+
+# Calculate the point estimates of all programs.
+getPointEstimates <- function(programs) {
+  mvpf_results <- data.frame(program = programs)
+  for (i in 1:length(programs)) {
+    message(paste("Running", programs[i], "once to get the point estimate."))
+    return_values <- do.call(programs[i], list())
+
+    if (!programs[i] %in% excluded_from_deflating) {
+      return_values <- deflateReturnValues(return_values, results_prices)
+    }
+
+    # Check if return_values include the necessary "willingness_to_pay" and "government_net_costs"
+    if (!all(c("willingness_to_pay", "government_net_costs") %in% names(return_values))) {
+      warning(paste0(programs[i], "does not include willingness_to_pay and / or government_net_costs. Cannot calculate MVPF"))
+      mvpf_results[names(return_values), ] <- unlist(return_values)
+      next
+    }
+    mvpf_results[i, names(return_values)] <- unlist(return_values)
+    mvpf_results[i, "mvpf"] <- calculateMVPF(mvpf_results[i, "willingness_to_pay"], mvpf_results[i, "government_net_costs"])
+  }
+  return(mvpf_results)
+}
+
+# Run Programs without priting messages
+quietelyRunPrograms <- function(programs, bootstrap = FALSE) {
+  results <- suppressMessages(getPointEstimates(programs))
+  if (bootstrap) {
+    results <- suppressMessages(addBootstrappedConfidenceIntervalls(results))
+  }
+  return(results)
+}
+
+# Deflates using the cpi
+deflate <- function(from, to) {
+  if (!exists("cpi")) {
+    # Load consumer price index into the global environment
+    cpi <<- read.csv("./cpi/cpi.csv")
+  }
+
+  if (from == to) {
+    return(1)
+  }
+
+  index_from <- cpi[cpi$year == from, "index"]
+  index_to <- cpi[cpi$year == to, "index"]
+
+  if(length(index_from) == 0 | length(index_to) == 0) {
+    warning("You are trying to deflate to or from a year for which there is no data available")
+  }
+
+  return(index_to / index_from)
+}
+
+# This function deflates the return values of some program e.g. classRoomTraining to 'year' prices
+deflateReturnValues <- function(return_values, year) {
+
+  if (disable_deflating) {
+    return(return_values)
+  }
+
+  if (!"prices_year" %in% names(return_values)) {
+    # The return values do not contain prices_year -> we don't know from which year to deflate. -> Assume that results
+    # are already correctly deflated
+    return(return_values)
+  }
+
+  # Vector to deselect variables that should not be deflated:
+  variables_to_deflate <- !names(return_values) %in% exclude_variables_from_price_adjustment
+
+  # Deflate variables
+  return_values[variables_to_deflate] <- lapply(return_values[variables_to_deflate], function(var) {
+    return(deflate(from = return_values[["prices_year"]], to = year) * var)
+  })
+
+  return(return_values)
+}
+
+# Use this function if a cash flow is split evenly across multiple periods.
+# This function then returns the present value of the cash flow
+splitAndDiscount <- function(amount, periods, discount_rate) {
+  cash_flows <- rep(amount / periods, periods)
+  present_value_cash_flows <- cash_flows / sapply(1:periods, function(x) {
+    (1 + discount_rate)^x})
+  return(sum(present_value_cash_flows))
+}
+
+# Returns the factor that some cash flow in year "from" has to be multiplied by to get the discounted value in year "to"
+discount <- function(from, to) {
+  return(1/(1+discount_rate)^(from - to))
+}
+
+# Returns a vector that contains the discount factor for all periods
+discountVector <- function(periods) {
+  return((1/(1 + discount_rate))^(0:(periods-1)))
+}
+
+# Calculates the present value of a cash flow which occurs every month
+discountMonthlyCashFlow <- function(amount, months) {
+  full_years <- months %/% 12
+  remaining_months <- months %% 12
+  if (remaining_months > 0) {
+    return(sum(c(rep(amount*12, full_years), remaining_months*amount) * discountVector(full_years + 1)))
+  }
+  return(sum(rep(amount*12, full_years) * discountVector(full_years)))
+}
+
+#----------------------------------------------------------------------------------------------------------------------#
+# Bootstrap Related Functions
+#----------------------------------------------------------------------------------------------------------------------#
 drawBootstrap <- function(path_to_xlsx, number_of_replications) {
   # Set seed
   set.seed(bootstrap_seed)
@@ -45,9 +225,11 @@ drawBootstrap <- function(path_to_xlsx, number_of_replications) {
     }
   }
 
+  # Empty matrix which will store the bootstrapped estimates. One row for each replication.
   bootstrapped_estimates <- matrix(data = NA, nrow = number_of_replications, ncol = nrow(estimates))
   colnames(bootstrapped_estimates) <- estimates$estimate
 
+  # Populate the 'bootstrapped_estimates' matrix by iterating over all rows
   for (i in 1:number_of_replications) {
     # This standard error vector is stochastic if for some estimates only the p-value range is known
     standard_error_vector <- coalesce(estimates$standard_error,
@@ -62,77 +244,116 @@ drawBootstrap <- function(path_to_xlsx, number_of_replications) {
 
 }
 
-getEstimates <- function(program, bootstrap_replication) {
+addBootstrappedConfidenceIntervalls <- function(mvpf_results) {
+  # This requires the dataframe that was returned from getPointEstimates as input
+  programs <- mvpf_results$program
 
-  if (bootstrap_replication == 0) {
-    estimates <- read_xlsx(paste0("./estimates/", program, ".xlsx"))
-    point_estimates <- data.frame(t(estimates$point_estimate))
-    colnames(point_estimates) <- estimates$estimate
-    return(point_estimates)
+  all_bootstrap_replications_results <<- list() # Contains a dataframe for each program with the estimated results from
+  # each bootstrap replication.
+
+  # Bootstrap
+  for (i in 1:length(programs)) {
+    message(paste("Running", bootstrap_replications, "bootstrap replications for", programs[i] ))
+
+    # This function generates a single row of a dataframe that contains one bootstrap replication
+    single_bootstrap_replication <- function(j) {
+      return_values <- do.call(programs[i], list(bootstrap_replication = j))
+      return_values <- deflateReturnValues(return_values, results_prices)
+      replication_row <- data.frame(replication = j)
+      replication_row[, names(return_values)] <- unlist(return_values)
+      replication_row$mvpf <- calculateMVPF(replication_row$willingness_to_pay, replication_row$government_net_costs)
+      return(replication_row)
+    }
+
+    # Call single_bootstrap_replication once for each bootstrap replication and row bind all the dataframe rows
+    bootstrapped_mvpf_results <- foreach(j = 1:bootstrap_replications,
+                                         .combine = rbind,
+                                         .export = ls(globalenv())[!ls(globalenv()) %in% c("programs", "i")], #this gets rid of some warnings
+                                         .packages = 'dplyr') %dopar% {
+      single_bootstrap_replication(j)
+    }
+    # Store the results to be accessed later
+    all_bootstrap_replications_results[[programs[i]]] <<- bootstrapped_mvpf_results
+
+    # Calculate confidence intervall here for all columns in the dataframe except: replication & mvpf
+    ci_variables <- names(bootstrapped_mvpf_results)[!names(bootstrapped_mvpf_results) %in% c("replication", "mvpf")]
+    for (k in 1:length(ci_variables)) {
+      mvpf_results[i, paste0(ci_variables[k], "_95ci_lower")] <-
+        quantile(bootstrapped_mvpf_results[, ci_variables[k]], 0.025)
+      mvpf_results[i, paste0(ci_variables[k], "_95ci_upper")] <-
+        quantile(bootstrapped_mvpf_results[, ci_variables[k]], 0.975)
+    }
+
+    # The calculation of the CI for the MVPF is non-trivial. See comment at the beginning of calculateMVPFCI(.)
+    mvpf_ci <- calculateMVPFCI(willingness_to_pay_pe = mvpf_results[i, "willingness_to_pay"],
+                               government_net_costs_pe = mvpf_results[i, "government_net_costs"],
+                               willingness_to_pay_boostrap = bootstrapped_mvpf_results[, "willingness_to_pay"],
+                               government_net_costs_bootstrap = bootstrapped_mvpf_results[, "government_net_costs"])
+
+    mvpf_results$mvpf_95ci_lower[i] <- mvpf_ci[["mvpf_95ci_lower"]]
+    mvpf_results$mvpf_95ci_upper[i] <- mvpf_ci[["mvpf_95ci_upper"]]
   }
-  return(as.data.frame(bootstrapped_estimates[[program]][bootstrap_replication, , drop = FALSE]))
+  return(mvpf_results)
 }
 
+# Takes bootstrapped willingness_to_pay & government_net_costs vector as inputs and calculates the MVPF confidence interval.
+calculateMVPFCI <- function(willingness_to_pay_pe,
+                            willingness_to_pay_boostrap,
+                            government_net_costs_pe,
+                            government_net_costs_bootstrap) {
+  # When calculating the MVPF CI the following has to be taken into account:
+  # The interpretation of the MVPF changes when the willingsness to pay and the government net costs are both negative.
+  # Although the sign of the MVPF is also positive. Example: Consider MVPF = 0.5
+  # This means that either
+  # (1) Willingness to pay and goverment net costs are positive. In this case one dollar spent by the government is valued
+  # with 0.5 dollar by the beneficiaries of the reform (higher value better)
+  # (2) Willingness to pay and goverment net costs are negative. In this case the MVPF measures how much WTP is lost
+  # per tax revenue increase. (lower value better)
+  # If the point estimate is either (1), and one of the bootstrapped estimates is (2) (or vice versa)
+  # the bootstrapped estimate is out of the comparable range and there is uncertainty about the sign of the effect of
+  # the policy.
+  # When running the bootstrap, this possibility has to be acconted for by removing the replications where the MVPF is
+  # out of the comparable range, and adjusting the confidence intervall.
+
+  replication_defined <- rep (TRUE, bootstrap_replications)
+
+  for (j in 1:bootstrap_replications) {
+    if (all(c(willingness_to_pay_pe, government_net_costs_pe) >= 0) &
+      all(c(willingness_to_pay_boostrap[j], government_net_costs_bootstrap[j]) < 0)) {
+      replication_defined[j] <- FALSE
+    }
+    else if (all(c(willingness_to_pay_pe, government_net_costs_pe) < 0) &
+      all(c(willingness_to_pay_boostrap[j], government_net_costs_bootstrap[j]) > 0)) {
+      replication_defined[j] <- FALSE
+    }
+  }
+
+  # Adjust the confindence intervall to account for the fact that the non-defined estimates have been removed.
+  # Note that the 95% confidence intervall can reach into the non-defined region of the mvpf. In this case,
+  # the confidence intervall spans -Inf to +Inf.
+  upper_percentile_95ci <- 1 - (0.05 - sum(!replication_defined) / bootstrap_replications) / 2
+  lower_percentile_95ci <- (0.05 - sum(!replication_defined) / bootstrap_replications) / 2
+
+  if (lower_percentile_95ci  <= 0 & upper_percentile_95ci >= 1) {
+    return(list(mvpf_95ci_lower = -Inf, mvpf_95ci_upper = Inf))
+  }
+  else {
+    bootstrapped_mvpf <- calculateMVPF(willingness_to_pay_boostrap, government_net_costs_bootstrap)
+    return(list(mvpf_95ci_lower = quantile(bootstrapped_mvpf[replication_defined], lower_percentile_95ci),
+                mvpf_95ci_upper = quantile(bootstrapped_mvpf[replication_defined], upper_percentile_95ci)))
+  }
+}
+
+# Converts a correlation matrix to a covarinace matrix
 correlationToCovarianceMatrix <- function(correlation_matrix, standard_error_vector) {
   return((standard_error_vector %*% t(standard_error_vector)) * correlation_matrix)
 }
 
-calculateMVPF <- function(willingness_to_pay , government_net_costs) {
-  # the inputs can either be a scalar or a vector. In case of a vector multiple MVPF are returned.
-  # This is useful for boostrapping the MVPF
-  mvpf <- rep(NA, length(willingness_to_pay))
-  for (j in 1:length(willingness_to_pay)) {
-    if (willingness_to_pay[j] > 0 & government_net_costs[j] <= 0) {
-      mvpf[j] <- Inf
-    }
-    else if (willingness_to_pay[j] < 0 & government_net_costs[j] == 0) {
-      mvpf[j] <- -Inf
-    }
-    else {
-      mvpf[j] <- willingness_to_pay[j] / government_net_costs[j]
-    }
-  }
-  return(mvpf)
-}
+#----------------------------------------------------------------------------------------------------------------------#
+# Plotting Related Functions
+#----------------------------------------------------------------------------------------------------------------------#
 
-deflate <- function(from, to) {
-  if (!exists("cpi")) {
-    # Load consumer price index into the global environment
-    cpi <<- read.csv("./cpi/cpi.csv")
-  }
-
-  if (from == to) {
-    return(1)
-  }
-
-  index_from <- cpi[cpi$year == from, "index"]
-  index_to <- cpi[cpi$year == to, "index"]
-
-  if(length(index_from) == 0 | length(index_to) == 0) {
-    warning("You are trying to deflate to or from a year for which there is no data available")
-  }
-
-  return(index_to / index_from)
-}
-
-splitAndDiscount <- function(amount, periods, discount_rate) {
-  # Use this function if a cost / gain is split evenly across multiple periods.
-  # This function then returns the present value of the cost / gain
-  cash_flows <- rep(amount / periods, periods)
-  present_value_cash_flows <- cash_flows / sapply(1:periods, function(x) {
-    (1 + discount_rate)^x})
-  return(sum(present_value_cash_flows))
-}
-
-discountMonthlyCashFlow <- function(amount, months) {
-  full_years <- months %/% 12
-  remaining_months <- months %% 12
-  if (remaining_months > 0) {
-    return(sum(c(rep(amount*12, full_years), remaining_months*amount) * discountVector(full_years + 1)))
-  }
-  return(sum(rep(amount*12, full_years) * discountVector(full_years)))
-}
-
+# This function is used for all the plotting.
 plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_label = "Year",
                         plot_data, category_plot_data, save = "", lower_cutoff = -1, upper_cutoff = 6, confidence_intervalls = FALSE,
                         text_labels = FALSE, legend_label = "Category", vertical_x_axis_labels = FALSE, landscape = FALSE, smaller_scale = FALSE) {
@@ -150,7 +371,7 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
               rgb(72,61,139, maxColorValue = 255),
               rgb(189,189,189, maxColorValue = 255))
 
-  # The text labels may be stochastic:
+  # The text labels may be stochastic. To make them deterministic:
   set.seed(1)
 
 
@@ -189,7 +410,6 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
   }
 
   # Censor all values to match the specified cut-offs. Handle the extra infinity level for the MVPF
-
   if (y_axis == "mvpf" | y_axis == "grouped_mvpf") {
     # Censor all values that are larger than the the infinity_cutoff and use infinity_cutoff + 1 as 'infinity'
     plot_data <- plot_data %>%
@@ -275,12 +495,13 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
                                    color = "black")
   }
 
-  plot <- plot + geom_point(aes_string(y = y_axis,
-                                       x= x_axis,
-                                       color = "category"),
-                            size = 2.75,
-                            alpha = ifelse(missing(category_plot_data), 1,0.4)) +
-    scale_color_manual(values=colors,
+  plot <- plot +
+    geom_point(aes_string(y = y_axis,
+                          x = x_axis,
+                          color = "category"),
+               size = 2.75,
+               alpha = ifelse(missing(category_plot_data), 1, 0.4)) +
+    scale_color_manual(values = colors,
                        breaks = unique(plot_data$category)[!unique(plot_data$category) %in% "Other"])
 
   if(smaller_scale) {
@@ -351,10 +572,181 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
     }
   }
 
-
   return(plot)
 }
 
+# Adds additional columns to the results data.frame. In particular, things that we need for plotting like
+# the average age, earnings and category mappings.
+getPlotData <- function(mvpf_results) {
+  # This function adds further information about the program to the mvpf_results returned from getPointEstimates and
+  # addBootstrappedConfidenceIntervalls
+
+  if (!exists("program_information")) {
+    # Load additional information about each policy from the excel file:
+    program_information <- as.data.frame(read_xlsx("programs.xlsx"))
+  }
+
+  # Calculate additional variables. CIs can only be calculated if the results already contains cis
+  mvpf_results$government_net_costs_per_program_cost <- mvpf_results$government_net_costs / mvpf_results$program_cost
+  if ("government_net_costs_95ci_lower" %in% colnames(mvpf_results)) {
+    mvpf_results$government_net_costs_per_program_cost_95ci_lower <- mvpf_results$government_net_costs_95ci_lower / mvpf_results$program_cost
+    mvpf_results$government_net_costs_per_program_cost_95ci_upper <- mvpf_results$government_net_costs_95ci_upper / mvpf_results$program_cost
+  }
+
+  mvpf_results$willingness_to_pay_per_program_cost <- mvpf_results$willingness_to_pay / mvpf_results$program_cost
+  if ("willingness_to_pay_95ci_lower" %in% colnames(mvpf_results)) {
+    mvpf_results$willingness_to_pay_per_program_cost_95ci_lower <- mvpf_results$willingness_to_pay_95ci_lower / mvpf_results$program_cost
+    mvpf_results$willingness_to_pay_per_program_cost_95ci_upper <- mvpf_results$willingness_to_pay_95ci_upper / mvpf_results$program_cost
+  }
+
+  mvpf_results$fiscal_externality_per_euro <- 1 - mvpf_results$government_net_costs / mvpf_results$program_cost
+  if ("government_net_costs_95ci_lower" %in% colnames(mvpf_results)) {
+    mvpf_results$fiscal_externality_per_euro_95ci_lower <-1 - mvpf_results$government_net_costs_95ci_lower / mvpf_results$program_cost
+    mvpf_results$fiscal_externality_per_euro_95ci_upper <-1 - mvpf_results$government_net_costs_95ci_upper / mvpf_results$program_cost
+  }
+
+  mvpf_results$cost_benefit_ratio <- (mvpf_results$willingness_to_pay + mvpf_results$fiscal_externality_per_euro) / ((1 + cost_of_raising_public_funds) * mvpf_results$program_cost)
+
+  # Join with additional information
+  joined_dataset <- left_join(mvpf_results, program_information, by = c("program" = "program_identifier"))
+
+  # The average_earnings_beneficiary column needs to be deflated:
+  joined_dataset <- joined_dataset %>% mutate(average_earnings_beneficiary = Vectorize(deflate)(from = prices_year, to = results_prices) * average_earnings_beneficiary)
+
+  # Remove excluded programs
+  joined_dataset <- joined_dataset %>% filter(!(program %in% excluded_from_all_plots))
+
+  # Generate Category 'Other' which contains all programs that have no Category specified:
+  joined_dataset$category <- coalesce(joined_dataset$category, "Other")
+  # Convert the category column into a factor. This is convenient for plotting
+  joined_dataset$category <- factor(joined_dataset$category, levels = order_of_categories)
+
+  return(joined_dataset)
+}
+
+# Calculates average mvpf (with CI) for each category specified in programs.xlsx and returns a dataframe that can be used
+# to plot the result. Requires plot_data returned by getPlotData as input and bootstrap results
+getCategoryPlotData <- function(plot_data, bootstrap_results, include_additional_programs = TRUE) {
+
+  categories <- unique(plot_data$category)
+  category_plot_data <- foreach(i = 1:length(categories), .combine = rbind) %do% {
+    # Calculating the category average MVPF is not trivial. Because the MVPF can be infinite we cannot just take the average.
+    # Instead we imagine a policy that spends one euro on each policy of a category. Where spending means the programmatic spending.
+    # There are two problems:
+    programs <- plot_data %>% filter(category == categories[i]) %>% pull(program)
+
+    if (include_additional_programs == TRUE) {
+      for (j in 1:length(programs)) {
+
+        current_program_name <- programs[j]
+        current_program_row <- plot_data %>% filter(program == current_program_name)
+        # 1) Some Programs have no programmatic spending. I.e. it costs nothing to implement G8 (Although there are externalities)
+        # In this case we cannot use the trick above of looking at a one euro increase in programmatic spending. For reforms
+        # with MPVF < infinity we can assume that the program cost is equal to the externalities. If the MVPF is infinity,
+        # we cannot spend more on a policy as it costs nothing. These retain their missing value.
+        if (is.na(current_program_row$program_cost)) {
+          if (current_program_row$government_net_costs > 0 |
+            (current_program_row$government_net_costs <= 0 & current_program_row$willingness_to_pay < 0)) {
+            # MVPF cannot be infinite
+            # Set Program Cost equal to the net cost
+            plot_data[plot_data$program == current_program_name, "program_cost"] <- current_program_row$government_net_costs
+            # Fiscal Externality equal to zero
+            plot_data[plot_data$program == current_program_name, "fiscal_externality_per_euro"] <- 0
+            # And the willingness to pay per program cost is equal to the finite MVPF
+            plot_data[plot_data$program == current_program_name, "willingness_to_pay_per_program_cost"] <-
+              current_program_row$willingness_to_pay / current_program_row$government_net_costs
+
+            # Add this program cost to the bootstrap results
+            bootstrap_results[[current_program_name]]$program_cost <- bootstrap_results[[current_program_name]]$government_net_costs
+          }
+        }
+
+        # Update Program row
+        current_program_row <- plot_data %>% filter(program == current_program_name)
+        # 2) Programs with negative WTP and Cost generate money. To fix this we need to multiply wtp
+        # by -1. Now we get the mvpf of not conducting the reform, i.e. spending money on not doing the reform.
+        # fiscal_externality_per_euro & willingness_to_pay_per_program_cost have the correct sign.
+        # But we need to flip the sign of program_cost and government_net_costs:
+        if (current_program_row$willingness_to_pay < 0 & current_program_row$program_cost < 0) {
+          plot_data[plot_data$program == current_program_name, "willingness_to_pay"] <- -current_program_row$willingness_to_pay
+          plot_data[plot_data$program == current_program_name, "program_cost"] <- -current_program_row$program_cost
+          plot_data[plot_data$program == current_program_name, "government_net_costs"] <- -current_program_row$government_net_costs
+
+          # We also have to do this for the bootstrap
+          bootstrap_results[[current_program_name]]$program_cost <- (-1) *bootstrap_results[[current_program_name]]$program_cost
+          bootstrap_results[[current_program_name]]$willingness_to_pay <- (-1) * bootstrap_results[[current_program_name]]$willingness_to_pay
+          bootstrap_results[[current_program_name]]$government_net_costs <- (-1) * bootstrap_results[[current_program_name]]$government_net_costs
+        }
+      }
+    }
+
+    # Programs that still have a negative or no program cost need to be removed. There is only one program for which
+    # this currently applies.
+    programs_in_category <- plot_data %>% filter(category == categories[i], !(is.na(program_cost) | program_cost <= 0 | program %in% excluded_from_category_average))
+
+    # If some category only consists of reforms with negative costs, skip it.
+    if (nrow(programs_in_category) == 0) {
+      # All programs in the category have zero cost or cost is NA.
+      # Skip this category
+      return(NULL)
+    }
+
+    # This is a implementation of Hendren & Sprung-Keyser (2020) Equation 8.
+    # There is something weird going on with the sign of fiscal externalities in Hendren & Sprung-Keyser (2020).
+    # In equation 4 fiscal externalities which increase government revenue have a positive sign.
+    # In equation 8 these FEs must have a negative sign. Not sure if this is intended or a oversight.
+    # Here, externalities are positive. I.e. we need to substract the FE in the denominator.
+    numerator <- (1 / nrow(programs_in_category)) * sum(programs_in_category$willingness_to_pay_per_program_cost)
+    denominator <- (1 / nrow(programs_in_category)) * sum(1 - programs_in_category$fiscal_externality_per_euro)
+    grouped_mvpf <- calculateMVPF(numerator, denominator)
+
+    # For the confidence intervall we need to calculate the grouped_mvpf for each bootstrap replication. These are stored in
+    # bootstrapped_estimates
+    # Get willingness_to_pay_per_program_cost from each bootstrap repilcation (rows) for each program beloning to the category (columns)
+    willingness_to_pay_per_euro <- sapply(bootstrap_results[programs_in_category$program], function(bootstrap_results) {
+      return(bootstrap_results$willingness_to_pay / bootstrap_results$program_cost)
+    })
+
+    # Get fiscal_externality_per_euro from each bootstrap repilcation (rows) for each program beloning to the category (columns)
+    fiscal_externality_per_euro <- sapply(bootstrap_results[programs_in_category$program], function(bootstrap_results) {
+      return(1 - bootstrap_results$government_net_costs / bootstrap_results$program_cost)
+    })
+
+    # Calculate numerator and denominator as before expcet that the result now is a vector with number of bootstrap replications rows:
+    numerator_bootstrap <- 1 / ncol(willingness_to_pay_per_euro) * rowSums(willingness_to_pay_per_euro)
+    denominator_bootstrap <- 1 / ncol(willingness_to_pay_per_euro) * (-rowSums(fiscal_externality_per_euro) + ncol(fiscal_externality_per_euro))
+
+    mvpf_ci_grouped <- calculateMVPFCI(willingness_to_pay_pe = numerator,
+                                       willingness_to_pay_boostrap = numerator_bootstrap,
+                                       government_net_costs_pe = denominator,
+                                       government_net_costs_bootstrap = denominator_bootstrap)
+
+
+    return(data.frame(grouped_mvpf = grouped_mvpf,
+                      category = categories[i],
+                      grouped_mvpf_95ci_upper = mvpf_ci_grouped[["mvpf_95ci_upper"]],
+                      grouped_mvpf_95ci_lower = mvpf_ci_grouped[["mvpf_95ci_lower"]],
+                      average_age_beneficiary = mean(programs_in_category$average_age_beneficiary, na.rm = TRUE),
+                      year = mean(programs_in_category$year, na.rm = TRUE),
+                      average_earnings_beneficiary = mean(programs_in_category$average_earnings_beneficiary, na.rm = TRUE)))
+  }
+  # There are some unnecessary row names that do not make sense -> remove those
+  rownames(category_plot_data) <- NULL
+  return(category_plot_data)
+}
+
+# Calculates the category average MVPF
+calculateAverageMVPF <- function(plot_data) {
+  # This is not a true average. The average is infinity once one program has an infinite MVPF.
+  # This is the MVPF of spending one euro on every policy
+  plot_data <- plot_data %>% filter(!(is.na(program_cost) | program_cost <= 0))
+  numerator <- (1 / nrow(plot_data)) * sum(plot_data$willingness_to_pay)
+  denominator <- (1 / nrow(plot_data)) * sum(1 - plot_data$fiscal_externality_per_euro)
+  return(calculateMVPF(numerator, denominator))
+}
+
+# Imputes the program cost for programms which have no direct program cost. We assume that the program cost is equal
+# to the fiscal externality
 impute_missing_program_costs <- function(plot_data) {
   # This replaces the program cost values and also calculates the derived program costs
   plot_data$program_cost <- coalesce(plot_data$program_cost,
@@ -424,70 +816,11 @@ theme_modified_minimal_small <- function() {
     axis.title = element_text(size=10))
 }
 
-project_medium_run_impact <- function(impact_magnitude, # can be either scalar or a vector containing the effect for each period
-                                      absolute_impact_magnitude, #can be either scalar or a vector containing the effect for each period (change in yearly earnings)
-                                      yearly_control_income,
-                                      number_of_periods,
-                                      prices_year,
-                                      share_affected = 1, # with labor market policies it can happen that only employed are affected and the share of employed increases over time
-                                      inculde_welfare_benefits_fraction = 1) {
+#----------------------------------------------------------------------------------------------------------------------#
+# Earnings Projections
+#----------------------------------------------------------------------------------------------------------------------#
 
-  # This function returns the dataframe as project_lifetime_impact but is simpler and requires less assumptions.
-  # It is intened for reforms for reforms whose beneficiaries vary greatly.
-  # Also this method does not assume wage growth
-
-  if (missing(yearly_control_income)) {
-    yearly_control_income = deflate(from = 2010, to = prices_year) * 30415.17 # average earnings across all ages from the age income cross section
-  }
-
-  if (missing(impact_magnitude)) {
-    impact_magnitude <- absolute_impact_magnitude / yearly_control_income
-  }
-
-  if(length(impact_magnitude) > 1 & length(impact_magnitude) != number_of_periods) {
-    # Length of the impact magnitude vector does not match the number of periods of the projection.
-    # In this case it is assumed that impact in the last period persists:
-    if (length(impact_magnitude) < number_of_periods) {
-      impact_magnitude <- c(impact_magnitude, rep(impact_magnitude[length(impact_magnitude)], number_of_periods - length(impact_magnitude)))
-    }
-    else {
-      # If the impact_magnitude vector is too long, the irrelevant periods will be ignored
-      impact_magnitude <- impact_magnitude[1:number_of_periods]
-    }
-  }
-
-
-  gross_earnings_no_reform <- rep(yearly_control_income, number_of_periods)
-  gross_earnings_reform <- rep(yearly_control_income, number_of_periods) *  (1 + impact_magnitude)
-
-  tax_payment_no_reform <- sapply(gross_earnings_no_reform,
-                                  getTaxPayment,
-                                  prices_year = prices_year,
-                                  inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction)
-
-  tax_payment_reform <- sapply(gross_earnings_reform,
-                               getTaxPayment,
-                               prices_year = prices_year,
-                               inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction)
-
-  net_earnings_no_reform <- gross_earnings_no_reform - tax_payment_no_reform
-  net_earnings_refrom <- gross_earnings_reform - tax_payment_reform
-
-  earnings_difference <- share_affected* (gross_earnings_reform - gross_earnings_no_reform)
-  tax_payment_difference <- share_affected* (tax_payment_reform - tax_payment_no_reform)
-  net_earnings_difference <- share_affected* (net_earnings_refrom - net_earnings_no_reform)
-
-  present_value_earnings_impact <- sum(earnings_difference * discountVector(number_of_periods))
-  present_value_tax_payment_impact <- sum(tax_payment_difference * discountVector(number_of_periods))
-  present_value_net_earnings_impact <- sum(net_earnings_difference * discountVector(number_of_periods))
-
-  return(data.frame(present_value_earnings_impact = present_value_earnings_impact,
-                    present_value_tax_payment_impact = present_value_tax_payment_impact,
-                    present_value_net_earnings_impact = present_value_net_earnings_impact))
-}
-
-
-
+# This is the earnings projection that is used for all education policies
 project_lifetime_impact <- function(impact_age, # the age at which the effect on income comes up for the first time
                                     impact_magnitude, # the effect of treatment on income relative to the control group, i.e. effect / income control
                                     impact_magnitude_matrix, # alllows to specify different impact magnitude for each age, see begin of function
@@ -499,7 +832,7 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
                                     prices_year, # the year whose prices are used (optional)
                                     discount_to, # the year to which the impacts should be discounted to (optional)
                                     inculde_welfare_benefits_fraction = 1 # The fraction of welfare benefits the beneficiaries receive
-                                    ) {
+) {
 
 
 
@@ -515,7 +848,6 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
   if (!exists("age_income_table")) {
     age_income_table <<- read.csv("./income_projection/age_income_cross_section.csv")
   }
-
   # Handlde impact magnitude:
 
   # There are two options to specifiy the impact magnitude.
@@ -647,24 +979,77 @@ project_lifetime_impact <- function(impact_age, # the age at which the effect on
 
 
   return(data.frame(present_value_earnings_impact = present_value_earnings_impact,
-              present_value_tax_payment_impact = present_value_tax_payment_impact,
-              present_value_net_earnings_impact = present_value_net_earnings_impact))
+                    present_value_tax_payment_impact = present_value_tax_payment_impact,
+                    present_value_net_earnings_impact = present_value_net_earnings_impact))
 }
 
-getNetIncome <- function(gross_income,
-                         inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
-                         income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
-                         income_fraction_of_unemployment_insurance_contribution = global_income_fraction_of_unemployment_insurance_contribution,
-                         income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution,
-                         income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution) {
-  return(getTaxSystemEffects(gross_income,
-                             inculde_welfare_benefits_fraction,
-                             income_fraction_of_pension_contribution,
-                             income_fraction_of_unemployment_insurance_contribution,
-                             income_fraction_of_long_term_care_contribution,
-                             income_fraction_of_health_insurance_contribution)$net_income_yearly)
+
+# This function returns the dataframe as project_lifetime_impact but is simpler and requires less assumptions.
+# It is intened for reforms for reforms whose beneficiaries vary greatly.
+# Also this method does not assume wage growth.
+project_medium_run_impact <- function(impact_magnitude, # can be either scalar or a vector containing the effect for each period
+                                      absolute_impact_magnitude, #can be either scalar or a vector containing the effect for each period (change in yearly earnings)
+                                      yearly_control_income,
+                                      number_of_periods,
+                                      prices_year,
+                                      share_affected = 1, # with labor market policies it can happen that only employed are affected and the share of employed increases over time
+                                      inculde_welfare_benefits_fraction = 1) {
+
+  if (missing(yearly_control_income)) {
+    yearly_control_income = deflate(from = 2010, to = prices_year) * 30415.17 # average earnings across all ages from the age income cross section
+  }
+
+  if (missing(impact_magnitude)) {
+    impact_magnitude <- absolute_impact_magnitude / yearly_control_income
+  }
+
+  if(length(impact_magnitude) > 1 & length(impact_magnitude) != number_of_periods) {
+    # Length of the impact magnitude vector does not match the number of periods of the projection.
+    # In this case it is assumed that impact in the last period persists:
+    if (length(impact_magnitude) < number_of_periods) {
+      impact_magnitude <- c(impact_magnitude, rep(impact_magnitude[length(impact_magnitude)], number_of_periods - length(impact_magnitude)))
+    }
+    else {
+      # If the impact_magnitude vector is too long, the irrelevant periods will be ignored
+      impact_magnitude <- impact_magnitude[1:number_of_periods]
+    }
+  }
+
+
+  gross_earnings_no_reform <- rep(yearly_control_income, number_of_periods)
+  gross_earnings_reform <- rep(yearly_control_income, number_of_periods) *  (1 + impact_magnitude)
+
+  tax_payment_no_reform <- sapply(gross_earnings_no_reform,
+                                  getTaxPayment,
+                                  prices_year = prices_year,
+                                  inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction)
+
+  tax_payment_reform <- sapply(gross_earnings_reform,
+                               getTaxPayment,
+                               prices_year = prices_year,
+                               inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction)
+
+  net_earnings_no_reform <- gross_earnings_no_reform - tax_payment_no_reform
+  net_earnings_refrom <- gross_earnings_reform - tax_payment_reform
+
+  earnings_difference <- share_affected * (gross_earnings_reform - gross_earnings_no_reform)
+  tax_payment_difference <- share_affected * (tax_payment_reform - tax_payment_no_reform)
+  net_earnings_difference <- share_affected * (net_earnings_refrom - net_earnings_no_reform)
+
+  present_value_earnings_impact <- sum(earnings_difference * discountVector(number_of_periods))
+  present_value_tax_payment_impact <- sum(tax_payment_difference * discountVector(number_of_periods))
+  present_value_net_earnings_impact <- sum(net_earnings_difference * discountVector(number_of_periods))
+
+  return(data.frame(present_value_earnings_impact = present_value_earnings_impact,
+                    present_value_tax_payment_impact = present_value_tax_payment_impact,
+                    present_value_net_earnings_impact = present_value_net_earnings_impact))
 }
 
+#----------------------------------------------------------------------------------------------------------------------#
+# Tax and Transfer System Simulation
+#----------------------------------------------------------------------------------------------------------------------#
+
+# Returns a dataframe which which consists of the tax due, net income, social security contributions and soli as a function of gross income
 getTaxSystemEffects <- function(gross_income,
                                 inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
                                 income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
@@ -862,6 +1247,23 @@ getTaxSystemEffects <- function(gross_income,
   return(return_df)
 }
 
+# Just gives the net income back as scalar.
+getNetIncome <- function(gross_income,
+                         inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
+                         income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
+                         income_fraction_of_unemployment_insurance_contribution = global_income_fraction_of_unemployment_insurance_contribution,
+                         income_fraction_of_long_term_care_contribution = global_income_fraction_of_long_term_care_contribution,
+                         income_fraction_of_health_insurance_contribution = global_income_fraction_of_health_insurance_contribution) {
+  return(getTaxSystemEffects(gross_income,
+                             inculde_welfare_benefits_fraction,
+                             income_fraction_of_pension_contribution,
+                             income_fraction_of_unemployment_insurance_contribution,
+                             income_fraction_of_long_term_care_contribution,
+                             income_fraction_of_health_insurance_contribution)$net_income_yearly)
+}
+
+
+# Calculates the average tax rate
 getAverageTaxRate <- function(gross_income,
                               inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
                               income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
@@ -879,6 +1281,8 @@ getAverageTaxRate <- function(gross_income,
                        income_tax_only = income_tax_only) / gross_income)
 }
 
+# Calculates the tax payment. Most programs call this functions somewhere. It includes some special features, such as
+# assuming a flat tax and adjusting prices or ingnoring all taxes other than the income tax.
 getTaxPayment <- function(gross_income,
                           inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
                           income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
@@ -922,6 +1326,46 @@ getTaxPayment <- function(gross_income,
   return(tax_payment_deflated)
 }
 
+# This functions inverts the tax calculations and allows us to infer the gross income from the net income.
+getGrossIncome <- function(net_income,
+                           flat_tax = global_flat_tax,
+                           assume_flat_tax = global_assume_flat_tax,
+                           inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
+                           welfare_benefit = global_welfare_benefit_monthly,
+                           income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution) {
+  # This function aims to infer the gross income from the net_income:
+
+  # If the relevant tax is flat, this is rather simple:
+  if (assume_flat_tax) {
+    return(net_income / (1- flat_tax))
+  }
+
+  # If the non-linear German tax system is assumed, the function that maps from gross income to net income has to be reversed.
+  # This is equal to solving f = getNetIncome(gross_income) - net_income = 0
+  # A problem that might arise is that if the tax system generates income regions where the marginal tax rate is > 1, the
+  # the function cannot be uniquely inverted.
+
+  # Define f as above:
+  f <- function(gross_income) {
+    getNetIncome(gross_income = gross_income,
+                 inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction,
+                 income_fraction_of_pension_contribution = income_fraction_of_pension_contribution) - net_income
+  }
+
+  # Net incomes below the welfare benefit do not make sense. In this case the root finding below
+  # would fail.
+  if (inculde_welfare_benefits_fraction > 0 & net_income < inculde_welfare_benefits_fraction * welfare_benefit * 12) {
+    warning("Net income cannot be lower than the yearly welfare benefit. Assuming 0 gross income")
+    return(0)
+  }
+
+  # Find the root of the f function (see above)
+  gross_income <- uniroot(f = f, interval = c(0, 2*net_income))$root
+
+  return(gross_income)
+}
+
+# Calculates the marginal rate at some gross income.
 getMarginalTaxRate <- function(gross_income,
                                inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
                                income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution,
@@ -950,6 +1394,7 @@ getMarginalTaxRate <- function(gross_income,
   }
 }
 
+# This gives back the income tax due as a function of taxable income. Calculations are for the year 2020.
 incomeTax <- function(taxable_income) {
   # There income tax is a piece-wise defined function. There are 4 cut-off points. These cut-offs are regularly adjusted.
   personal_exemption <- 9408 # also known as "Grundfreibetrag", i.e. the income below which no tax has to be payed
@@ -974,14 +1419,17 @@ incomeTax <- function(taxable_income) {
   }
 }
 
+# Returns the marginal income tax only
 marginalIncomeTaxRate <- function(taxable_income) {
   return(incomeTax(taxable_income + 1) - incomeTax(taxable_income))
 }
 
+# Returns the average income tax only
 averageIncomeTaxRate <- function(taxable_income) {
   return(incomeTax(taxable_income) / taxable_income)
 }
 
+# Calculates the solidarity charge in 2020.
 solidarityCharge <- function(taxable_income) {
   excemption_limit <- 972 # Will be raised to 16956 in 2021
   solidarity_charge <- 0.055
@@ -999,6 +1447,8 @@ solidarityCharge <- function(taxable_income) {
   }
 }
 
+# Generates and saves plots that illustrate the German Tax and Transfer System. (Mostly marginal and averages
+# rates as a function of gross earnings)
 plotTaxRates <- function(income_tax_only = FALSE) {
   # Assumptions for the plots:
   inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction
@@ -1219,6 +1669,10 @@ roundToString <- function(values, remove_trailing_zeros = TRUE) {
   }))
 }
 
+#----------------------------------------------------------------------------------------------------------------------#
+# Latex Export
+#----------------------------------------------------------------------------------------------------------------------#
+
 exportLatexTables <- function(plot_data)  {
   # Store category names and count in a data frame
   categories <- plot_data %>% group_by(category) %>% summarize(count=n()) %>% as.data.frame()
@@ -1364,16 +1818,12 @@ FolderCopy <- function() {
   system("python web/copyFiles.py")
 }
 
-discountVector <- function(periods) {
-  # Returns a vector that contains the discount factor for all periods
-  return((1/(1 + discount_rate))^(0:(periods-1)))
-}
+#----------------------------------------------------------------------------------------------------------------------#
+# Cost and Returns of Schooling and College
+#----------------------------------------------------------------------------------------------------------------------#
 
-discount <- function(from, to) {
-  # Returns the factor that some cash flow in year "from" has to be multiplied by to get the discounted value in year "to"
-  return(1/(1+discount_rate)^(from - to))
-}
-
+# Returns the fiscal cost of studying 'duration_of_study' of years starting in 'year' at German university.
+# The results is returned  in prices_year. state_token allows specifying a 'Bundesland'
 costOfCollege <- function(duration_of_study,
                           year,
                           state_token = "DE",
@@ -1381,7 +1831,6 @@ costOfCollege <- function(duration_of_study,
   if (missing(prices_year)) {
     prices_year = year
   }
-
   # Years in which the student studies:
   years_at_college <- year:(year + duration_of_study -1)
   # Cost for each of the years:
@@ -1395,16 +1844,17 @@ costOfCollege <- function(duration_of_study,
   return(sum(discounted_cost))
 }
 
+# Returns the average cost per student for a given year and a given state
+# prices_year can be set to return the college cost in 'prices_year' euro.
+# By default the prices are in 'year' euro.
 getCollegeCostInformation <- function(year, state_token, prices_year) {
-  # Returns the average cost per student for a given year and a given state
-  # prices_year can be set to return the college cost in 'prices_year' dollar. By default the prices are in 'year' euro.
 
   if (missing(prices_year)) {
     prices_year <- year
   }
 
   if(!exists("college_costs")) {
-    college_costs <<- read.csv(file = "./college_costs/college_costs_per_state.csv")
+    college_costs <<- read.csv(file = "./school_costs/college_costs_per_state.csv")
   }
 
   available_years <- as.numeric(substring(colnames(college_costs)[3:ncol(college_costs)],2))
@@ -1419,11 +1869,14 @@ getCollegeCostInformation <- function(year, state_token, prices_year) {
     return(deflate(from = closest_year,to = prices_year) * unlist(relevant_row[3:ncol(college_costs)][closest_year == available_years]))
   }
 }
-
+# Returns the fiscal cost of going to school for 'year' years.
+# The results is returned  in prices_year. state_token allows specifying a 'Bundesland'
 costOfSchool <- function(duration_of_schooling,
                          year,
                          school_type = "all_schools",
                          prices_year) {
+  # Possible values for school_type are elementary_school, hauptschule, various_tracks, realschule, gymnasium,
+  # gesamtschule, allgemeinbildende_schulen, berufsschule, berufsschule_dual, all_schools
 
   if (missing(prices_year)) {
     prices_year = year
@@ -1444,6 +1897,7 @@ costOfSchool <- function(duration_of_schooling,
   return(sum(discounted_cost))
 }
 
+# Returns the cost of going to a school of type 'school_type' in 'year'.
 getSchoolCostInformation <- function(year, school_type , prices_year) {
   # Possible values for school_type are elementary_school, hauptschule, various_tracks, realschule, gymnasium,
   # gesamtschule, allgemeinbildende_schulen, berufsschule, berufsschule_dual, all_schools
@@ -1483,12 +1937,11 @@ getSchoolCostInformation <- function(year, school_type , prices_year) {
   }
 }
 
+# Returns a matrix which contains the relative earnings differences between education_decision  and alternative.
+# To be used in conjunction with project_lifetime_impact and the impact_magnitude_matrix option.
 getEducationEffectOnEarnings <- function(education_decision = "university_degree",
                                          alternative = "vocational_educ",
                                          assume_constant_effect_from) {
-
-  # Returns a matrix which contains the relative earnings differences between education_decision  and alternative.
-  # To be used in conjunction with project_lifetime_impact and the impact_magnitude_matrix option.
 
   # The Impact of education decisions is based on data from IAB (2014) http://doku.iab.de/kurzber/2014/kb0114.pdf
   #
@@ -1533,6 +1986,8 @@ getEducationEffectOnEarnings <- function(education_decision = "university_degree
   return(impact_magnitude_matrix)
 }
 
+# Returns the averages earnings of holders of a 'education_decision' degree relative to the average earnings
+# averaged over all degrees
 getRelativeControlGroupEarnings <- function(education_decision) {
   # Check if the relevant data has already been loaded. If not load the csv file.
   if (!exists("age_income_degree_table")) {
@@ -1543,13 +1998,14 @@ getRelativeControlGroupEarnings <- function(education_decision) {
   }
   # In theory this could vary with age, but quick tests suggest that this would have a very small impact, and also
   # cause problems where the control group has zero earnings. -> Take the ratio of the present values of the lifetime
-  # control groug earnings to the average lifetime earnings.
+  # control group earnings to the average lifetime earnings.
   control_group_average_ratio <- sum(age_income_degree_table[, education_decision] * discountVector(length(age_income_degree_table[, education_decision] ))) /
     sum(age_income_table[, "income"] * discountVector(length(age_income_table[, "income"])))
   return(control_group_average_ratio)
 }
 
-getAverageIncome <- function(age, education, year) {
+# Returns the average earnigs at some 'age' and some 'education level'
+getAverageIncome <- function(age, education) {
   if (!exists("age_income_degree_table")) {
     age_income_degree_table <<- read.csv("./income_projection/age_income_degree.csv")
   }
@@ -1563,202 +2019,11 @@ getAverageIncome <- function(age, education, year) {
   return(age_income_degree_table[age_income_degree_table$age == age, education])
 }
 
-getGrossIncome <- function(net_income,
-                           flat_tax = global_flat_tax,
-                           assume_flat_tax = global_assume_flat_tax,
-                           inculde_welfare_benefits_fraction = global_inculde_welfare_benefits_fraction,
-                           welfare_benefit = global_welfare_benefit_monthly,
-                           income_fraction_of_pension_contribution = global_income_fraction_of_pension_contribution) {
-  # This function aims to infer the gross income from the net_income:
-
-  # If the relevant tax is flat, this is rather simple:
-  if (assume_flat_tax) {
-    return(net_income / (1- flat_tax))
-  }
-
-  # If the non-linear German tax system is assumed, the function that maps from gross income to net income has to be reversed.
-  # This is equal to solving f = getNetIncome(gross_income) - net_income = 0
-  # A problem that might arise is that if the tax system generates income regions where the marginal tax rate is > 1, the
-  # the function cannot be uniquely inverted.
-
-  # Define f as above:
-  f <- function(gross_income) {
-    getNetIncome(gross_income = gross_income,
-                 inculde_welfare_benefits_fraction = inculde_welfare_benefits_fraction,
-                 income_fraction_of_pension_contribution = income_fraction_of_pension_contribution) - net_income
-  }
-
-  # Net incomes below the welfare benefit do not make sense. In this case the root finding below
-  # would fail.
-  if (inculde_welfare_benefits_fraction > 0 & net_income < inculde_welfare_benefits_fraction * welfare_benefit * 12) {
-    warning("Net income cannot be lower than the yearly welfare benefit. Assuming 0 gross income")
-    return(0)
-  }
-
-  # Find the root of the f function (see above)
-  gross_income <- uniroot(f = f, interval = c(0, 2*net_income))$root
-
-  return(gross_income)
-}
-
-getPlotData <- function(mvpf_results) {
-  # This function adds further information about the program to the mvpf_results returned from getPointEstimates and
-  # addBootstrappedConfidenceIntervalls
-
-  if (!exists("program_information")) {
-    # Load additional information about each policy from the excel file:
-    program_information <- as.data.frame(read_xlsx("programs.xlsx"))
-  }
-
-  # Calculate additional variables. CIs can only be calculated if the results already contains cis
-  mvpf_results$government_net_costs_per_program_cost <- mvpf_results$government_net_costs / mvpf_results$program_cost
-  if ("government_net_costs_95ci_lower" %in% colnames(mvpf_results)) {
-    mvpf_results$government_net_costs_per_program_cost_95ci_lower <- mvpf_results$government_net_costs_95ci_lower / mvpf_results$program_cost
-    mvpf_results$government_net_costs_per_program_cost_95ci_upper <- mvpf_results$government_net_costs_95ci_upper / mvpf_results$program_cost
-  }
-
-  mvpf_results$willingness_to_pay_per_program_cost <- mvpf_results$willingness_to_pay / mvpf_results$program_cost
-  if ("willingness_to_pay_95ci_lower" %in% colnames(mvpf_results)) {
-    mvpf_results$willingness_to_pay_per_program_cost_95ci_lower <- mvpf_results$willingness_to_pay_95ci_lower / mvpf_results$program_cost
-    mvpf_results$willingness_to_pay_per_program_cost_95ci_upper <- mvpf_results$willingness_to_pay_95ci_upper / mvpf_results$program_cost
-  }
-
-  mvpf_results$fiscal_externality_per_euro <- 1 - mvpf_results$government_net_costs / mvpf_results$program_cost
-  if ("government_net_costs_95ci_lower" %in% colnames(mvpf_results)) {
-    mvpf_results$fiscal_externality_per_euro_95ci_lower <-1 - mvpf_results$government_net_costs_95ci_lower / mvpf_results$program_cost
-    mvpf_results$fiscal_externality_per_euro_95ci_upper <-1 - mvpf_results$government_net_costs_95ci_upper / mvpf_results$program_cost
-  }
-
-  mvpf_results$cost_benefit_ratio <- (mvpf_results$willingness_to_pay + mvpf_results$fiscal_externality_per_euro) / ((1 + cost_of_raising_public_funds) * mvpf_results$program_cost)
-
-  # Join with additional information
-  joined_dataset <- left_join(mvpf_results, program_information, by = c("program" = "program_identifier"))
-
-  # The average_earnings_beneficiary column needs to be deflated:
-  joined_dataset <- joined_dataset %>% mutate(average_earnings_beneficiary = Vectorize(deflate)(from = prices_year, to = results_prices) * average_earnings_beneficiary)
-
-  # Remove excluded programs
-  joined_dataset <- joined_dataset %>% filter(!(program %in% excluded_from_all_plots))
-
-  # Generate Category 'Other' which contains all programs that have no Category specified:
-  joined_dataset$category <- coalesce(joined_dataset$category, "Other")
-  # Convert the category column into a factor. This is convenient for plotting
-  joined_dataset$category <- factor(joined_dataset$category, levels = order_of_categories)
-
-  return(joined_dataset)
-}
-
-getCategoryPlotData <- function(plot_data, bootstrap_results, include_additional_programs = TRUE) {
-  # Calculates average mvpf (with CI) for each category specified in programs.xlsx and returns a dataframe that can be used
-  # to plot the result. Requires plot_data returned by getPlotData as input and bootstrap results
-
-  categories <- unique(plot_data$category)
-  category_plot_data <- foreach(i = 1:length(categories), .combine = rbind) %do% {
-    # Calculating the category average MVPF is not trivial. Because the MVPF can be infinite we cannot just take the average.
-    # Instead we imagine a policy that spends one euro on each policy of a category. Where spending means the programmatic spending.
-      # There are two problems:
-      programs <- plot_data %>% filter(category == categories[i]) %>% pull(program)
-
-    if (include_additional_programs == TRUE) {
-      for (j in 1:length(programs)) {
-
-        current_program_name <- programs[j]
-        current_program_row <- plot_data %>% filter(program == current_program_name)
-        # 1) Some Programs have no programmatic spending. I.e. it costs nothing to implement G8 (Although there are externalities)
-        # In this case we cannot use the trick above of looking at a one euro increase in programmatic spending. For reforms
-        # with MPVF < infinity we can assume that the program cost is equal to the externalities. If the MVPF is infinity,
-        # we cannot spend more on a policy as it costs nothing. These retain their missing value.
-        if (is.na(current_program_row$program_cost)) {
-          if (current_program_row$government_net_costs > 0 |
-            (current_program_row$government_net_costs <= 0 & current_program_row$willingness_to_pay < 0)) {
-            # MVPF cannot be infinite
-            # Set Program Cost equal to the net cost
-            plot_data[plot_data$program == current_program_name, "program_cost"] <- current_program_row$government_net_costs
-            # Fiscal Externality equal to zero
-            plot_data[plot_data$program == current_program_name, "fiscal_externality_per_euro"] <- 0
-            # And the willingness to pay per program cost is equal to the finite MVPF
-            plot_data[plot_data$program == current_program_name, "willingness_to_pay_per_program_cost"] <-
-              current_program_row$willingness_to_pay / current_program_row$government_net_costs
-
-            # Add this program cost to the bootstrap results
-            bootstrap_results[[current_program_name]]$program_cost <- bootstrap_results[[current_program_name]]$government_net_costs
-          }
-        }
-
-        # Update Program row
-        current_program_row <- plot_data %>% filter(program == current_program_name)
-        # 2) Programs with negative WTP and Cost generate money. To fix this we need to multiply wtp
-        # by -1. Now we get the mvpf of not conducting the reform, i.e. spending money on not doing the reform.
-        # fiscal_externality_per_euro & willingness_to_pay_per_program_cost have the correct sign.
-        # But we need to flip the sign of program_cost and government_net_costs:
-        if (current_program_row$willingness_to_pay < 0 & current_program_row$program_cost < 0) {
-          plot_data[plot_data$program == current_program_name, "willingness_to_pay"] <- -current_program_row$willingness_to_pay
-          plot_data[plot_data$program == current_program_name, "program_cost"] <- -current_program_row$program_cost
-          plot_data[plot_data$program == current_program_name, "government_net_costs"] <- -current_program_row$government_net_costs
-
-          # We also have to do this for the bootstrap
-          bootstrap_results[[current_program_name]]$program_cost <- (-1) *bootstrap_results[[current_program_name]]$program_cost
-          bootstrap_results[[current_program_name]]$willingness_to_pay <- (-1) * bootstrap_results[[current_program_name]]$willingness_to_pay
-          bootstrap_results[[current_program_name]]$government_net_costs <- (-1) * bootstrap_results[[current_program_name]]$government_net_costs
-        }
-      }
-    }
-
-    # Programs that still have a negative or no program cost need to be removed. There is only one program for which
-    # this currently applies.
-    programs_in_category <- plot_data %>% filter(category == categories[i], !(is.na(program_cost) | program_cost <= 0 | program %in% excluded_from_category_average))
-
-    # If some category only consists of reforms with negative costs, skip it.
-    if (nrow(programs_in_category) == 0) {
-      # All programs in the category have zero cost or cost is NA.
-      # Skip this category
-      return(NULL)
-    }
-
-    # This is a implementation of Hendren & Sprung-Keyser (2020) Equation 8.
-    # There is something weird going on with the sign of fiscal externalities in Hendren & Sprung-Keyser (2020).
-    # In equation 4 fiscal externalities which increase government revenue have a positive sign.
-    # In equation 8 these FEs must have a negative sign. Not sure if this is intended or a oversight.
-    # Here, externalities are positive. I.e. we need to substract the FE in the denominator.
-    numerator <- (1 / nrow(programs_in_category)) * sum(programs_in_category$willingness_to_pay_per_program_cost)
-    denominator <- (1 / nrow(programs_in_category)) * sum(1 - programs_in_category$fiscal_externality_per_euro)
-    grouped_mvpf <- calculateMVPF(numerator, denominator)
-
-    # For the confidence intervall we need to calculate the grouped_mvpf for each bootstrap replication. These are stored in
-    # bootstrapped_estimates
-    # Get willingness_to_pay_per_program_cost from each bootstrap repilcation (rows) for each program beloning to the category (columns)
-    willingness_to_pay_per_euro <- sapply(bootstrap_results[programs_in_category$program], function(bootstrap_results) {
-      return(bootstrap_results$willingness_to_pay / bootstrap_results$program_cost)
-    })
-
-    # Get fiscal_externality_per_euro from each bootstrap repilcation (rows) for each program beloning to the category (columns)
-    fiscal_externality_per_euro <- sapply(bootstrap_results[programs_in_category$program], function(bootstrap_results) {
-      return(1 - bootstrap_results$government_net_costs / bootstrap_results$program_cost)
-    })
-
-    # Calculate numerator and denominator as before expcet that the result now is a vector with number of bootstrap replications rows:
-    numerator_bootstrap <- 1 / ncol(willingness_to_pay_per_euro) * rowSums(willingness_to_pay_per_euro)
-    denominator_bootstrap <- 1 / ncol(willingness_to_pay_per_euro) * (-rowSums(fiscal_externality_per_euro) + ncol(fiscal_externality_per_euro))
-
-    mvpf_ci_grouped <- calculateMVPFCI(willingness_to_pay_pe = numerator,
-                                       willingness_to_pay_boostrap = numerator_bootstrap,
-                                       government_net_costs_pe = denominator,
-                                       government_net_costs_bootstrap = denominator_bootstrap)
-
-
-    return(data.frame(grouped_mvpf = grouped_mvpf,
-                      category = categories[i],
-                      grouped_mvpf_95ci_upper = mvpf_ci_grouped[["mvpf_95ci_upper"]],
-                      grouped_mvpf_95ci_lower = mvpf_ci_grouped[["mvpf_95ci_lower"]],
-                      average_age_beneficiary = mean(programs_in_category$average_age_beneficiary, na.rm = TRUE),
-                      year = mean(programs_in_category$year, na.rm = TRUE),
-                      average_earnings_beneficiary = mean(programs_in_category$average_earnings_beneficiary, na.rm = TRUE)))
-  }
-  # There are some unnecessary row names that do not make sense -> remove those
-  rownames(category_plot_data) <- NULL
-  return(category_plot_data)
-}
-
+# This function conducts robustness checks and exports a plot that shows the MVPF plotted against the
+# average age age of beneficiaries for each specification. Specifications are defined by passing a
+# function to the 'robustnesscheck_assumptions' parameter. This function has to take integers as input.
+# And then set the assumptions accordingly. I.e. if the 1 is passed to this function, it has to exectute
+# all the code that characterizes specification 1. See the usage of robustnessCheck in main.R
 robustnessCheck <- function(programs,
                             robustnesscheck_assumptions,
                             headlines,
@@ -1811,15 +2076,12 @@ robustnessCheck <- function(programs,
   }
 }
 
-calculateAverageMVPF <- function(plot_data) {
-  # This is not a true average. The average is infinity once one program has an infinite MVPF.
-  # This is the MVPF of spending one euro on every policy
-  plot_data <- plot_data %>% filter(!(is.na(program_cost) | program_cost <= 0))
-  numerator <- (1 / nrow(plot_data)) * sum(plot_data$willingness_to_pay)
-  denominator <- (1 / nrow(plot_data)) * sum(1 - plot_data$fiscal_externality_per_euro)
-  return(calculateMVPF(numerator, denominator))
-}
+#----------------------------------------------------------------------------------------------------------------------#
+# CSV Export for web visualization
+#----------------------------------------------------------------------------------------------------------------------#
 
+# Returns a list of key value pairs, where the key specifies the name of the assumption and
+# the value is a vector containing all possible values
 getListOfAllMetaAssumptions <- function() {
   # Update this function when updating setMetaAssumptions!
   list_of_all_meta_assumptions <- list(
@@ -1833,6 +2095,8 @@ getListOfAllMetaAssumptions <- function() {
   )
 }
 
+# Sets assumption "key" to value "value". This functione essentially specifies what the assumptions specified
+# in getListOfAllMetaAssumptions() actually do.
 setMetaAssumption <- function(key, value) {
   # Update getListOfAllMetaAssumptions function when updating this function
   if (key == "discount_rate") {
@@ -1981,6 +2245,8 @@ setMetaAssumption <- function(key, value) {
   applyAssumptions()
 }
 
+# This function calculates the MVPF of all possible combinations of assumptions. The resulting
+# csv file can be read by the web visualization in the ./web/ folder
 exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_assumptions = TRUE) {
   # assumption list is a list that specifies all the possible assumptions for which the code should be run.
   # Example:
@@ -2049,193 +2315,4 @@ exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_as
   source("assumptions.R")
 
   message("Exporting results completed in ", difftime(Sys.time(), start_time, units='mins'), " minutes \n")
-}
-
-getCompletePrograms <- function() {
-  # Get List of all programs
-  programs <- list.dirs("./programs", full.names = FALSE, recursive = FALSE)
-  complete_programs <- NULL
-  for (i in 1:length(programs)) {
-
-    # Check if *.xlsx file in estimates folder exists
-    if (!file.exists(paste0("./estimates/", programs[i], ".xlsx"))) {
-      warning(paste0("No correctly named .xlsx file for program \"", programs[i], "\" was found. ",
-                     "Make sure that for each program there exists a Excel (.xlsx) file in the \"estimates\" folder."))
-      next
-    }
-
-
-    # Check if .R file exists
-    current_program_path <- paste0("./programs/", programs[i],  "/", programs[i], ".R")
-    if (!file.exists(current_program_path)) {
-      warning(paste0("No correctly named .R file for program \"", programs[i], "\" was found. ",
-                     "Make sure that for each directory there exists a .R file within this directory with the same name."))
-      next
-    }
-
-    # Check if the required function exists
-    source(current_program_path)
-    if (!exists(programs[i])) {
-      warning(paste0("The file \"", programs[i], ".R\" does not contain a function named \"", programs[i],
-                     "\". Make sure that the function that should be called to calculate the MVPF is correctly named."))
-      next
-    }
-    complete_programs <- c(complete_programs, programs[i])
-  }
-  return(complete_programs)
-}
-
-quietelyRunPrograms <- function(programs, bootstrap = FALSE) {
-  results <- suppressMessages(getPointEstimates(programs))
-  if (bootstrap) {
-    results <- suppressMessages(addBootstrappedConfidenceIntervalls(results))
-  }
-  return(results)
-}
-
-getPointEstimates <- function(programs) {
-  mvpf_results <- data.frame(program = programs)
-  for (i in 1:length(programs)) {
-    message(paste("Running", programs[i], "once to get the point estimate."))
-    return_values <- do.call(programs[i], list())
-
-    if (!programs[i] %in% excluded_from_deflating) {
-      return_values <- deflateReturnValues(return_values, results_prices)
-    }
-
-    # Check if return_values include the necessary "willingness_to_pay" and "government_net_costs"
-    if (!all(c("willingness_to_pay", "government_net_costs") %in% names(return_values))) {
-      warning(paste0(programs[i], "does not include willingness_to_pay and / or government_net_costs. Cannot calculate MVPF"))
-      mvpf_results[names(return_values), ] <- unlist(return_values)
-      next
-    }
-    mvpf_results[i, names(return_values)] <- unlist(return_values)
-    mvpf_results[i, "mvpf"] <- calculateMVPF(mvpf_results[i, "willingness_to_pay"], mvpf_results[i, "government_net_costs"])
-  }
-  return(mvpf_results)
-}
-
-deflateReturnValues <- function(return_values, year) {
-
-  if (disable_deflating) {
-    return(return_values)
-  }
-
-  # This function deflates the return value of some program e.g. classRoomTraining to 'year' prices
-  if (!"prices_year" %in% names(return_values)) {
-    # The return values do not contain prices_year -> we don't know from which year to deflate. -> Assume that results
-    # are already correctly deflated
-    return(return_values)
-  }
-
-  # Vector to deselect variables that should not be deflated:
-  variables_to_deflate <- !names(return_values) %in% exclude_variables_from_price_adjustment
-
-  # Deflate variables
-  return_values[variables_to_deflate] <- lapply(return_values[variables_to_deflate], function(var) {
-    return(deflate(from = return_values[["prices_year"]], to = year) * var)
-  })
-
-  return(return_values)
-}
-
-addBootstrappedConfidenceIntervalls <- function(mvpf_results) {
-  # This requires the dataframe that was returned from getPointEstimates as input
-  programs <- mvpf_results$program
-
-  all_bootstrap_replications_results <<- list() # Contains a dataframe for each program with the estimated results from
-  # each bootstrap replication.
-
-  # Bootstrap
-  for (i in 1:length(programs)) {
-    message(paste("Running", bootstrap_replications, "bootstrap replications for", programs[i] ))
-
-    # This function generates a single row of a dataframe that contains one bootstrap replication
-    single_bootstrap_replication <- function(j) {
-      return_values <- do.call(programs[i], list(bootstrap_replication = j))
-      return_values <- deflateReturnValues(return_values, results_prices)
-      replication_row <- data.frame(replication = j)
-      replication_row[, names(return_values)] <- unlist(return_values)
-      replication_row$mvpf <- calculateMVPF(replication_row$willingness_to_pay, replication_row$government_net_costs)
-      return(replication_row)
-    }
-
-    # Call single_bootstrap_replication once for each bootstrap replication and row bind all the dataframe rows
-    bootstrapped_mvpf_results <- foreach(j = 1:bootstrap_replications,
-                                         .combine = rbind,
-                                         .export = ls(globalenv())[!ls(globalenv()) %in% c("programs", "i")], #this gets rid of some warnings
-                                         .packages = 'dplyr') %dopar% {
-      single_bootstrap_replication(j)
-    }
-    # Store the results to be accessed later
-    all_bootstrap_replications_results[[programs[i]]] <<- bootstrapped_mvpf_results
-
-    # Calculate confidence intervall here for all columns in the dataframe except: replication & mvpf
-    ci_variables <- names(bootstrapped_mvpf_results)[!names(bootstrapped_mvpf_results) %in% c("replication", "mvpf")]
-    for (k in 1:length(ci_variables)) {
-      mvpf_results[i, paste0(ci_variables[k], "_95ci_lower")] <-
-        quantile(bootstrapped_mvpf_results[, ci_variables[k]], 0.025)
-      mvpf_results[i, paste0(ci_variables[k], "_95ci_upper")] <-
-        quantile(bootstrapped_mvpf_results[, ci_variables[k]], 0.975)
-    }
-
-    # The calculation of the CI for the MVPF is non-trivial. See comment at the beginning of calculateMVPFCI(.)
-    mvpf_ci <- calculateMVPFCI(willingness_to_pay_pe = mvpf_results[i, "willingness_to_pay"],
-                               government_net_costs_pe = mvpf_results[i, "government_net_costs"],
-                               willingness_to_pay_boostrap = bootstrapped_mvpf_results[, "willingness_to_pay"],
-                               government_net_costs_bootstrap = bootstrapped_mvpf_results[, "government_net_costs"])
-
-    mvpf_results$mvpf_95ci_lower[i] <- mvpf_ci[["mvpf_95ci_lower"]]
-    mvpf_results$mvpf_95ci_upper[i] <- mvpf_ci[["mvpf_95ci_upper"]]
-  }
-  return(mvpf_results)
-}
-
-calculateMVPFCI <- function(willingness_to_pay_pe,
-                            willingness_to_pay_boostrap,
-                            government_net_costs_pe,
-                            government_net_costs_bootstrap) {
-  # Takes bootstrapped willingness_to_pay & government_net_costs vector as inputs and calculates the MVPF confidence interval.
-
-  # When calculating the MVPF CI the following has to be taken into account:
-  # The interpretation of the MVPF changes when the willingsness to pay and the government net costs are both negative.
-  # Although the sign of the MVPF is also positive. Example: Consider MVPF = 0.5
-  # This means that either
-  # (1) Willingness to pay and goverment net costs are positive. In this case one dollar spent by the government is valued
-  # with 0.5 dollar by the beneficiaries of the reform (higher value better)
-  # (2) Willingness to pay and goverment net costs are negative. In this case the MVPF measures how much WTP is lost
-  # per tax revenue increase. (lower value better)
-  # If the point estimate is either (1), and one of the bootstrapped estimates is (2) (or vice versa)
-  # the bootstrapped estimate is out of the comparable range and there is uncertainty about the sign of the effect of
-  # the policy.
-  # When running the bootstrap, this possibility has to be acconted for by removing the replications where the MVPF is
-  # out of the comparable range, and adjusting the confidence intervall.
-
-  replication_defined <- rep (TRUE, bootstrap_replications)
-
-  for (j in 1:bootstrap_replications) {
-    if (all(c(willingness_to_pay_pe, government_net_costs_pe) >= 0) &
-      all(c(willingness_to_pay_boostrap[j], government_net_costs_bootstrap[j]) < 0)) {
-      replication_defined[j] <- FALSE
-    }
-    else if (all(c(willingness_to_pay_pe, government_net_costs_pe) < 0) &
-      all(c(willingness_to_pay_boostrap[j], government_net_costs_bootstrap[j]) > 0)) {
-      replication_defined[j] <- FALSE
-    }
-  }
-
-  # Adjust the confindence intervall to account for the fact that the non-defined estimates have been removed.
-  # Note that the 95% confidence intervall can reach into the non-defined region of the mvpf. In this case,
-  # the confidence intervall spans -Inf to +Inf.
-  upper_percentile_95ci <- 1 - (0.05 - sum(!replication_defined) / bootstrap_replications) / 2
-  lower_percentile_95ci <- (0.05 - sum(!replication_defined) / bootstrap_replications) / 2
-
-  if (lower_percentile_95ci  <= 0 & upper_percentile_95ci >= 1) {
-    return(list(mvpf_95ci_lower = -Inf, mvpf_95ci_upper = Inf))
-  }
-  else {
-    bootstrapped_mvpf <- calculateMVPF(willingness_to_pay_boostrap, government_net_costs_bootstrap)
-    return(list(mvpf_95ci_lower = quantile(bootstrapped_mvpf[replication_defined], lower_percentile_95ci),
-                mvpf_95ci_upper = quantile(bootstrapped_mvpf[replication_defined], upper_percentile_95ci)))
-  }
 }
