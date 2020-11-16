@@ -368,7 +368,7 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
               rgb(255,20,147, maxColorValue = 255),
               rgb(165,42,42, maxColorValue = 255),
               rgb(0,255,127, maxColorValue = 255),
-              rgb(72,61,139, maxColorValue = 255),
+              rgb(196, 196, 126, maxColorValue = 255),
               rgb(189,189,189, maxColorValue = 255))
 
   # The text labels may be stochastic. To make them deterministic:
@@ -1606,8 +1606,8 @@ plotTaxRates <- function(income_tax_only = FALSE) {
     geom_line() +
     theme_modified_minimal() +
     scale_x_continuous(limits = c(0, 150000)) +
-    scale_y_continuous(limits = c(0, 0.75),
-                       breaks = c(0, 0.25, 0.5, 0.75),
+    scale_y_continuous(limits = c(0, 0.6),
+                       breaks = c(0, 0.25, 0.5),
                        expand = expansion(mult = c(0, 0))) +
     scale_colour_discrete(name = "Legend:", labels = c("Average Tax Rate", "Marginal Tax Rate")) +
     xlab("Gross Earnings per Year") +
