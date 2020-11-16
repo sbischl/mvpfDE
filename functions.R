@@ -2033,6 +2033,12 @@ robustnessCheck <- function(programs,
   # robustnesscheck_assumptions is function which takes the specification number 1 to n and stores the assumptions
   # in the global environment
   # headLines is vector containing the headlines of each of the subplots. This is not optional.
+  # overwrite_bootstrap_replications can be set to reduce the number of bootstrap replications. It cannot be higher than
+  # the value set for 'bootstrap_replications' in assumptions.R
+  if (overwrite_bootstrap_replications > bootstrap_replications) {
+    warning("Bootstrap replications cannot exceed than the number of replications set in 'bootstrap_replications' in assumptions.R")
+    return(-1)
+  }
 
   plots <- lapply(1:length(headlines), function(specification) {
     # Reset assumptions to be save:
@@ -2259,6 +2265,10 @@ exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_as
   # Run with default assumption and save the csv file:
   source("assumptions.R")
   results <- quietelyRunPrograms(programs, bootstrap)
+
+  # Check if ./csv_export/ directory exists. If not create it.
+  dir.create(file.path(getwd(), "csv_export"), showWarnings = FALSE)
+
   write.csv(x = getPlotData(results),
             file = "./csv_export/default.csv",
             row.names = FALSE,
