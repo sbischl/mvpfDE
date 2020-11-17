@@ -367,7 +367,7 @@ plotResults <- function(y_axis = "mvpf", y_label = "MVPF", x_axis = "year", x_la
               rgb(0,0,139, maxColorValue = 255),
               rgb(255,20,147, maxColorValue = 255),
               rgb(165,42,42, maxColorValue = 255),
-              rgb(0,255,127, maxColorValue = 255),
+              rgb(154,205,50, maxColorValue = 255),
               rgb(196, 196, 126, maxColorValue = 255),
               rgb(189,189,189, maxColorValue = 255))
 
