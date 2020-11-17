@@ -61,6 +61,8 @@ html, body {
 .selectBox {
     font-size: 14px;
     padding: 1px;
+    margin-top: 3px;
+    margin-bottom: 4px;
     color: black;
 }
 
@@ -68,7 +70,7 @@ html, body {
     margin-top: 75px;
     float: left;
     /*height: 150px;*/
-    width: calc((100vw - var(--left-width)) * (1 - var(--middle-share)));
+    width: calc((97vw - var(--left-width)) * (1 - var(--middle-share)));
     margin-bottom: 50px;
     position:relative;
 }

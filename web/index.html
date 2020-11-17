@@ -14,8 +14,9 @@
     <link rel="icon" href="icon.png">
     <link href='https://fonts.googleapis.com/css?family=Open Sans' rel='stylesheet'>
     <link href='https://fonts.googleapis.com/css?family=Source Sans Pro' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
 
-<body style="font-family: Open Sans"></body>
+<body style="font-family: Roboto"></body>
 
 
 <link id="stylesheet" rel="stylesheet" href="style.css?v=1">
@@ -33,9 +34,10 @@
                 <option value="noSelection">Select a Program</option>
             </select>
         </div>
+        <br>
         <div class="barHeadLine">Chart Options:</div>
         <div class="plotSettingsBox">
-            <label for="yAxis">Y Axis Variable:</label>
+            <label for="yAxis">Vertical Axis Variable:</label>
             <br>
             <select id="yAxis" class="selectBox"
                 onchange="updateAxis('y', options[this.selectedIndex].value, options[this.selectedIndex].innerHTML)">
@@ -44,9 +46,8 @@
                 <option value="willingness_to_pay_per_program_cost">Willingness to Pay per Euro Spent</option>
             </select>
         </div>
-    
         <div class="plotSettingsBox">
-            <label for="xAxis">X Axis Variable:</label>
+            <label for="xAxis">Horizontal Axis Variable:</label>
             <br>
             <select id="xAxis" class="selectBox" onchange="updateAxis('x', options[this.selectedIndex].value, options[this.selectedIndex].innerHTML)">
                 <option value="year">Year</option>
@@ -54,7 +55,7 @@
                 <option value="average_earnings_beneficiary">Average Earnings of Beneficiaries</option>
             </select>
         </div>
-    
+        <br>
         <div class="barHeadLine">Assumptions:</div>
         <div class="plotAssumptionsBox">
             <label for="taxRateAssumption">Tax Rate:</label>
@@ -104,10 +105,10 @@
             <label for="co2externality">Valuation of Saving a ton of CO<sub>2</sub></label>
             <br>
             <select id="co2externality" class="selectBox" onchange="updateGraphAssumptions()">
-                <option value="co2externality0">0€</option>
-                <option value="co2externality50">50€</option>
-                <option value="co2externality100" selected>100€</option>
-                <option value="co2externality250">250€</option>
+                <option value="co2_externality0">0€</option>
+                <option value="co2_externality50">50€</option>
+                <option value="co2_externality100" selected>100€</option>
+                <option value="co2_externality250">250€</option>
             </select>
         </div>
 

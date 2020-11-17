@@ -3,7 +3,7 @@
 
 
 // Settings (some of these have to be in line with what the R code does that exports the csv files):
-var document_root = 'https://sbischl.github.io';
+var document_root = '';
 var infinity_cutoff = 6;
 var lower_cutoff = -1;
 
@@ -20,6 +20,8 @@ var wtpCostChart;
 
 var headline_font = "Source Sans Pro";
 var headline_fontsize = 20;
+// Store programHeadline in global so that we can update the MVPF
+var programHeadLine
 
 //Store barChartSuperDiv's in a array
 var barChartSuperDivArray;
@@ -32,6 +34,19 @@ var chartDiv = document.querySelector("#barChartDiv")
 
 // Count Tooltip calls;
 var tooltip_counter = 1;
+
+// Categories (in order that they are displayed in the legend):
+var categories = ["Top Tax Reform",
+    "Education",
+    "Job Training",
+    "Start up Subsidy",
+    "Subsidized Employment",
+    "Other Labor Market Policies",
+    "Unemployment Insurance",
+    "Parental Leave Reform",
+    "Climate Policy",
+    "Health Program",
+    "Other"];
 
 // Store the mapping of willingness to pay and government net cost in a JSON object:
 var variable_mapping = [
@@ -288,7 +303,6 @@ var variable_mapping = [
             benefit_receipt: "Effect on Welfare Benefits"
         }
     },
-    /* commented out because temporary removed, need to put it in again on final build.
     {
         program: "bicycleHelmet",
         willingness_to_pay: {
@@ -304,7 +318,6 @@ var variable_mapping = [
             value_added_tax_loss: "VAT Gain"
         }
     },
-    */
     {
         program: "maternityLeave79",
         willingness_to_pay: {
@@ -362,7 +375,6 @@ var variable_mapping = [
             tax_revenue_increase: "Effect on Tax Revenue from Mothers"
         }
     },
-    /* renamed an therefore temporary removed
     {
         program: "coronavirusRestrictions",
         willingness_to_pay: {
@@ -374,7 +386,6 @@ var variable_mapping = [
             tax_revenue_increase: "Resource Cost of averted Deaths"
         }
     },
-    */
     {
         program: "bafoegRepayment",
         willingness_to_pay: {
@@ -582,6 +593,11 @@ async function readcsv(csv_location) {
     });
     //This stores a copy of the dataset
     unmodified_dataset = JSON.parse(JSON.stringify(csv_as_array));
+    // sort by category
+    unmodified_dataset.sort(function(a, b){
+        return categories.indexOf(a.category) - categories.indexOf(b.category);
+    });
+
     return csv_as_array;
 }
 
@@ -591,6 +607,9 @@ function generateDatasets(csv_as_array) {
     // The actual dataSets that will eventually be returned
     var datasets = [];
     var i;
+    csv_as_array.sort(function(a, b){
+        return categories.indexOf(a.category) - categories.indexOf(b.category);
+    });
     for (i = 0; i < csv_as_array.length; i++) {
         var current_observation = csv_as_array[i];
 
@@ -613,6 +632,13 @@ function generateDatasets(csv_as_array) {
     // Now the csv has been read. Apply the censoring
     censorValues(datasets);
 
+    // thx @https://stackoverflow.com/questions/13304543/
+    datasets.sort(function(a, b){
+        return categories.indexOf(a.label) - categories.indexOf(b.label);
+    });
+    datasetsLabels.sort(function(a, b){
+        return categories.indexOf(a) - categories.indexOf(b);
+    });
     return (datasets);
 }
 
@@ -673,10 +699,22 @@ async function updateGraphAssumptions() {
     readcsv(csvLocation).then(function (csv) {
         updateGraphDataSet(csv);
         openTooltipCurrentProgram();
+        // We also have to update the MVPF on the right side
+        updateProgramHeadLine();
     });
-    
+}
 
-    // We also have to update the HTML on the right side
+function updateProgramHeadLine() {
+    var program_data = getUnmodifiedbyIdentProgram(currently_displayed_program)
+    var mvpf_to_print = program_data["mvpf"] == "Inf" ? "∞" : parseFloat(program_data["mvpf"]).toFixed(2);
+    var current_html = programHeadLine.innerHTML;
+    // find pattern to replace
+    var start = current_html.indexOf("MVPF = ");
+    var end = current_html.indexOf("</span>");
+    var toReplace = current_html.substring(start + 6, end);
+    console.log(toReplace);
+    var current_html = current_html.replace(toReplace, " " + mvpf_to_print);
+    programHeadLine.innerHTML = current_html;
 }
 
 function updateAxis(axis, value, label) {
@@ -1050,10 +1088,10 @@ function selectColor(number, background = false) {
     }
     else if (number == 9) {
         if (background) {
-            return "rgba(0,255,127" + background_opa + ")"
+            return "rgba(154,205,50," + background_opa + ")"
         }
         else {
-            return "rgba(0,255,127," + foreground_opa + ")"
+            return "rgba(154,205,50," + foreground_opa + ")"
         }
     }
     else if (number == 10) {
@@ -1073,7 +1111,6 @@ function selectColor(number, background = false) {
         }
     }
 }
-
 function addAllPositivesSubtractAllNegatives(array) {
     var negative = 0;
     var positive = 0;
@@ -1255,7 +1292,21 @@ function drawMVPFChart(csv_as_array) {
             scales: getScales("mvpf", "Year", "Marginal Value of Public Funds"),
             legend: {
                 position: 'bottom',
-                usePointStyle: true
+                usePointStyle: true,
+                labels: {
+                    filter: function(legendItem, chartData) {
+                        return true;
+                        // This code can remove certain categories.
+                        /*
+                        if (legendItem.text == "Other") {
+                            return false;
+                        }
+                        else {
+                            return true;
+                        }
+                        */
+                    }
+                }
             },
             hover: {
                 mode: "point"
@@ -1398,9 +1449,11 @@ function generateSingleProgramHTML(program) {
     singleProgramDiv.className = "singleProgramDiv";
 
     // Headline
-    var programHeadLine = document.createElement('h3');
+    programHeadLine = document.createElement('h3');
     programHeadLine.className = "programHeadLine";
-    programHeadLine.textContent = program_data.program_name;
+    programHeadLine.textContent = program_data.program_name ;
+    var mvpf_to_print = program_data["mvpf"] == "Inf" ? "∞" : parseFloat(program_data["mvpf"]).toFixed(2);
+    programHeadLine.innerHTML = programHeadLine.innerHTML + "<br><span style=\"font-weight: 300; font-family:Roboto; font-style: italic; font-size: 19.5px\">MVPF = " + mvpf_to_print  + "</span>"
     singleProgramDiv.appendChild(programHeadLine);
 
     //Description
@@ -1432,7 +1485,7 @@ function generateSingleProgramHTML(program) {
     wtpDiv.innerHTML = "";
     var wtpChartElement = document.createElement('canvas');
     wtpChartElement.className = "barPlotElement";
-    wtpDiv.appendChild(wtpChartElement)
+    wtpDiv.appendChild(wtpChartElement);
     singleProgramDiv.appendChild(wtpDiv);
 
     var mvpfHeadline = document.createElement('div');
@@ -1450,6 +1503,12 @@ function generateSingleProgramHTML(program) {
 
     // I need to access the barChartSuperDivs later on to manipulate the size of the barCharts
     barChartSuperDivArray = [gccDiv, wtpDiv, wtpCostDiv];
+
+    // Add note below:
+    var note = document.createElement('p');
+    note.className = "programDescription";
+    note.innerHTML = "<span style=\"font-family: "+ headline_font + "; font-size:"+ headline_fontsize + "px;\"><strong>Note:</strong></span> <span style=\"color: rgb(102,102,102);\"> All calculations are in 2010 Euro prices";
+    singleProgramDiv.appendChild(note);
 
     //Cite papers
     var html = "<span style=\"font-family: "+ headline_font + "; font-size:"+ headline_fontsize + "px;\"><strong>Relevant Literature:</strong></span> <br>"
