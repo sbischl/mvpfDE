@@ -1,4 +1,4 @@
-// This should contain all of the required js code
+ // This should contain all of the required js code
 
 
 
@@ -1242,7 +1242,15 @@ function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
                         drawOnChartArea: false
                     },
                     min: -range,
-                    max: range
+                    max: range,
+                    afterTickToLabelConversion: function(data) {
+                        // this adds € signs to the tick marks on the x-axis.
+                        ticks = data.ticks;
+                        for (var i = 0; i < ticks.length; i++) {
+                            ticks[i].label = ticks[i].label.replace(".", "placeholder").replace(",", ".").replace("placeholder", ",") + "€";
+                        }
+                        return data;
+                    }
                 },
                 y: {
                     stacked: variable_to_plot == "mvpf" ? false : true,
@@ -1295,16 +1303,13 @@ function drawMVPFChart(csv_as_array) {
                 usePointStyle: true,
                 labels: {
                     filter: function(legendItem, chartData) {
-                        return true;
-                        // This code can remove certain categories.
-                        /*
+                        //return true;
                         if (legendItem.text == "Other") {
                             return false;
                         }
                         else {
                             return true;
                         }
-                        */
                     }
                 }
             },
@@ -1337,8 +1342,8 @@ function drawMVPFChart(csv_as_array) {
                             tooltip.push(program_name + ":");
                         }
 
-                        tooltip.push("Willingness to Pay:" + +parseFloat(unmodified_datapoint["willingness_to_pay"]).toFixed(2));
-                        tooltip.push("Government Net Cost: " + +parseFloat(unmodified_datapoint["government_net_costs"]).toFixed(2));
+                        tooltip.push("Willingness to Pay: " + +parseFloat(unmodified_datapoint["willingness_to_pay"]).toFixed(2) + "€");
+                        tooltip.push("Government Net Cost: " + +parseFloat(unmodified_datapoint["government_net_costs"]).toFixed(2) + "€");
                         tooltip.push("MVPF: " + (mvpfIsInfinity ? "∞" : +parseFloat(unmodified_datapoint["mvpf"]).toFixed(2)));
 
                         if (tooltip_number > 1 & tooltip_counter < tooltip_number) {
@@ -1554,6 +1559,5 @@ function main() {
     });
 
 }
-
 
 main();
