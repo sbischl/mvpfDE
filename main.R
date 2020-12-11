@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------------------------------------------------------#
-# Unified Welfare Analysis for Germany using MVPFs (Marginal Value of Public Funds)
+# Unified Welfare Analysis for Germany using the MVPF (Marginal Value of Public Funds)
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Clear the environment:
@@ -37,7 +37,7 @@ if (length(not_installed_packages) > 0) {
       break
     }
     else if (confirmation == "n") {
-      stop("Need to have required packages installed. Exiting...")
+      stop("Need to have the required packages installed. Exiting...")
     }
   }
 }
@@ -129,7 +129,7 @@ plotResults(plot_data = plot_data,
 # Figure that plots the Net Costs of all policies against the year they were implemented (with text lables)
 plotResults(plot_data = plot_data,
             y_axis = "government_net_costs_per_program_cost",
-            y_label = "Net Costs per Euro Progammatic Expenditure",
+            y_label = "Net Costs per Euro Programmatic Expenditure",
             x_axis = "year", x_label = "Year",
             save = "cost_against_year.pdf",
             lower_cutoff = 0,
@@ -140,7 +140,7 @@ plotResults(plot_data = plot_data,
 # Figure that plots the WTP of all policies against the year they were implemented (with text lables)
 plotResults(plot_data = plot_data,
             y_axis = "willingness_to_pay_per_program_cost",
-            y_label = "Willingness to Pay per Euro Progammatic Expenditure",
+            y_label = "Willingness to Pay per Euro Programmatic Expenditure",
             x_axis = "year", x_label = "Year",
             save = "wtp_against_year.pdf",
             lower_cutoff = 0,
@@ -236,7 +236,7 @@ robustnessCheck(programs,
                     global_flat_tax <<- 0.5
                   }
                 },
-                headlines = c("τ = 0.1", "Only Income Tax", "Taxes and Transfers (Baseline)", "τ = 0.5"),
+                headlines = c("τ = 0.1", "Only Income Tax", "German Tax and Transfer System (Baseline)", "τ = 0.5"),
                 overwrite_bootstrap_replications = 100,
                 save = "robustness_check_tax_rate.pdf")
 
@@ -255,7 +255,7 @@ robustnessCheck(programs,
                     yearly_return_to_schooling <<- 0.11
                   }
                   else if (specification == 4) {
-                    # Baseline
+                    # nothing baseline
                   }
                 },
                 headlines = c("RTS = 5%", "RTS = 8%", " RTS = 11%", "IAB Data (Baseline)"),
@@ -271,6 +271,3 @@ cat("Robustness checks completed in ", difftime(Sys.time(), start_time, units='m
 
 # Export Tables:
 exportLatexTables(plot_data)
-
-# Copy Files:
-FolderCopy()

@@ -2,9 +2,9 @@
 # Changeable Assumptions
 #----------------------------------------------------------------------------------------------------------------------#
 
-# Economic Assumptions:
+# Basic Assumptions:
 discount_rate <- 0.03
-retirement_age <- 64 # This is more or less set in stone by the IAB data. We cannot go higher only lower.
+retirement_age <- 64 # This is more or less set in stone by the IAB data. We cannot go higher than 64 only lower.
 wage_growth_rate <- 0.005
 
 # Tax System Assumptions:
@@ -22,7 +22,7 @@ global_income_fraction_of_long_term_care_contribution <- 0 # The fraction of une
 global_welfare_benefit_monthly <- 700
 value_added_tax <- 0.19
 
-# Behaviroal reponses to taxation
+# Behavioural responses to taxation
 cost_of_raising_public_funds <- 0.3 # Relevant for the more traditional benefit cost ratio
 # Elasticity of Taxable Income
 overwrite_eti <- FALSE # If set to true the ETI specified below is used for all tax reforms
@@ -31,7 +31,7 @@ global_eti <- 0.3 # Irrelevant unless overwrite_eti == TRUE
 # Preferences
 global_relative_risk_aversion <- 2
 
-# Value of statistical Life and Injuries:
+# Value of statistical life and injuries:
 use_single_statistical_life_value <- TRUE # If set to true only one statistical life value has to be specified. All of the
 # other values for injuries and the differentiation between resource cost and risk value are derived from the value set
 # in value_of_statistical_life
@@ -90,7 +90,7 @@ excluded_from_deflating <- c("taxReform2005",
 order_of_categories <- c("Top Tax Reform",
                          "Education",
                          "Job Training",
-                         "Start up Subsidy",
+                         "Start-Up Subsidy",
                          "Subsidized Employment",
                          "Other Labor Market Policies",
                          "Unemployment Insurance",
@@ -98,7 +98,8 @@ order_of_categories <- c("Top Tax Reform",
                          "Climate Policy",
                          "Health Program",
                          "Other") #This determines the order in which the reforms categories are displayed in the graphs
-# and tables.
+# and tables. If a new category is added (or a existing is renamed this has to be updated). Otherwise the program crashes
+# when trying to calculate category averages.
 
 # Exclude Programs from category average:
 excluded_from_category_average <- c("bicycleHelmet", "coronavirusLockdownR1")

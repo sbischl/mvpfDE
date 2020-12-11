@@ -74,8 +74,10 @@ getPointEstimates <- function(programs) {
   mvpf_results <- data.frame(program = programs)
   for (i in 1:length(programs)) {
     message(paste("Running", programs[i], "once to get the point estimate."))
+    # Call program "i" and store the return values
     return_values <- do.call(programs[i], list())
 
+    # Deflate unless deflating is explicitely disabled.
     if (!programs[i] %in% excluded_from_deflating) {
       return_values <- deflateReturnValues(return_values, results_prices)
     }
@@ -86,13 +88,15 @@ getPointEstimates <- function(programs) {
       mvpf_results[names(return_values), ] <- unlist(return_values)
       next
     }
+    # Store the return values in the results data.frame
     mvpf_results[i, names(return_values)] <- unlist(return_values)
+    # Calculate the MVPF and also store it in the results data.frame
     mvpf_results[i, "mvpf"] <- calculateMVPF(mvpf_results[i, "willingness_to_pay"], mvpf_results[i, "government_net_costs"])
   }
   return(mvpf_results)
 }
 
-# Run Programs without priting messages
+# Run Programs without printing messages
 quietelyRunPrograms <- function(programs, bootstrap = FALSE) {
   results <- suppressMessages(getPointEstimates(programs))
   if (bootstrap) {
@@ -712,7 +716,7 @@ getCategoryPlotData <- function(plot_data, bootstrap_results, include_additional
       return(1 - bootstrap_results$government_net_costs / bootstrap_results$program_cost)
     })
 
-    # Calculate numerator and denominator as before expcet that the result now is a vector with number of bootstrap replications rows:
+    # Calculate numerator and denominator as before except that the result now is a vector with 'number of bootstrap replications' rows:
     numerator_bootstrap <- 1 / ncol(willingness_to_pay_per_euro) * rowSums(willingness_to_pay_per_euro)
     denominator_bootstrap <- 1 / ncol(willingness_to_pay_per_euro) * (-rowSums(fiscal_externality_per_euro) + ncol(fiscal_externality_per_euro))
 
@@ -1063,7 +1067,7 @@ getTaxSystemEffects <- function(gross_income,
   # Higher pension contributions result in higher pension payments but due to demographics the return is probably quite low.
 
   # adapted from:
-  # 'Identifying Laffer Bounds: A Sufficient-Statistics Approach with an Application to Germany' by Sachs and Lorenz (2015) Appendix A
+  # 'Identifying Laffer Bounds: A Sufficient-Statistics Approach with an Application to Germany' by Lorenz and Sachs (2015) Appendix A
   # and their supplementary excel file
 
   # Calculations are for a single household without children
