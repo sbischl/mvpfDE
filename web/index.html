@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>MVPF Plot</title>
+    <title>MVPF DE</title>
 
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script type="text/javascript"
@@ -31,47 +31,47 @@
         <div class="barHeadLine">Highlight Program:</div>
         <div class="plotSettingsBox">
             <select id="highlightProgram" class="selectBox" onchange="highlightProgram(options[this.selectedIndex].value)">
-                <option value="noSelection">Select a Program</option>
+                <option value="noSelection">Select a program</option>
             </select>
         </div>
         <br>
         <div class="barHeadLine">Chart Options:</div>
         <div class="plotSettingsBox">
-            <label for="yAxis">Vertical Axis Variable:</label>
+            <label for="yAxis">Vertical axis variable:</label>
             <br>
             <select id="yAxis" class="selectBox"
                 onchange="updateAxis('y', options[this.selectedIndex].value, options[this.selectedIndex].innerHTML)">
-                <option value="mvpf">Marginal Value of Public Funds</option>
-                <option value="government_net_costs_per_program_cost">Net Cost per Euro Spent</option>
-                <option value="willingness_to_pay_per_program_cost">Willingness to Pay per Euro Spent</option>
+                <option value="mvpf">Marginal value of public funds</option>
+                <option value="government_net_costs_per_program_cost">Net cost per euro spent</option>
+                <option value="willingness_to_pay_per_program_cost">Willingness to pay per euro spent</option>
             </select>
         </div>
         <div class="plotSettingsBox">
-            <label for="xAxis">Horizontal Axis Variable:</label>
+            <label for="xAxis">Horizontal axis variable:</label>
             <br>
             <select id="xAxis" class="selectBox" onchange="updateAxis('x', options[this.selectedIndex].value, options[this.selectedIndex].innerHTML)">
                 <option value="year">Year</option>
-                <option value="average_age_beneficiary">Average Age of Beneficiaries</option>
-                <option value="average_earnings_beneficiary">Average Earnings of Beneficiaries</option>
+                <option value="average_age_beneficiary">Average age of beneficiaries</option>
+                <option value="average_earnings_beneficiary">Average earnings of beneficiaries</option>
             </select>
         </div>
         <br>
         <div class="barHeadLine">Assumptions:</div>
         <div class="plotAssumptionsBox">
-            <label for="taxRateAssumption">Tax Rate:</label>
+            <label for="taxRateAssumption">Tax rate:</label>
             <br>
             <select id="taxRateAssumption" class="selectBox" onchange="updateGraphAssumptions()">
                 <option value="tax_rate0">0%</option>
                 <option value="tax_rate10">10%</option>
                 <option value="tax_rate30">30%</option>
                 <option value="tax_rate50">50%</option>
-                <option value="tax_ratenonlinear" selected>German Tax System</option>
-                <option value="tax_rateincometaxonly">Only Income Tax</option>
+                <option value="tax_ratenonlinear" selected>German tax system</option>
+                <option value="tax_rateincometaxonly">Only income tax</option>
             </select>
         </div>
     
         <div class="plotAssumptionsBox">
-            <label for="discountRateAssumption">Discount Rate:</label>
+            <label for="discountRateAssumption">Discount rate:</label>
             <br>
             <select id="discountRateAssumption" class="selectBox" onchange="updateGraphAssumptions()">
                 <option value="discount_rate7">7%</option>
@@ -87,12 +87,12 @@
                 <option value="returns_to_schooling5">5%</option>
                 <option value="returns_to_schooling7">7%</option>
                 <option value="returns_to_schooling11">11%</option>
-                <option value="returns_to_schoolingIAB" selected>IAB Data</option>
+                <option value="returns_to_schoolingIAB" selected>IAB data</option>
             </select>
         </div>
 
         <div class="plotAssumptionsBox">
-            <label for="valueOfStatisticalLifeAssumption">Value of Statistical Life:</label>
+            <label for="valueOfStatisticalLifeAssumption">Value of statistical life:</label>
             <br>
             <select id="valueOfStatisticalLifeAssumption" class="selectBox" onchange="updateGraphAssumptions()">
                 <option value="value_of_statistical_life1million">1 Million</option>
@@ -102,7 +102,7 @@
         </div>
 
         <div class="plotAssumptionsBox">
-            <label for="co2externality">Valuation of Saving a ton of CO<sub>2</sub></label>
+            <label for="co2externality">Valuation of saving a ton of CO<sub>2</sub></label>
             <br>
             <select id="co2externality" class="selectBox" onchange="updateGraphAssumptions()">
                 <option value="co2_externality0">0€</option>
@@ -113,7 +113,7 @@
         </div>
 
         <div class="plotAssumptionsBox">
-            <label for="wage_growth_rate">Wage Growth Rate</label>
+            <label for="wage_growth_rate">Wage growth rate</label>
             <br>
             <select id="wage_growth_rate" class="selectBox" onchange="updateGraphAssumptions()">
                 <option value="wage_growth_rate0">0%</option>
@@ -124,7 +124,7 @@
         </div>
 
         <div class="plotAssumptionsBox">
-            <label for="eti">Elasticity of Taxable Income</label>
+            <label for="eti">Elasticity of taxable income</label>
             <br>
             <select id="eti" class="selectBox" onchange="updateGraphAssumptions()">
                 <option value="etibase" selected>Baseline</option>
@@ -141,7 +141,7 @@
     
     <div id="barChartDiv" onmouseover="openTooltipCurrentProgram()">
         <br>
-        <div style= "text-align:center;"><strong>Hint:</strong> <span style="color:grey;">Click on one of the datapoints in the Chart to reveal more
+        <div style= "text-align:center;"><strong>Hint:</strong> <span style="color:grey;">Click on one of the datapoints in the chart to reveal more
             information about the program</span></div>
     </div>
 

@@ -39,7 +39,7 @@ var tooltip_counter = 1;
 var categories = ["Top Tax Reform",
     "Education",
     "Job Training",
-    "Start up Subsidy",
+    "Start-Up Subsidy",
     "Subsidized Employment",
     "Other Labor Market Policies",
     "Unemployment Insurance",
@@ -53,294 +53,294 @@ var variable_mapping = [
     {
         program: "taxReform1990",
         willingness_to_pay: {
-            willingness_to_pay: "Tax Reduction",
+            willingness_to_pay: "Tax reduction",
         },
         government_net_costs: {
-            willingness_to_pay: "Tax Reduction",
-            fiscal_externality: "Fiscal Externality"
+            willingness_to_pay: "Tax reduction",
+            fiscal_externality: "Fiscal externality"
         }
     },
     {
         program: "taxReform2001",
         willingness_to_pay: {
-            willingness_to_pay: "Tax Reduction",
+            willingness_to_pay: "Tax reduction",
         },
         government_net_costs: {
-            willingness_to_pay: "Tax Reduction",
-            fiscal_externality: "Fiscal Externality"
+            willingness_to_pay: "Tax reduction",
+            fiscal_externality: "Fiscal externality"
         }
     },
     {
         program: "taxReform2004",
         willingness_to_pay: {
-            willingness_to_pay: "Tax Reduction",
+            willingness_to_pay: "Tax reduction",
         },
         government_net_costs: {
-            willingness_to_pay: "Tax Reduction",
-            fiscal_externality: "Fiscal Externality"
+            willingness_to_pay: "Tax reduction",
+            fiscal_externality: "Fiscal externality"
         }
     },
     {
         program: "taxReform2005",
         willingness_to_pay: {
-            willingness_to_pay: "Tax Reduction",
+            willingness_to_pay: "Tax reduction",
         },
         government_net_costs: {
-            willingness_to_pay: "Tax Reduction",
-            fiscal_externality: "Fiscal Externality"
+            willingness_to_pay: "Tax reduction",
+            fiscal_externality: "Fiscal externality"
         }
     },
     {
         program: "BestUpInformationWorkshop",
         willingness_to_pay: {
-            net_income_increase: "Lifteime Effect on Net Income",
-            bafoeg_cost: "Bafög Receipt",
-            bafoeg_repayment: "Bafög Repayment"
+            net_income_increase: "Lifetime effect on net income",
+            bafoeg_cost: "Receipt of Bafög ",
+            bafoeg_repayment: "Bafög repayment"
         },
         government_net_costs: {
-            program_cost: "Workshop Cost",
-            tax_revenue_increase: "Lifteime Tax Revenue Effect",
-            education_cost: "Education Cost Difference",
-            bafoeg_cost: "Bafög Payment",
-            bafoeg_repayment: "Bafög Repayment"
+            program_cost: "Workshop cost",
+            tax_revenue_increase: "Lifetime tax revenue effect",
+            education_cost: "Education cost difference",
+            bafoeg_cost: "Bafög payment",
+            bafoeg_repayment: "Bafög repayment"
         }
     },
     {
         program: "mentoringBalu",
         willingness_to_pay: {
-            net_income_increase: "Lifteime Effect on Net Income"
+            net_income_increase: "Lifetime effect on net income"
         },
         government_net_costs: {
-            program_cost: "Cost of Mentor, Mentee pair",
-            tax_revenue_increase: "Lifteime Tax Revenue Effect",
-            education_cost: "Education Cost Difference"
+            program_cost: "Cost of mentor mentee pair",
+            tax_revenue_increase: "Lifetime tax revenue effect",
+            education_cost: "Education cost difference"
         }
     },
     {
         program: "G8",
         willingness_to_pay: {
-            net_income_increase: "Liftetime Effect on Net Income",
-            earlier_labor_market_participation_net_income: "Earlier Labor Force Participation"
+            net_income_increase: "Lifetime effect on net income",
+            earlier_labor_market_participation_net_income: "Earlier labor force participation"
         },
         government_net_costs: {
-            earlier_labor_market_participation_tax_revenue: "Tax Revenue from Earlier Labor Force Participation",
-            tax_revenue_increase: "Lifteime Tax Revenue Effect",
-            education_cost: "Education Cost Difference"
+            earlier_labor_market_participation_tax_revenue: "tax revenue from earlier labor force participation",
+            tax_revenue_increase: "Lifetime tax revenue effect",
+            education_cost: "Education cost difference"
         }
     },
     {
         program: "tuitionFees",
         willingness_to_pay: {
-            net_income_increase: "Liftetime Effect on Net Income",
-            program_cost: "Tuition Fees"
+            net_income_increase: "Lifetime effect on net income",
+            program_cost: "Tuition fees"
         },
         government_net_costs: {
-            program_cost: "Tuition Fees",
-            education_cost: "Education Cost Difference",
-            tax_revenue_increase: "Lifteime Tax Revenue Effect",
+            program_cost: "Tuition fees",
+            education_cost: "Education cost difference",
+            tax_revenue_increase: "Lifetime tax revenue effect",
         }
     },
     {
         program: "longTraining",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Training Cost",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Training cost",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "shortTraining",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Training Cost",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Training cost",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "practiceFirm",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Participation Cost",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Participation cost",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "retraining",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Training Cost",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Training cost",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "classRoomTraining",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Training Cost",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Training cost",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "trainingMeasures",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Training Cost",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Training cost",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "bridgingAllowance",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Cost of Paying Subsidy",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Cost of paying subsidy",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "startupSubsidy",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Cost of Paying Subsidy",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Cost of paying subsidy",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "startupGrant",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Cost of Paying Start up Grant",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Cost of paying start-up grant",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "trainingVoucher",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Training Cost",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Training cost",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "speedLimitA3",
         willingness_to_pay: {
-            cost_increased_travel_time: "Cost of Longer Travel Time",
-            private_safer_traffic_valuation: "Private Valuation of fewer Accidents",
-            private_fuel_cost_saving: "Lower Fuel Consumption",
-            local_emission_reduction: "Less Local Emissions",
-            co2_emission_reducation: "Less CO2 Emissions"
+            cost_increased_travel_time: "Cost of longer travel time",
+            private_safer_traffic_valuation: "Private valuation of fewer accidents",
+            private_fuel_cost_saving: "Lower fuel consumption",
+            local_emission_reduction: "Less local emissions",
+            co2_emission_reducation: "Less CO2 emissions"
         },
         government_net_costs: {
-            public_safer_traffic_valuation: "Public Valuation of fewer Accidents",
-            energy_tax_loss: "Energy Tax Loss",
-            value_added_tax_loss: "VAT Loss"
+            public_safer_traffic_valuation: "Public valuation of fewer Accidents",
+            energy_tax_loss: "Energy tax loss",
+            value_added_tax_loss: "VAT loss"
         }
     },
     {
         program: "speedLimitA61",
         willingness_to_pay: {
-            cost_increased_travel_time: "Cost of Longer Travel Time",
-            private_safer_traffic_valuation: "Private Valuation of fewer Accidents",
-            private_fuel_cost_saving: "Lower Fuel Consumption",
-            local_emission_reduction: "Less Local Emissions",
-            co2_emission_reducation: "Less CO2 Emissions"
+            cost_increased_travel_time: "Cost of longer travel time",
+            private_safer_traffic_valuation: "Private valuation of fewer Accidents",
+            private_fuel_cost_saving: "Lower fuel consumption",
+            local_emission_reduction: "Less local emissions",
+            co2_emission_reducation: "Less CO2 emissions"
         },
         government_net_costs: {
-            public_safer_traffic_valuation: "Public Valuation of fewer Accidents",
-            energy_tax_loss: "Energy Tax Loss",
-            value_added_tax_loss: "VAT Loss"
+            public_safer_traffic_valuation: "Public valuation of fewer Accidents",
+            energy_tax_loss: "Energy tax loss",
+            value_added_tax_loss: "VAT loss"
         }
     },
     {
         program: "jobCreationSchemes",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Cost of Job Creation Scheme",
-            tax_revenue_increase: "Tax Revenue Effect",
-            benefit_receipt: "Effect on Welfare Benefits"
+            program_cost: "Cost of job creation scheme",
+            tax_revenue_increase: "Tax revenue effect",
+            benefit_receipt: "Effect on receipt of welfare benefits"
         }
     },
     {
         program: "oneEuroJobs",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Cost of Job Creation Scheme",
-            tax_revenue_increase: "Tax Revenue Effect",
-            benefit_receipt: "Effect on Welfare Benefits"
+            program_cost: "Cost of job creation scheme",
+            tax_revenue_increase: "Tax revenue effect",
+            benefit_receipt: "Effect on receipt of welfare benefits"
         }
     },
     {
         program: "subsidizedJobOpportunities",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Cost of Job Creation Scheme",
-            tax_revenue_increase: "Tax Revenue Effect",
-            benefit_receipt: "Effect on Welfare Benefits"
+            program_cost: "Cost of job creation scheme",
+            tax_revenue_increase: "Tax revenue effect",
+            benefit_receipt: "Effect on receipt of welfare benefits"
         }
     },
     {
         program: "bicycleHelmet",
         willingness_to_pay: {
-            private_safer_traffic_valuation: "Private Valuation of less severe Accidents",
-            utility_loss_helmet: "Utility loss of wearing helmet",
-            helmet_cost: "Cost of Buying Helmets",
-            co2_emission_reducation: "More CO2 Emissions",
-            private_health_cost: "Health Effect of Less cycling"
+            private_safer_traffic_valuation: "Private valuation of less severe accidents",
+            utility_loss_helmet: "Utility loss of wearing a helmet",
+            helmet_cost: "Cost of buying helmets",
+            co2_emission_reducation: "More CO2 emissions",
+            private_health_cost: "Health effect of less cycling"
         },
         government_net_costs: {
-            public_safer_traffic_valuation: "Public Valuation of less severe Accidents",
-            public_health_cost: "Health Effect of Less cycling",
+            public_safer_traffic_valuation: "Public valuation of less severe Accidents",
+            public_health_cost: "Health effect of less cycling",
             value_added_tax_loss: "VAT Gain"
         }
     },
     {
         program: "maternityLeave79",
         willingness_to_pay: {
-            benefit_receipt: "Valuation of additional Maternity Benefit",
-            net_income_increase: "Net Income Effect on Children"
+            benefit_receipt: "Valuation of additional maternity benefits",
+            net_income_increase: "Effect on children's net income"
         },
         government_net_costs: {
-            program_cost: "Cost of Paying Maternity Benefit",
-            tax_revenue_increase: "Effect on Tax Revenue from Mothers",
-            tax_revenue_increase_children: "Effect on Tax Revenue from Children"
+            program_cost: "Cost of paying maternity benefit",
+            tax_revenue_increase: "Effect on tax revenue from mothers",
+            tax_revenue_increase_children: "Effect on tax revenue from children"
         }
     },
     {
         program: "maternityLeave86",
         willingness_to_pay: {
-            benefit_receipt: "Valuation of additional Maternity Benefit",
-            net_income_increase: "Net Income Effect on Children"
+            benefit_receipt: "Valuation of additional maternity benefits",
+            net_income_increase: "Effect on children's net income"
         },
         government_net_costs: {
-            program_cost: "Cost of Paying Maternity Benefit",
-            tax_revenue_increase: "Effect on Tax Revenue from Mothers",
-            tax_revenue_increase_children: "Effect on Tax Revenue from Children",
-            education_cost: "Education Cost Differenceost "
+            program_cost: "Cost of paying maternity benefit",
+            tax_revenue_increase: "Effect on tax revenue from mothers",
+            tax_revenue_increase_children: "Effect on tax revenue from children",
+            education_cost: "Education cost difference"
         }
     },
     {
@@ -349,9 +349,9 @@ var variable_mapping = [
             net_income_increase: "Net Income Effect on Children"
         },
         government_net_costs: {
-            tax_revenue_increase: "Effect on Tax Revenue from Mothers",
-            tax_revenue_increase_children: "Effect on Tax Revenue from Children",
-            education_cost: "Education Cost Differenceost "
+            tax_revenue_increase: "Effect on Tax Revenue from mothers",
+            tax_revenue_increase_children: "Effect on Tax Revenue from children",
+            education_cost: "Education cost difference"
         }
     },
     {
@@ -362,7 +362,7 @@ var variable_mapping = [
         government_net_costs: {
             program_cost: "Cost of paying the subsidy",
             child_care_cost_reduction: "Lower take-up of subsidized child care",
-            tax_revenue_increase: "Effect on Tax Revenue from Mothers"
+            tax_revenue_increase: "Effect on tax revenue from mothers"
         }
     },
     {
@@ -371,51 +371,51 @@ var variable_mapping = [
             willingness_to_pay: "Valuation of the increased benefit payment"
         },
         government_net_costs: {
-            program_cost: "Cost of paying the benefits",
-            tax_revenue_increase: "Effect on Tax Revenue from Mothers"
+            program_cost: "Cost of the increased benefit payment",
+            tax_revenue_increase: "Effect on tax revenue from mothers"
         }
     },
     {
         program: "coronavirusRestrictions",
         willingness_to_pay: {
-            valuation_lower_risk_of_dying: "Valuation Lower Risk of Dying",
-            income_loss: "Income Loss"
+            valuation_lower_risk_of_dying: "Valuation lower risk of dying",
+            income_loss: "Income loss"
         },
         government_net_costs: {
-            program_cost: "Fiscal Cost of Lockdown",
-            tax_revenue_increase: "Resource Cost of averted Deaths"
+            program_cost: "Fiscal cost of restrictions",
+            tax_revenue_increase: "Resource cost of averted deaths"
         }
     },
     {
         program: "bafoegRepayment",
         willingness_to_pay: {
-            net_income_increase: "Lifteime Effect on Net Income",
-            bafoeg_valuation: "Reduced Repayment"
+            net_income_increase: "Lifetime effect on net income",
+            bafoeg_valuation: "Reduced repayment"
         },
         government_net_costs: {
-            program_cost: "Only Partial Repayment",
-            tax_revenue_increase: "Lifteime Tax Revenue Effect",
-            education_cost: "Education Cost Difference",
-            bafoeg_cost: "Additional Bafög Recipients",
+            program_cost: "Only partial repayment",
+            tax_revenue_increase: "Lifetime tax revenue effect",
+            education_cost: "Education cost difference",
+            bafoeg_cost: "Additional Bafög recipients",
         }
     },
     {
         program: "bafoeg2001",
         willingness_to_pay: {
-            net_income_increase: "Lifteime Effect on Net Income",
-            reform_valuation: "Bafög Receipt"
+            net_income_increase: "Lifetime Effect on net income",
+            reform_valuation: "Receipt of Bafög"
         },
         government_net_costs: {
-            program_cost: "Additional Bafög Recipients",
-            tax_revenue_increase: "Lifteime Tax Revenue Effect",
-            education_cost: "Education Cost Difference"
+            program_cost: "Additional Bafög recipients",
+            tax_revenue_increase: "Lifetime tax revenue effect",
+            education_cost: "Education cost difference"
         }
     },
     {
         program: "unemploymentBenefits42",
         willingness_to_pay: {
-            program_cost: "Benefit Payment",
-            valuation_reduced_risk: "Valuation of Lower Risk"
+            program_cost: "Benefit payment",
+            valuation_reduced_risk: "Valuation of risk reduction"
         },
         government_net_costs: {
             program_cost: "Benefit Payment",
@@ -425,138 +425,138 @@ var variable_mapping = [
     {
         program: "unemploymentBenefits44",
         willingness_to_pay: {
-            program_cost: "Benefit Payment",
-            valuation_reduced_risk: "Valuation of Lower Risk"
+            program_cost: "Benefit payment",
+            valuation_reduced_risk: "Valuation of risk reduction"
         },
         government_net_costs: {
-            program_cost: "Benefit Payment",
-            fiscal_externality: "Fiscal Externality due to longer unemployment"
+            program_cost: "Benefit payment",
+            fiscal_externality: "Fiscal externality due to longer unemployment"
         }
     },
     {
         program: "unemploymentBenefits49",
         willingness_to_pay: {
-            program_cost: "Benefit Payment",
-            valuation_reduced_risk: "Valuation of Lower Risk"
+            program_cost: "Benefit payment",
+            valuation_reduced_risk: "Valuation of risk reduction"
         },
         government_net_costs: {
-            program_cost: "Benefit Payment",
-            fiscal_externality: "Fiscal Externality due to longer unemployment"
+            program_cost: "Benefit payment",
+            fiscal_externality: "Fiscal externality due to longer unemployment"
         }
     },
     {
         program: "unemploymentBenefits2002",
         willingness_to_pay: {
-            program_cost: "Benefit Payment",
-            valuation_reduced_risk: "Valuation of Lower Risk"
+            program_cost: "Benefit payment",
+            valuation_reduced_risk: "Valuation of risk reduction"
         },
         government_net_costs: {
-            program_cost: "Benefit Payment",
-            fiscal_externality: "Fiscal Externality due to longer unemployment"
+            program_cost: "Benefit payment",
+            fiscal_externality: "Fiscal externality due to longer unemployment"
         }
     },
     {
         program: "unemploymentBenefits2006",
         willingness_to_pay: {
-            program_cost: "Benefit Payment",
-            valuation_reduced_risk: "Valuation of Lower Risk"
+            program_cost: "Benefit payment",
+            valuation_reduced_risk: "Valuation of risk reduction"
         },
         government_net_costs: {
-            program_cost: "Benefit Payment",
-            fiscal_externality: "Fiscal Externality due to longer unemployment"
+            program_cost: "Benefit payment",
+            fiscal_externality: "Fiscal externality due to longer unemployment"
         }
     },
     {
         program: "jobSearchInformation",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Brochure Cost",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Brochure cost",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "relocationAssistance",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Subsidy Cost",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Subsidy cost",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "sportsExpenditure",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Sports Expenditure",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Sports expenditure",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "negativeIncomeTax",
         willingness_to_pay: {
-            reform_valuation: "Valuation of Transfer"
+            reform_valuation: "Valuation of transfer"
         },
         government_net_costs: {
-            program_cost: "Sports Expenditure",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Subsidy cost",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "placementService",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Cost of Providing Service Inhouse",
-            benefit_receipt: "Unemployment Benefits",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Cost of providing service inhouse",
+            benefit_receipt: "Effect on receipt of unemployment benefits",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "expectedPensionLetter",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            program_cost: "Letter Cost",
-            tax_revenue_increase: "Tax Revenue Effect"
+            program_cost: "Letter cost",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "decentralizedEmploymentServices",
         willingness_to_pay: {
-            net_income_increase: "Effect on Net Income"
+            net_income_increase: "Effect on net income"
         },
         government_net_costs: {
-            benefit_receipt: "Cost of Paying Unemployment Benefits",
-            tax_revenue_increase: "Tax Revenue Effect"
+            benefit_receipt: "Cost of paying unemployment benefits",
+            tax_revenue_increase: "Tax revenue effect"
         }
     },
     {
         program: "eegWind",
         willingness_to_pay: {
-            co2_emission_reducation: "Less CO2 Emissions",
-            income_loss: "Effect on Producer Rents",
-            price_effect: "Effect on Electricity Prices"
+            co2_emission_reducation: "Less CO2 emissions",
+            income_loss: "Effect on producer rents",
+            price_effect: "Effect on electricity prices"
         },
         government_net_costs: {
-            program_cost: "Subsidy Cost"
+            program_cost: "Subsidy cost"
         }
     },
     {
         program: "eegSolar",
         willingness_to_pay: {
-            co2_emission_reducation: "Less CO2 Emissions",
-            income_loss: "Effect on Producer Rents",
-            price_effect: "Effect on Electricity Prices"
+            co2_emission_reducation: "Less CO2 emissions",
+            income_loss: "Effect on producer rents",
+            price_effect: "Effect on electricity prices"
         },
         government_net_costs: {
-            program_cost: "Subsidy Cost"
+            program_cost: "Subsidy cost"
         }
     }
 ]
@@ -1096,10 +1096,10 @@ function selectColor(number, background = false) {
     }
     else if (number == 10) {
         if (background) {
-            return "rgba(72,61,139," + background_opa + ")"
+            return "rgba(196,196,126," + background_opa + ")"
         }
         else {
-            return "rgba(72,61,139," + foreground_opa + ")"
+            return "rgba(196,196,126," + foreground_opa + ")"
         }
     }
     else if (number == 11) {
@@ -1512,7 +1512,7 @@ function generateSingleProgramHTML(program) {
     // Add note below:
     var note = document.createElement('p');
     note.className = "programDescription";
-    note.innerHTML = "<span style=\"font-family: "+ headline_font + "; font-size:"+ headline_fontsize + "px;\"><strong>Note:</strong></span> <span style=\"color: rgb(102,102,102);\"> All calculations are in 2010 Euro prices";
+    note.innerHTML = "<span style=\"font-family: "+ headline_font + "; font-size:"+ headline_fontsize + "px;\"><strong>Note:</strong></span> <span style=\"color: rgb(102,102,102);\"> All calculations are in 2010 euro prices";
     singleProgramDiv.appendChild(note);
 
     //Cite papers
