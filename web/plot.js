@@ -957,6 +957,36 @@ function highlightProgram(program) {
     openTooltip(program);
 }
 
+function highlightCategory(category) {
+    for (var i = 0; i < mvpfChart._metasets.length; i++) {
+        var current_metaset = mvpfChart._metasets[i];
+        if (current_metaset._dataset.label == category) {
+            hideMetaSetsExcept(i);
+            return
+        }
+    }
+    console.log("Category to be highlighted not present in graph. Show all");
+    hideMetaSetsExcept(-1);
+}
+
+function hideMetaSetsExcept(number) {
+    // if number is positive, hides all metasets in the graph except number. If negative hides none, but rather makes all visiable
+    for (var i = 0; i < mvpfChart._metasets.length; i++) {
+        var current_metaset = mvpfChart._metasets[i];
+        if (number < 0) {
+            current_metaset.hidden = false;
+            continue;
+        }
+        if (i == number) {
+            current_metaset.hidden = false;
+        }
+        else {
+            current_metaset.hidden = true;
+        }
+    }
+    mvpfChart.update();
+}
+
 function openTooltipCurrentProgram() {
     if (currently_displayed_program) {
         openTooltip(currently_displayed_program);
@@ -1550,11 +1580,22 @@ function populatePrograms() {
         selection.appendChild(option);
     }
 }
+function populateCategories() {
+    var selection = document.querySelector('#highlightCategory');
+    var i;
+    for (i in categories) {
+        var option = document.createElement("option");
+        option.value = categories[i];
+        option.innerHTML = categories[i];
+        selection.appendChild(option);
+    }
+}
 
 function main() {
     readcsv(document_root.concat("/csv/default.csv")).then(function (csv) {
         drawMVPFChart(csv);
         populatePrograms();
+        populateCategories();
         //generateLeftSideHTMLCharts("taxReform1990");
     });
 
