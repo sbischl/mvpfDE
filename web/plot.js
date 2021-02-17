@@ -558,6 +558,17 @@ var variable_mapping = [
         government_net_costs: {
             program_cost: "Subsidy cost"
         }
+    }, 
+    {
+        program: "compulsarySchooling",
+        willingness_to_pay: {
+            net_income_increase: "Lifetime effect on net income"
+        },
+        government_net_costs: {
+            program_cost: "Cost of providing one additional year of schooling",
+            tax_revenue_increase: "Lifetime tax revenue effect",
+            education_cost: "Additional education of sons"
+        }
     }
 ]
 
