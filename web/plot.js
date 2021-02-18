@@ -562,11 +562,13 @@ var variable_mapping = [
     {
         program: "compulsarySchooling",
         willingness_to_pay: {
-            net_income_increase: "Lifetime effect on net income"
+            net_income_increase: "Lifetime effect on childrens' net income",
+            net_income_increase_parents: "Lifetime effect on parents' net income"
         },
         government_net_costs: {
             program_cost: "Cost of providing one additional year of schooling",
-            tax_revenue_increase: "Lifetime tax revenue effect",
+            tax_revenue_increase: "Lifetime effect on childrens' tax payments",
+            tax_revenue_increase_parents: "Lifetime effect on parents' tax payments",
             education_cost: "Additional education of sons"
         }
     }

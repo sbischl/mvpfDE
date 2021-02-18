@@ -5,6 +5,8 @@
 # Relevant Literature:
 # Piopiunik (2014)
 # Piopiunik (2011)
+# Kamhöfer & Schmitz (2016)
+# Pischke & von Wachter (2008)
 
 compulsarySchooling <- function (bootstrap_replication = 0, use_constant_ols_return_to_schooling = global_use_constant_ols_return_to_schooling) {
   program_name <- toString(match.call()[1])
@@ -34,12 +36,15 @@ compulsarySchooling <- function (bootstrap_replication = 0, use_constant_ols_ret
   # finished school before the reform (i.e. 9th grade). In 9th grade students are about 15 - 16.
   impact_age <- 16
 
-  # Genertation time:
+  # Generation time:
   generation_time <- 1981 - 1953  # see  Piopiunik (2014), Table 1
   # equal to age of parents at birth and also the number of years that pass till children are in 9th grade.
 
+  # Direct Effect on Parents (i.e. the population affected by the schooling reform)
+  lwage_effect <- estimates$lwage_effect_parents_pw # _pw: Pischke & von Wachter (2008) or _ks: Kamhöfer & Schmitz (2016)
+
   #--------------------------------------------------------------------------------------------------------------------#
-  # Project and discount earnings / tax payments when attending higher track instead of one of the lower tracks
+  # Project and discount earnings & tax payments of children
   #--------------------------------------------------------------------------------------------------------------------#
 
   # Need to take into account that the effect only applies to son's of mothers.
@@ -74,6 +79,7 @@ compulsarySchooling <- function (bootstrap_replication = 0, use_constant_ols_ret
   # The multiplication messed up the age column. Restore it.
   impact_magnitude_matrix$age <- 18:(18 + nrow(impact_magnitude_matrix) - 1)
 
+
   if (!use_constant_ols_return_to_schooling) {
     lifetime_impacts <- project_lifetime_impact(impact_age = 18, # cannot go lower than 18
                                                 impact_magnitude_matrix = impact_magnitude_matrix,
@@ -105,13 +111,28 @@ compulsarySchooling <- function (bootstrap_replication = 0, use_constant_ols_ret
     lifetime_impacts <- years_of_schooling_effect * impact_longer_schooling + impact_more_education
   }
 
-
   # Affected students value higher net-income
   net_income_increase <- lifetime_impacts$present_value_net_earnings_impact * share_affected
   willingness_to_pay <- net_income_increase
   # Government costs are reduced by the increase in tax revenue
   tax_revenue_increase <- lifetime_impacts$present_value_tax_payment_impact * share_affected
   government_net_costs <- - tax_revenue_increase
+
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Project and discount earnings & tax payments of parent generation (the one which received more schooling)
+  #--------------------------------------------------------------------------------------------------------------------#
+  # Both Kamhöfer & Schmitz (2016) and Pischke & von Wachter (2008) find basically zero effect.
+  lifetime_impacts_parents <- project_lifetime_impact(impact_age = 18, # cannot go lower than 18
+                                                      impact_magnitude = lwage_effect,
+                                                      relative_control_income = getRelativeControlGroupEarnings("vocational_educ"),
+                                                      start_projection_year = 1967,
+                                                      prices_year = prices_year,
+                                                      inculde_welfare_benefits_fraction = 1)
+
+  tax_revenue_increase_parents <- lifetime_impacts_parents$present_value_tax_payment_impact
+  government_net_costs <- government_net_costs - tax_revenue_increase_parents
+  net_income_increase_parents <- lifetime_impacts_parents$present_value_net_earnings_impact
+  willingness_to_pay <- willingness_to_pay + net_income_increase_parents
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Cost of Schooling
@@ -134,7 +155,9 @@ compulsarySchooling <- function (bootstrap_replication = 0, use_constant_ols_ret
                         government_net_costs = government_net_costs,
                         program_cost = cost_of_additional_year_parents,
                         net_income_increase = net_income_increase,
+                        net_income_increase_parents = net_income_increase_parents,
                         tax_revenue_increase = -tax_revenue_increase,
+                        tax_revenue_increase_parents = - tax_revenue_increase_parents,
                         education_cost = cost_of_additonal_year_children,
                         prices_year = prices_year)
   return(return_values)
