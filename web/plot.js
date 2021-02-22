@@ -571,6 +571,15 @@ var variable_mapping = [
             tax_revenue_increase_parents: "Lifetime effect on parents' tax payments",
             education_cost: "Additional education of sons"
         }
+    },
+    {
+        program: "trackingBavaria",
+        willingness_to_pay: {
+            net_income_increase: "Projected lifetime net earnings reduction",
+        },
+        government_net_costs: {
+            tax_revenue_increase: "Projected lifetime tax revenue reduction",
+        }
     }
 ]
 
