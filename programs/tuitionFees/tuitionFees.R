@@ -5,6 +5,7 @@
 # Relevant Literature:
 # Bruckmeier & Wigger (2014)
 # Gorgen & Schienle (2019)
+# Huber (2012)
 
 tuitionFees <- function (bootstrap_replication = 0, use_constant_ols_return_to_schooling = global_use_constant_ols_return_to_schooling) {
   program_name <- toString(match.call()[1])
@@ -24,6 +25,7 @@ tuitionFees <- function (bootstrap_replication = 0, use_constant_ols_return_to_s
   # Possible estimates of the effect of tuition fees on university enrollment (in percentage points) are:
   # enrollment_rate_pp_bruckmeier : about -3% from Bruckmeier & Wigger (2014)
   # enrollment_rate_pp_bruckmeier_more_controls : insignificant, about -1% from Bruckmeier & Wigger (2014)
+  # enrollment_rate_pp_huber: - 2.7% from Huber (2012). According to the paper this is lower bound.
   # enrollment_rate_pp_gorgen : about -4% from Gorgen & Schienle (2019)
   #
   # Bruckmeier & Wigger (2014) use DiD. Gorgen & Schienle (2019) also follow a DiD approach, but they select
