@@ -575,12 +575,24 @@ var variable_mapping = [
     {
         program: "trackingBavaria",
         willingness_to_pay: {
-            net_income_increase: "Projected lifetime net earnings reduction",
+            net_income_increase: "Projected lifetime net earnings effect",
         },
         government_net_costs: {
-            tax_revenue_increase: "Projected lifetime tax revenue reduction",
+            tax_revenue_increase: "Projected lifetime tax revenue effect",
         }
-    }
+    },
+    {
+        program: "schoolFees",
+        willingness_to_pay: {
+            net_income_increase: "Lifetime effect on net income",
+            program_cost: "Waived school fees"
+        },
+        government_net_costs: {
+            program_cost: "Waived school fees",
+            tax_revenue_increase: "Lifetime tax revenue effect",
+            education_cost: "Cost higher Gymnasium attendance"
+        }
+    },
 ]
 
 // Store a unmodified, easy to access version of all programs:

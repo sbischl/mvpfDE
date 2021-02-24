@@ -1934,7 +1934,7 @@ getSchoolCostInformation <- function(year, school_type , prices_year) {
   else {
     # If no data is available for a given year return the closest year adjusted for prices to the year of interest
     closest_year <- available_years[which(abs(available_years - year) == min(abs(available_years - year)))]
-    return(deflate(from = closest_year,to = prices_year) * school_costs %>%
+    return(deflate(from = closest_year, to = prices_year) * school_costs %>%
       filter(year == closest_year) %>%
       select(!!school_type))  %>%
       unlist()
