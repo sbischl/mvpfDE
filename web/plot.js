@@ -593,6 +593,16 @@ var variable_mapping = [
             education_cost: "Cost higher Gymnasium attendance"
         }
     },
+    {
+        program: "rockYourLife",
+        willingness_to_pay: {
+            net_income_increase: "Lifetime effect on net income"
+        },
+        government_net_costs: {
+            program_cost: "Cost of mentor mentee pair",
+            tax_revenue_increase: "Lifetime tax revenue effect"
+        }
+    },
 ]
 
 // Store a unmodified, easy to access version of all programs:
