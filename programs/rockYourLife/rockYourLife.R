@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------------------------------------------------------#
-# Mentoring Program Balu und Du
+# Rock Your Life
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Relevant Literature:
@@ -41,10 +41,6 @@ rockYourLife <- function (bootstrap_replication = 0) {
   #--------------------------------------------------------------------------------------------------------------------#
   # Project and discount earnings / tax payments when attending higher track instead of one of the lower tracks
   #--------------------------------------------------------------------------------------------------------------------#
-
-  impact_magnitude_matrix <- getEducationEffectOnEarnings(education_decision = "abitur",
-                                                          alternative = "vocational_educ")
-
   # We replicate the approach of Resnjanskij et al. (2021) using our own data. To project the effect on lifetime earnings of the
   # mentoring program we take the effect of the mentoring on grades (math_grade_effect) and multiply with the effect of
   # the grade on log wages. That way we get a earnings increase in percent which we can use to project earnings. ~2.5%
@@ -56,7 +52,6 @@ rockYourLife <- function (bootstrap_replication = 0) {
                                               prices_year = prices_year,
                                               discount_to = 2017, # Discount to the year the cost of the mentor program accrues
                                               inculde_welfare_benefits_fraction = 1)
-  print(lifetime_impacts)
   # Students value higher net-income. Since there is a zero effect for non low-SES students have to multiply by low SES share
   net_income_increase <- lifetime_impacts$present_value_net_earnings_impact * low_ses_share
   willingness_to_pay <- net_income_increase
