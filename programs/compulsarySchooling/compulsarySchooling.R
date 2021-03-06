@@ -41,7 +41,7 @@ compulsarySchooling <- function (bootstrap_replication = 0, use_constant_ols_ret
   # equal to age of parents at birth and also the number of years that pass till children are in 9th grade.
 
   # Direct Effect on Parents (i.e. the population affected by the schooling reform)
-  lwage_effect <- estimates$lwage_effect_parents_pw # _pw: Pischke & von Wachter (2008) or _ks: Kamhöfer & Schmitz (2016)
+  lwage_effect <- estimates$lwage_effect_parents_ks # _pw: Pischke & von Wachter (2008) or _ks: Kamhöfer & Schmitz (2016)
 
   #--------------------------------------------------------------------------------------------------------------------#
   # Project and discount earnings & tax payments of children
