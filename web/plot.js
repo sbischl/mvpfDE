@@ -603,6 +603,16 @@ var variable_mapping = [
             tax_revenue_increase: "Lifetime tax revenue effect"
         }
     },
+    {
+        program: "interimDegrees",
+        willingness_to_pay: {
+            net_income_increase: "Lifetime effect on net income"
+        },
+        government_net_costs: {
+            education_cost: "Cost higher Gymnasium attendance",
+            tax_revenue_increase: "Lifetime tax revenue effect"
+        }
+    }
 ]
 
 // Store a unmodified, easy to access version of all programs:
