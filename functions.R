@@ -587,7 +587,7 @@ getPlotData <- function(mvpf_results) {
 
   if (!exists("program_information")) {
     # Load additional information about each policy from the excel file:
-    program_information <- as.data.frame(read_xlsx("programs.xlsx"))
+    program_information <<- as.data.frame(read_xlsx("programs.xlsx"))
   }
 
   # Calculate additional variables. CIs can only be calculated if the results already contains cis
@@ -2255,9 +2255,177 @@ setMetaAssumption <- function(key, value) {
   applyAssumptions()
 }
 
+exportSingleJSON <- function(program) {
+  # Exports the json files for a single program + the json files that contain the information about the variable mapping
+  # and categories. Run this when adding a single reform.
+  if (length(program > 1)) {
+    print("This function is meant to export the json files for a single program. Provide only one program name!")
+    return(-1)
+  }
+  exportReformJSON(program)
+  exportCategoriesJSON()
+  exportPlotJSON(program)
+  file.copy("variable_mapping.json", "./json_export/variable_mapping.json")
+}
+
+exportAllJSON <- function(programs) {
+  # This exports all json files of all programs for the web viz. Do this only if you need to export all files. E.g. because something
+  # was changed that affects all programs.
+  sapply(programs, function(x) {
+    exportReformJSON(x)
+  })
+  exportCategoriesJSON()
+  exportPlotJSON(programs)
+  file.copy("variable_mapping.json", "./json_export/variable_mapping.json")
+}
+
+exportReformJSON <- function(program) {
+  # Generates the program.json file for the "program" which contains the information contains basic characteristics about the reform.
+  # Year, Name, Age of Beneficiaries. All info is read from the programs.xlsx file
+  if (!exists("program_information")) {
+    # Load additional information about each policy from the excel file:
+    program_information <<- as.data.frame(read_xlsx("programs.xlsx"))
+  }
+  df_row <- program_information %>% filter(program_identifier == program) %>% select(program_identifier,
+                                                                                     program_name,
+                                                                                     category,
+                                                                                     year,
+                                                                                     average_age_beneficiary,
+                                                                                     average_earnings_beneficiary,
+                                                                                     sources,
+                                                                                     links,
+                                                                                     short_description)
+
+  df_row_as_list <- as.list(df_row)
+  df_row_as_list$sources <- strsplit(df_row_as_list$sources, ";")[[1]]
+  df_row_as_list$links <- strsplit(df_row_as_list$links, ";")[[1]]
+
+  # Create directory (if it does not exist yet):
+  dir.create(file.path(getwd(), "json_export"), showWarnings = FALSE)
+  dir.create(file.path(paste0(file.path(getwd()) , "/json_export"), program), showWarnings = FALSE)
+
+  writeLines(rjson::toJSON(df_row_as_list, indent = 1), paste0("./json_export/", program, "/program.json"))
+}
+
+exportCategoriesJSON <- function() {
+  if (exists("order_of_categories")) {
+    # Create directory (if it does not exist yet):
+    dir.create(file.path(getwd(), "json_export"), showWarnings = FALSE)
+    writeLines(rjson::toJSON(order_of_categories, indent = 1),"./json_export/categories.json")
+  }
+  else {
+    print("Order of categories not found. Cannot export categories.json Has assumptions.R been run?")
+  }
+}
+
+# This function calculates the MVPF of all possible combinations of assumptions. The resulting
+# json file can be read by the web visualization in the ./web/ folder. This function replaces the exportPlotCSV
+# function which creates one csv file per specification. We switch to JSON because this is easier to read for the browser.
+# Additionally, we add the option export individual programs. So we get a subfolder for each program, which contains a json
+# file for each specification
+exportPlotJSON <- function(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE) {
+
+
+  # Run with default assumption
+  source("assumptions.R")
+  results <- quietelyRunPrograms(programs, bootstrap)
+
+
+  # Check if ./csv_export/ directory exists. If not create it.
+  dir.create(file.path(getwd(), "json_export"), showWarnings = FALSE)
+
+  # Read variable_mapping.json
+  variable_mapping = rjson::fromJSON(file = "variable_mapping.json")
+
+  # Store relevant variables in a list
+  relevant_variables <- list()
+
+  # Store relevant results
+  store_relevant_results_in_JSON <- function(estimation_results, filename) {
+    for (j in 1:nrow(estimation_results)) {
+      current_program <- estimation_results[j, "program"]
+      current_program_results <- estimation_results[j,]
+      # Remove unnecesarry
+      if ((!length(relevant_variables[[current_program]]) == 1) || relevant_variables[[current_program]] == "") {
+        current_program_results <- current_program_results %>% select(all_of(relevant_variables[[current_program]]))
+      }
+      json_current_program <- rjson::toJSON(as.list(current_program_results), indent = 1)
+      writeLines(json_current_program, paste0("./json_export/", current_program, "/", filename, ".json"))
+    }
+  }
+
+  for (j in 1:length(programs)) {
+    current_program = programs[j]
+    # Create directory for each program
+    dir.create(file.path(paste0(file.path(getwd()) , "/json_export"), current_program), showWarnings = FALSE)
+
+    # Here we are looking for the program x in the variable_mapping json structure. If we find it we take note
+    # of the relevant paramters for this reform
+    program_found = FALSE
+    for (i in 1:length(variable_mapping)) {
+      if (variable_mapping[[i]]$program == current_program) {
+        relevant_variables[[current_program]] <- unique(c(names(variable_mapping[[i]]$willingness_to_pay),
+                                            names(variable_mapping[[i]]$government_net_costs)))
+        program_found = TRUE
+      }
+    }
+    if (!program_found) {
+      warning(paste0("No entry in variable_mappings.json was found for program ", current_program))
+      relevant_variables[[current_program]] <- ""
+    }
+  }
+
+  # Store the results from the default assumptions run
+  store_relevant_results_in_JSON(results, "default")
+
+  # Now work on all the possible combinations of the assumptions
+
+  possible_assumption_combinations <- expand.grid(assumption_list)
+
+  message("Running and Exporting the results of ", nrow(possible_assumption_combinations),
+          " specifications as json. This can take a while.\n")
+
+  start_time <- Sys.time()
+
+  foreach(i = 1:nrow(possible_assumption_combinations),
+          .export =  ls(globalenv())[!ls(globalenv()) %in% c("programs")], #this gets rid of some warnings
+          .packages = c("dplyr", "readxl")) %dopar% {
+    # Iterate over all possible assumption combinations
+
+    # First reset all assumptions back to default:
+    source("assumptions.R")
+
+    #Generate a string that summarizes the assumptions:
+    assumptions_string <- ""
+
+    assumptions <- colnames(possible_assumption_combinations)
+    for (j in 1:length(assumptions)) {
+      # Iterate over all assumptions:
+      if (!meta_assumptions) {
+        assign(assumptions[j], possible_assumption_combinations[i,j], envir = .GlobalEnv)
+      }
+      else {
+        setMetaAssumption(assumptions[j], possible_assumption_combinations[i,j])
+      }
+      #Generate a string that summarizes the assumptions:
+      assumptions_string <- paste0(assumptions_string, assumptions[j], possible_assumption_combinations[i,j])
+    }
+
+    # Now that the assumptions have been set, we can run the estimation
+    results <- quietelyRunPrograms(programs, bootstrap)
+
+    # Store the results in JSON with the appropriate filename
+    store_relevant_results_in_JSON(results, assumptions_string)
+  }
+  # Reset the assumptions.
+  source("assumptions.R")
+
+  message("Exporting results completed in ", difftime(Sys.time(), start_time, units='mins'), " minutes \n")
+}
+
 # This function calculates the MVPF of all possible combinations of assumptions. The resulting
 # csv file can be read by the web visualization in the ./web/ folder
-exportPlotCSV <- function(programs, assumption_list, bootstrap  = FALSE, meta_assumptions = TRUE) {
+exportPlotCSV <- function(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE) {
   # assumption list is a list that specifies all the possible assumptions for which the code should be run.
   # Example:
   # assumption_list = list(tax_rate = c(0.5,0.3), discount_rate = c(0.1,0.2))

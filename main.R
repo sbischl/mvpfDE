@@ -21,7 +21,8 @@ required_packages <- c("ggplot2",
                        "knitr",
                        "kableExtra",
                        "patchwork",
-                       "xtable")
+                       "xtable",
+                       "rjson")
 
 not_installed_packages <- required_packages[!required_packages %in% installed.packages()[, 1]]
 
@@ -267,7 +268,7 @@ cat("Robustness checks completed in ", difftime(Sys.time(), start_time, units='m
 
 # Exports all possible combinations of assumptions specified in getListOfAllMetaAssumptions().
 # Takes about 2 hours with 3 parallel threads. Only relevant for the web visualization.
-#exportPlotCSV(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE)
+exportAllJSON(programs)
 
 # Export Tables:
 exportLatexTables(plot_data)
