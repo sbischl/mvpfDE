@@ -26,3 +26,6 @@ UnifiedWelfareGer.iml
 
 # CSV export folder
 /csv_export/*
+
+# JSON export folder
+/json_export/*
