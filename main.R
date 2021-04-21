@@ -22,6 +22,7 @@ required_packages <- c("ggplot2",
                        "kableExtra",
                        "patchwork",
                        "xtable",
+                       "jsonlite",
                        "rjson")
 
 not_installed_packages <- required_packages[!required_packages %in% installed.packages()[, 1]]
