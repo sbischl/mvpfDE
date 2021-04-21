@@ -12,36 +12,39 @@ const cost_upper_cutoff = 3
 const wtp_lower_cutoff = -1
 const wtp_upper_cutoff = 3
 
-// Generate a global chart variable that can always be accessed:
+// Headline Fonts and Font size
+const headline_font = "Source Sans Pro";
+const headline_fontsize = 20;
+
+// Generate global variables pointing to each of the chart objects to later modify those
 var mvpfChart;
 var governmentCostChart;
 var wtpChart;
 var wtpCostChart;
 
-const headline_font = "Source Sans Pro";
-const headline_fontsize = 20;
-
 // Store programHeadline in global so that we can update the MVPF
 var programHeadLine
-//Store barChartSuperDiv's in a array
+//Store barChartSuperDiv's (Divs that hold the Bar Charts) in a array
 var barChartSuperDivArray;
-// Currently displayed Program:
+// String reference to the currently displayed program:
 var currently_displayed_program;
-
 
 // Bar Chart Div. This one has to be dynamically updated.
 var chartDiv = document.querySelector("#barChartDiv")
 
-// Count Tooltip calls;
+// Count Tooltip calls  (required to deal with multiple programs located at the exact same location)
 var tooltip_counter = 1;
 
-// Categories (in order that they are displayed in the legend). These are loaded from /data/categories.json:
+// Categories (in order that they are displayed in the legend). These are loaded from data/categories.json:
 var categories;
 
-// Store the mapping of willingness to pay and government net cost in a JSON object:
+// Store the additional paramters of each policy. These are loaded from data/programs.json:
+var additional_program_info
+
+// Store the mapping of willingness to pay and government net cost in a JSON object. (loaded from data/variable_mapping)
 var variable_mapping;
 
-// Store the colors used for the Graph;
+// Store the colors used for the Graph (loaded from data/colors.json);
 var colors;
 
 // Store a unmodified, easy to access version of all programs:
@@ -51,6 +54,7 @@ var unmodified_dataset;
 var category_counter_mvpf = 0;
 var bar_counter = 1;
 
+// Simple helper function which loads a url to a json file into a js object
 async function loadJSON(url) {
     var json;
     await fetch(url).then(response => {
@@ -59,6 +63,47 @@ async function loadJSON(url) {
     return json;
 }
 
+async function readjson(assumption_string) {
+    // depends on additional_program_info being loaded
+
+    // This will be the array carrying the data
+    var json_as_array;
+
+    // First we need to get a list of all programs. Where the entries are strings
+    var programs = additional_program_info.map(program => {
+        return program.program_identifier;
+    });
+
+    // Individual json requests to all of the programs
+    var requests = programs.map(program => {
+        // Note: usually one would expect that this code runs the loadJSON and stores the
+        // result in requests. This is not what we want, as the http requests should be
+        // run in parallel for better performance. Fortunately, this is not what is happening. loadJSON is a async function. And async functions return promises. which are not automatically resolved.
+        return loadJSON(document_root + "data/" + program + "/" + assumption_string + ".json");
+    });
+
+    // Resolve promises
+    await Promise.all(requests).then((result) => json_as_array = result);
+
+    for (var i = 0; i < json_as_array.length; i++) {
+        Object.assign(json_as_array[i], additional_program_info[i]);
+        // Rename program identifier to program. (For compatibility with the old solution)   
+        json_as_array[i]["program"] = json_as_array[i]["program_identifier"];
+        delete json_as_array[i]["program_identifier"];
+    }
+
+    unmodified_dataset = JSON.parse(JSON.stringify(json_as_array));
+
+    // sort by category & ensure that categories is defined already
+    if (typeof(categories) != "undefined") {
+        unmodified_dataset.sort(function(a, b){
+            return categories.indexOf(a.category) - categories.indexOf(b.category);
+        });
+    }
+    return json_as_array;
+}
+
+// function to readcsv files ... no longer in use
 async function readcsv(csv_location) {
     var csv_as_array;
 
@@ -186,8 +231,8 @@ function generateEmptyDataset(datasetLabel) {
 }
 
 async function updateGraphAssumptions() {
-    var csvLocation = getCSVLocation(getGraphAssumptions());
-    readcsv(csvLocation).then(function (csv) {
+    console.log(getGraphAssumptions().join(""));
+    readjson(getGraphAssumptions().join("")).then(function (csv) {
         updateGraphDataSet(csv);
         openTooltipCurrentProgram();
         // We also have to update the MVPF on the right side
@@ -431,7 +476,7 @@ function getCSVLocation(specifiedAssumptions) {
 
 function getGraphAssumptions() {
     // The assumption Select Box Ids have to be in the correct order!!
-    // The correct order is given by order of the assumptions in the csv files
+    // The correct order is given by order of the assumptions in the csv / json file names
     var assumptionSelectBoxesIds = ["discountRateAssumption", "taxRateAssumption", "returnsToSchoolingAssumption", "valueOfStatisticalLifeAssumption", "co2externality", "wage_growth_rate", "eti"];
     var specifiedAssumptions = [];
 
@@ -803,7 +848,7 @@ function drawMVPFChart(csv_as_array) {
         //But it works now!!!!!
         var activePoints = mvpfChart.getElementsAtEventForMode(evt, 'point', mvpfChart.options);
         var firstPoint = activePoints[0];
-        // activePoints is undefined in case no point is pressed. if(undefined) is false, this if condition prevents
+        // activePoints is undefined in case no point is pressed. if(undefined) is false, this condition prevents
         // the code from being executed if nothing is clicked.
         if (activePoints[0]) {
             var clicked_program = mvpfChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index].program;
@@ -959,8 +1004,8 @@ function generateSingleProgramHTML(program) {
 
     //Cite papers
     var html = "<span style=\"font-family: "+ headline_font + "; font-size:"+ headline_fontsize + "px;\"><strong>Relevant Literature:</strong></span> <br>"
-    var links = program_data.Links.split(";");
-    var authors = program_data.Papers.split(";");
+    var links = program_data.links.split(";");
+    var authors = program_data.sources.split(";");
     var i;
     for (i = 0; i < authors.length; i++) {
         html += "<span style=\"color: rgb(102,102,102);\">" + 
@@ -1011,23 +1056,21 @@ function main() {
     3. the colors
     4. the categories
     */
-
     Promise.all([
-        readcsv(document_root.concat("/csv/default.csv")),
-        loadJSON("/data/variable_mapping.json"),
-        loadJSON("/data/colors.json"),
-        loadJSON("/data/categories.json")
-    ]).then((returnValues) => {
-        csv = returnValues[0];
-        variable_mapping = returnValues[1];
-        colors = returnValues[2];
-        categories = returnValues[3];
-
-        // The unmodified dataset is usually sorted in readcsv. However, this depends on the categories being loaded, which they are initially not. Therefore
-        // do the sort here
-        unmodified_dataset.sort(function(a, b){
-            return categories.indexOf(a.category) - categories.indexOf(b.category)});
-
+        loadJSON(document_root + "data/programs.json"),
+        loadJSON(document_root + "data/categories.json")
+    ]).then(return_values => {
+        additional_program_info = return_values[0];
+        categories = return_values[1];
+        return Promise.all([
+            readjson("default"),
+            loadJSON(document_root + "data/variable_mapping.json"),
+            loadJSON(document_root + "data/colors.json")
+        ]);
+    }).then((return_values) => {
+        csv = return_values[0];
+        variable_mapping = return_values[1];
+        colors = return_values[2];
         drawMVPFChart(csv);
         populatePrograms();
         populateCategories();
