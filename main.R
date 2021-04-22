@@ -269,7 +269,7 @@ cat("Robustness checks completed in ", difftime(Sys.time(), start_time, units='m
 
 # Exports all possible combinations of assumptions specified in getListOfAllMetaAssumptions().
 # Takes about 2 hours with 3 parallel threads. Only relevant for the web visualization.
-exportAllJSON(programs)
+# exportJSON(programs)
 
 # Export Tables:
 exportLatexTables(plot_data)
