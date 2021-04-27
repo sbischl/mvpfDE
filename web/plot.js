@@ -64,9 +64,9 @@ async function loadJSON(url) {
 }
 
 async function readjson(assumption_string) {
-    // depends on additional_program_info being loaded
+    // depends on additional_program_info being loaded as we need some way of determining which government policies exist before this function can be called
 
-    // This will be the array carrying the data
+    // This will be the array carrying the data. It should be compatible to the array returned from readcsv with the only difference that the json format omits all the keys with NA values.
     var json_as_array;
 
     // First we need to get a list of all programs. Where the entries are strings
@@ -82,8 +82,10 @@ async function readjson(assumption_string) {
         return loadJSON(document_root + "data/" + program + "/" + assumption_string + ".json");
     });
 
-    // Resolve promises
+    // Resolve promises in parallel
     await Promise.all(requests).then((result) => json_as_array = result);
+
+    // This loop merges the loaded ddata with the details about each reform (description, sources, age etc..) form programs.json. The resulting array of objects then contains all relevant data.
 
     for (var i = 0; i < json_as_array.length; i++) {
         Object.assign(json_as_array[i], additional_program_info[i]);
@@ -142,6 +144,7 @@ function generateDatasets(csv_as_array) {
     var datasets = [];
     var i;
 
+    // Sort by category
     csv_as_array.sort(function(a, b) {
         return categories.indexOf(a.category) - categories.indexOf(b.category);
     });
@@ -165,10 +168,11 @@ function generateDatasets(csv_as_array) {
         correctDataset.data.push(current_observation);
     }
 
-    // Now the csv has been read. Apply the censoring
+    // Now the csv has been read. Apply the censoring. That means convert infinite values to some number (e.g.) which will act as infinity on the chart.
     censorValues(datasets);
 
     // thx @https://stackoverflow.com/questions/13304543/
+    // Again sort by category
     datasets.sort(function(a, b){
         return categories.indexOf(a.label) - categories.indexOf(b.label);
     });
@@ -241,6 +245,7 @@ async function updateGraphAssumptions() {
 }
 
 function updateProgramHeadLine() {
+    // this function manipulates the HTML of the Bar Charts
     var program_data = getUnmodifiedbyIdentProgram(currently_displayed_program)
     var mvpf_to_print = program_data["mvpf"] == "Inf" ? "∞" : parseFloat(program_data["mvpf"]).toFixed(2);
     var current_html = programHeadLine.innerHTML;
@@ -431,13 +436,14 @@ function getScales(variable,
 }
 
 function updateGraphDataSet(csv_as_array) {
-    // Update the main Chart
+    // Update the main Chart by updating the data of each dataset
     var updatedDatasets = generateDatasets(csv_as_array);
     var i;
     for (i = 0; i < updatedDatasets.length; i++) {
         mvpfChart.data.datasets[i].data = updatedDatasets[i].data;
     }
     mvpfChart.update();
+
     // Update Bar Charts
     var range = getScalesMinMax(currently_displayed_program);
 
@@ -534,6 +540,7 @@ function openTooltip(program) {
     var coordinates;
     var i = 0
     while (true) {
+        // Use infinite loop and try catch here because I could not find an easy way of determining the number of DatasetMetas. The current code looks at the next meta until an exception is thrown.
         try {
             var currentDataSetMeta = mvpfChart.getDatasetMeta(i);
             // Check if program is in this Meta:
@@ -553,6 +560,7 @@ function openTooltip(program) {
     }
 
     // Thx; @jwerre https://stackoverflow.com/questions/39283177/programmatically-open-and-close-chart-js-tooltip
+    // Open Tooltip by simulating a mouse press
     var mouseMoveEvent, rectangle;
     rectangle = mvpfChart.canvas.getBoundingClientRect();
 
@@ -561,7 +569,6 @@ function openTooltip(program) {
         clientY: rectangle.top + coordinates.y
     });
     mvpfChart.canvas.dispatchEvent(mouseMoveEvent);
-
 }
 
 function getUnmodifiedProgram(program_name) {
@@ -586,6 +593,7 @@ function getUnmodifiedbyIdentProgram(programIdent) {
 
 
 function selectColor(number, background = false) {
+    // returns a string in the format rgba(123,123,123,0.6)
     background_opa = 0.7
     foreground_opa = 0.9
     if (number > colors.length) {
@@ -613,9 +621,11 @@ function addAllPositivesSubtractAllNegatives(array) {
 }
 
 function getScalesMinMax(program) {
+    // we want the same scale on all of the bar plots. To ensure this we calculate the required min length of the x-axis for each plot and apply the largest to all.
     var relevant_datapoint = unmodified_dataset.find(function (datapoint) {
         return (datapoint.program === program);
     });
+
     var max = addAllPositivesSubtractAllNegatives([
         Math.abs(parseFloat(relevant_datapoint["willingness_to_pay"]),
             -Math.abs(parseFloat(relevant_datapoint["government_net_costs"])))
@@ -701,6 +711,7 @@ function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
     // Get Plotting range
     var range = getScalesMinMax(program);
 
+    // Check if the screen size is small
     var smallscreen = jQuery(window).width() < 1450 ? true : false
     barChart = new Chart(chartElement, {
         type: 'bar',
@@ -1027,10 +1038,12 @@ function generateSingleProgramHTML(program) {
 }
 
 function populatePrograms() {
+    // adds available programs to the programs select box
     var selection = document.querySelector('#highlightProgram');
     var i;
-    for (i in variable_mapping) {
-        var current_program = getUnmodifiedbyIdentProgram(variable_mapping[i].program);
+    for (i in unmodified_dataset) {
+        console.log(i);
+        var current_program = getUnmodifiedbyIdentProgram(unmodified_dataset[i].program);
         var option = document.createElement("option");
         option.value = current_program.program;
         option.innerHTML = current_program.program_name;
@@ -1039,6 +1052,7 @@ function populatePrograms() {
 }
 
 function populateCategories() {
+    // adds available categories to the categories select box
     var selection = document.querySelector('#highlightCategory');
     var i;
     for (i in categories) {
@@ -1050,12 +1064,15 @@ function populateCategories() {
 }
 
 function main() {
-    /* Load the required data asyncronously. That is, load:
-    1. readcsv(document_root.concat("/csv/default.csv"))
-    2. the variable mapping
-    3. the colors
-    4. the categories
+    /* Load the required data mostly asyncronously.
+    First load programs, and categories. readjson depends on these being already loaded.
+    Then (simultaneously):
+    1. readjson("default") -> load the default spec of each program
+    2. the variable mapping -> loads the composition of the net cost and wtp
+    3. the colors -> loads the colors used in the plot
+    4. the categories -> loads the categories. The nth category is displayed in the nth color.
     */
+
     Promise.all([
         loadJSON(document_root + "data/programs.json"),
         loadJSON(document_root + "data/categories.json")

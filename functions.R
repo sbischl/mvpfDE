@@ -2267,7 +2267,7 @@ exportJSON <- function(programs = getCompletePrograms(),
   exportReformJSON(all_programs)
   exportCategoriesJSON()
   exportPlotJSON(programs, only_default_specification = only_default_specification)
-  file.copy("variable_mapping.json", "./json_export/variable_mapping.json")
+  file.copy("variable_mapping.json", "./json_export/variable_mapping.json", overwrite = T)
 }
 
 exportReformJSON <- function(programs = getCompletePrograms()) {
