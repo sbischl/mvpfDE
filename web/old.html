@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MVPF DE</title>
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.11/jquery.csv.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.0.0-beta/chart.min.js"></script>
+    <link rel="icon" href="icon.png">
+    <link href='https://fonts.googleapis.com/css?family=Open Sans' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Source Sans Pro' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
+
+<body style="font-family: Roboto"></body>
+
+
+<link id="stylesheet" rel="stylesheet" href="style_old.css">
+</head>
+
+<body>
+    <div id="headLine">
+        The Value of Government Expenditure in Germany
+    </div>
+
+    <div id="leftSide" onmouseover="openTooltipCurrentProgram()">
+        <div class="barHeadLine">Highlight Program:</div>
+        <div class="plotSettingsBox">
+            <select id="highlightProgram" class="selectBox" onchange="highlightProgram(options[this.selectedIndex].value)">
+                <option value="noSelection">Select a program</option>
+            </select>
+        </div>
+        <div class="barHeadLine">Highlight Category:</div>
+        <div class="plotSettingsBox">
+            <select id="highlightCategory" class="selectBox" onchange="highlightCategory(options[this.selectedIndex].value)">
+                <option value="noSelection">Select a category</option>
+            </select>
+        </div>
+        <br>
+        <div class="barHeadLine">Chart Options:</div>
+        <div class="plotSettingsBox">
+            <label for="yAxis">Vertical axis variable:</label>
+            <br>
+            <select id="yAxis" class="selectBox"
+                onchange="updateAxis('y', options[this.selectedIndex].value, options[this.selectedIndex].innerHTML)">
+                <option value="mvpf">Marginal value of public funds</option>
+                <option value="government_net_costs_per_program_cost">Net cost per euro spent</option>
+                <option value="willingness_to_pay_per_program_cost">Willingness to pay per euro spent</option>
+            </select>
+        </div>
+        <div class="plotSettingsBox">
+            <label for="xAxis">Horizontal axis variable:</label>
+            <br>
+            <select id="xAxis" class="selectBox" onchange="updateAxis('x', options[this.selectedIndex].value, options[this.selectedIndex].innerHTML)">
+                <option value="year">Year</option>
+                <option value="average_age_beneficiary">Average age of beneficiaries</option>
+                <option value="average_earnings_beneficiary">Average earnings of beneficiaries</option>
+            </select>
+        </div>
+        <br>
+        <div class="barHeadLine">Assumptions:</div>
+        <div class="plotAssumptionsBox">
+            <label for="taxRateAssumption">Tax rate:</label>
+            <br>
+            <select id="taxRateAssumption" class="selectBox" onchange="updateGraphAssumptions()">
+                <option value="tax_rate0">0%</option>
+                <option value="tax_rate10">10%</option>
+                <option value="tax_rate30">30%</option>
+                <option value="tax_rate50">50%</option>
+                <option value="tax_ratenonlinear" selected>German tax system</option>
+                <option value="tax_rateincometaxonly">Only income tax</option>
+            </select>
+        </div>
+    
+        <div class="plotAssumptionsBox">
+            <label for="discountRateAssumption">Discount rate:</label>
+            <br>
+            <select id="discountRateAssumption" class="selectBox" onchange="updateGraphAssumptions()">
+                <option value="discount_rate7">7%</option>
+                <option value="discount_rate3" selected>3%</option>
+                <option value="discount_rate1">1%</option>
+            </select>
+        </div>
+    
+        <div class="plotAssumptionsBox">
+            <label for="returnsToSchoolingAssumption">Return to additional year of schooling:</label>
+            <br>
+            <select id="returnsToSchoolingAssumption" class="selectBox" onchange="updateGraphAssumptions()">
+                <option value="returns_to_schooling5">5%</option>
+                <option value="returns_to_schooling7">7%</option>
+                <option value="returns_to_schooling11">11%</option>
+                <option value="returns_to_schoolingIAB" selected>IAB data</option>
+            </select>
+        </div>
+
+        <div class="plotAssumptionsBox">
+            <label for="valueOfStatisticalLifeAssumption">Value of statistical life:</label>
+            <br>
+            <select id="valueOfStatisticalLifeAssumption" class="selectBox" onchange="updateGraphAssumptions()">
+                <option value="value_of_statistical_life1million">1 Million</option>
+                <option value="value_of_statistical_life2.5million" selected>2.5 Million</option>
+                <option value="value_of_statistical_life5million">5 Million</option>
+            </select>
+        </div>
+
+        <div class="plotAssumptionsBox">
+            <label for="co2externality">Valuation of saving a ton of CO<sub>2</sub></label>
+            <br>
+            <select id="co2externality" class="selectBox" onchange="updateGraphAssumptions()">
+                <option value="co2_externality0">0€</option>
+                <option value="co2_externality50">50€</option>
+                <option value="co2_externality100" selected>100€</option>
+                <option value="co2_externality250">250€</option>
+            </select>
+        </div>
+
+        <div class="plotAssumptionsBox">
+            <label for="wage_growth_rate">Wage growth rate</label>
+            <br>
+            <select id="wage_growth_rate" class="selectBox" onchange="updateGraphAssumptions()">
+                <option value="wage_growth_rate0">0%</option>
+                <option value="wage_growth_rate05" selected>0.5%</option>
+                <option value="wage_growth_rate1">1%</option>
+                <option value="wage_growth_rate15">1.5%</option>
+            </select>
+        </div>
+
+        <div class="plotAssumptionsBox">
+            <label for="eti">Elasticity of taxable income</label>
+            <br>
+            <select id="eti" class="selectBox" onchange="updateGraphAssumptions()">
+                <option value="etibase" selected>Baseline</option>
+                <option value="eti0">ɛ = 0</option>
+                <option value="eti3">ɛ = 0.3</option>
+                <option value="eti6">ɛ = 0.6</option>
+            </select>
+        </div>
+    </div>
+    
+    <div id="mvpfChartDiv">
+        <canvas id="mvpfChart"></canvas>
+    </div>
+    
+    <div id="barChartDiv" onmouseover="openTooltipCurrentProgram()">
+        <br>
+        <div style= "text-align:center;"><strong>Hint:</strong> <span style="color:grey;">Click on one of the datapoints in the chart to reveal more
+            information about the program</span></div>
+    </div>
+
+    <script src="plot_old.js"></script>
+</body>
+
+</html>

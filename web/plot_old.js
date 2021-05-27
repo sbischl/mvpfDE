@@ -24,6 +24,8 @@ var wtpCostChart;
 
 // Store programHeadline in global so that we can update the MVPF
 var programHeadLine
+//Store barChartSuperDiv's (Divs that hold the Bar Charts) in a array
+var barChartSuperDivArray;
 // String reference to the currently displayed program:
 var currently_displayed_program;
 
@@ -233,6 +235,7 @@ function generateEmptyDataset(datasetLabel) {
 }
 
 async function updateGraphAssumptions() {
+    console.log(getGraphAssumptions().join(""));
     readjson(getGraphAssumptions().join("")).then(function (csv) {
         updateGraphDataSet(csv);
         openTooltipCurrentProgram();
@@ -250,6 +253,7 @@ function updateProgramHeadLine() {
     var start = current_html.indexOf("MVPF = ");
     var end = current_html.indexOf("</span>");
     var toReplace = current_html.substring(start + 6, end);
+    console.log(toReplace);
     var current_html = current_html.replace(toReplace, " " + mvpf_to_print);
     programHeadLine.innerHTML = current_html;
 }
@@ -278,8 +282,6 @@ function getScales(variable,
                     display: true,
                     labelString: yLab
                 },
-                suggestedMin: lower_cutoff,
-                suggestedMax: infinity_cutoff + 1,
                 ticks: {
                     min: lower_cutoff,
                     max: infinity_cutoff,
@@ -326,8 +328,6 @@ function getScales(variable,
                     display: true,
                     labelString: yLab
                 },
-                suggestedMin: wtp_lower_cutoff,
-                suggestedMax: wtp_upper_cutoff,
                 ticks: {
                     min: wtp_lower_cutoff,
                     max: wtp_upper_cutoff,
@@ -371,8 +371,6 @@ function getScales(variable,
                     display: true,
                     labelString: yLab
                 },
-                suggestedMin: cost_lower_cutoff,
-                suggestedMax: cost_upper_cutoff,
                 ticks: {
                     min: cost_lower_cutoff,
                     max: cost_upper_cutoff,
@@ -501,20 +499,7 @@ function highlightProgram(program) {
     openTooltip(program);
 }
 
-function highlightCategory(options) {
-    //This function needs to get passed the options argument from the select / select picker like:
-    // onchange="highlightCategory(options)"
-    for (let i = 0; i < options.length; i++) {
-        if (options[i].selected === false) {
-            mvpfChart._metasets[i].hidden = true;
-        }
-        else {
-            mvpfChart._metasets[i].hidden = false;
-        }
-    }
-    mvpfChart.update();
-    /*
-    console.log(category);
+function highlightCategory(category) {
     for (var i = 0; i < mvpfChart._metasets.length; i++) {
         var current_metaset = mvpfChart._metasets[i];
         if (current_metaset._dataset.label == category) {
@@ -524,9 +509,8 @@ function highlightCategory(options) {
     }
     console.log("Category to be highlighted not present in graph. Show all");
     hideMetaSetsExcept(-1);
-    */
 }
-/*
+
 function hideMetaSetsExcept(number) {
     // if number is positive, hides all metasets in the graph except number. If negative hides none, but rather makes all visiable
     for (var i = 0; i < mvpfChart._metasets.length; i++) {
@@ -544,7 +528,6 @@ function hideMetaSetsExcept(number) {
     }
     mvpfChart.update();
 }
-*/
 
 function openTooltipCurrentProgram() {
     if (currently_displayed_program) {
@@ -941,76 +924,27 @@ function generateProgramsHTML() {
 }
 
 function generateLeftSideHTMLCharts(program) {
-    generateSingleProgramHTML(program)
-
+    chartDiv.innerHTML = "";
     bar_counter = 1;
-    governmentCostChart = drawBarChart(unmodified_dataset, "government_net_costs", program, document.querySelector("#costgraph"));
-    wtpChart = drawBarChart(unmodified_dataset, "willingness_to_pay", program, document.querySelector("#wtpgraph"));
-    wtpCostChart = drawBarChart(unmodified_dataset, "mvpf", program, document.querySelector("#wtpcostgraph"));
+    var html = generateSingleProgramHTML(program);
+    chartDiv.appendChild(html.singleProgramDiv);
+    governmentCostChart = drawBarChart(unmodified_dataset, "government_net_costs", program, html.chartElements[0]);
+    wtpChart = drawBarChart(unmodified_dataset, "willingness_to_pay", program, html.chartElements[1]);
+    wtpCostChart = drawBarChart(unmodified_dataset, "mvpf", program, html.chartElements[2]);
     
     // Increase size of bar Charts if legend has to many elements:
-    let chartArray = [wtpChart, governmentCostChart, wtpCostChart];
-    let barChartDivArray = [document.querySelector("#wtpgraphdiv"), document.querySelector("#costgraphdiv"), document.querySelector("#wtpcostgraphdiv")]
-    let screensize = jQuery(window).width();
-    let effect_size = 35 * (500 / screensize);
-    for (let i = 0; i < chartArray.length; i++) {
+    var chartArray = [governmentCostChart, wtpChart, wtpCostChart];
+    var i;
+    var screensize = jQuery(window).width();
+    var effect_size = 35 * (500 / screensize);
+    for (i = 0; i < chartArray.length; i++) {
         legendItems = chartArray[i]._sortedMetasets.length;
         if (legendItems > 3) {
-            barChartDivArray[i].style.height = (160 + (legendItems - 3) * effect_size) + "px" 
+            barChartSuperDivArray[i].style.height = (160 + (legendItems - 3) * effect_size) + "px" 
         }
     }
 }
 
-function generateSingleProgramHTML(program) {
-    program_data = getUnmodifiedbyIdentProgram(program);
-    
-    
-    // Generate author citiations
-    let links = program_data.links.split(";");
-    let authors = program_data.sources.split(";");
-    let listElements = "";
-    for (let i = 0; i < authors.length; i++) {
-        listElements += `<li>${authors[i]}, <a href="${links[i]}" class="btn btn-primary linkbutton" target="_blank">URL</a></li>`
-    }
-
-    // Generate Description, Bar Chart divs etc..
-    rightHandSideDiv = document.querySelector("#rightsidebarcharts");
-    rightHandSideDiv.innerHTML = `
-    <h3>${program_data.program_name}<hr style="margin-bottom: 5px"><small class="text-muted" style="font-style: italic;">MVPF = ${program_data["mvpf"] == "Inf" ? "∞" : parseFloat(program_data["mvpf"]).toFixed(2)}</small></h3>
-
-            <button type="button" class="btn collapseicon" data-toggle="collapse"
-              data-target="#refdescription">Description</button>
-            <div id="refdescription" class="collapse show"><p>${program_data.short_description}</p></div>
-
-            <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#costgraphdiv">Willingness
-              to Pay:</button>
-            <div class="barChartDiv collapse show" id="costgraphdiv">
-            <canvas id="costgraph"></canvas>
-            </div>
-
-            <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#wtpgraphdiv">Government Net
-              Cost:</button>
-            <div class="barChartDiv collapse show" id="wtpgraphdiv">
-            <canvas id="wtpgraph"></canvas>
-            </div>
-
-            <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#wtpcostgraphdiv">Government Net Cost & Willingness to Pay:</button>
-            <div class="barChartDiv collapse show" id="wtpcostgraphdiv">
-            <canvas id="wtpcostgraph"></canvas>
-            </div>
-
-            <button type="button" class="btn collapseicon" data-toggle="collapse"
-              data-target="#relliterature">Relevant Literature:</button>
-            <div id="relliterature" class="collapse show">
-            <ul>
-
-            </ul>
-            ${listElements}
-            </div>
-      `
-}
-
-/*
 function generateSingleProgramHTML(program) {
     program_data = getUnmodifiedbyIdentProgram(program);
 
@@ -1102,22 +1036,19 @@ function generateSingleProgramHTML(program) {
         chartElements: [governmentCostChartElement, wtpChartElement, wtpCostChartElement]
     };
 }
-*/
 
 function populatePrograms() {
     // adds available programs to the programs select box
     var selection = document.querySelector('#highlightProgram');
     var i;
     for (i in unmodified_dataset) {
+        console.log(i);
         var current_program = getUnmodifiedbyIdentProgram(unmodified_dataset[i].program);
         var option = document.createElement("option");
         option.value = current_program.program;
         option.innerHTML = current_program.program_name;
-        option.setAttribute("data-subtext",current_program.category)
         selection.appendChild(option);
     }
-    // The select picker needs to be updated
-    jQuery('#highlightProgram').selectpicker('refresh');
 }
 
 function populateCategories() {
@@ -1128,23 +1059,11 @@ function populateCategories() {
         var option = document.createElement("option");
         option.value = categories[i];
         option.innerHTML = categories[i];
-        option.setAttribute("selected","")
         selection.appendChild(option);
     }
-    // The select picker needs to be updated
-    jQuery('#highlightCategory').selectpicker('refresh');
 }
 
 function main() {
-    // Show collapse if screen size large enough:
-    if (jQuery(window).width() > 960) {
-        let chartOptions = document.querySelector("#chartOptions");
-        chartOptions.classList.add("show");
-        let assumptions = document.querySelector("#assumptions");
-        assumptions.classList.add("show");
-    }
-
-
     /* Load the required data mostly asyncronously.
     First load programs, and categories. readjson depends on these being already loaded.
     Then (simultaneously):
