@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
   <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/css/bootstrap-select.min.css">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=1">
   <link rel="icon" href="icon.png">
   <link href='https://fonts.googleapis.com/css?family=Open Sans' rel='stylesheet'>
   <title>The Value of Government Expenditure in Germany</title>
@@ -24,7 +24,7 @@
 <body>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.0.0-beta/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.3.0/chart.min.js"></script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js "></script>
@@ -33,7 +33,7 @@
   <div class="container-fluid ">
     <div class="row">
       <div class="col-pixel-width-100" onmouseover="openTooltipCurrentProgram()">
-        <button type="button" class="collapseicon btn" data-toggle="collapse" data-target="#chartOptions">Chart
+        <button type="button" id = "chartOptionsButton" class="collapseicon btn" data-toggle="collapse" data-target="#chartOptions">Chart
           Options</button>
         <div id="chartOptions" class="collapse">
           <div class="chartsetting">
@@ -165,7 +165,7 @@
       </div>
     </div>
   </div>
-  <script src="plot.js"></script>
+  <script src="plot.js?v=1"></script>
 </body>
 
 </html>

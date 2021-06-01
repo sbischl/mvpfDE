@@ -1,5 +1,5 @@
 :root {
-    --primary-color: rgb(74, 80, 207); /*#6fb2ec;*/
+    --primary-color: #2b6ebe; /*#6fb2ec;*/
     --secondary-color: #c3e3ff;
 }
 
@@ -16,13 +16,14 @@ body {
 .collapseicon{
     display: block;
     clear: both;
-    margin-top: 10px;
+    margin-top: 5px;
     margin-bottom: 0px;
     padding-left: 0px;
     background-color: transparent;
     font-size: 1.3rem;
     box-shadow: transparent;
     font-weight: 500;
+    border-radius: 7px;
 }
 
 .collapseicon:hover {
@@ -35,10 +36,16 @@ body {
     box-shadow: none;
 }
 
+.form-control:focus {
+    border-color:var(--primary-color);
+    box-shadow: 0 0 0 .1rem var(--primary-color);
+ }
+
 #mvpfChartDiv {
     padding: 20px;
     width: 97%;
-    height: 60vh;
+    height: 80vh;
+    max-height: 900px;
     margin-bottom: 50px;
 }
 
@@ -136,6 +143,7 @@ body {
     color: black;
     font-weight: 500;
     border-color: white;
+    border-radius: 7px;
 }
 
 .linkbutton:hover{
@@ -153,6 +161,9 @@ body {
     #pageTitle {
         font-size: 17px;
     }
+    #chartOptionsButton {
+       margin-top : 20px;
+    }
     .dropdown-menu {
         max-width: 300px;
     }
@@ -164,7 +175,3 @@ body {
 .dropdown-item.active, .dropdown-item:active {
     background-color: var(--primary-color);
 }
-
-
-
-

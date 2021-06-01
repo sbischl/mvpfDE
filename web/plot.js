@@ -105,7 +105,7 @@ async function readjson(assumption_string) {
 
 // function to readcsv files ... no longer in use
 async function readcsv(csv_location) {
-    var csv_as_array;
+    let csv_as_array;
 
     // This fixes the broken Umlaute: Thx @https://stackoverflow.com/questions/15333711/specials-chars-from-csv-to-javascript
     // Now this breaks them. I dunno what I have changed. These encoding problems are weird
@@ -137,10 +137,10 @@ async function readcsv(csv_location) {
 
 function generateDatasets(csv_as_array) {
     // This stores the name or in my context the type of program (i.e. something like education policy, tax reform ...) of all the datasets we need to construct
-    var datasetsLabels = [];
+    let datasetsLabels = [];
     // The actual dataSets that will eventually be returned
-    var datasets = [];
-    var i;
+    let datasets = [];
+    let i;
 
     // Sort by category
     csv_as_array.sort(function(a, b) {
@@ -148,7 +148,7 @@ function generateDatasets(csv_as_array) {
     });
 
     for (i = 0; i < csv_as_array.length; i++) {
-        var current_observation = csv_as_array[i];
+        let current_observation = csv_as_array[i];
 
         // Check if the dataset already exists. If not add it.
         if (!datasetsLabels.includes(current_observation.category)) {
@@ -181,9 +181,9 @@ function generateDatasets(csv_as_array) {
 }
 
 function censorValues(datasets) {
-    var i;
-    var j;
-    var k;
+    let i;
+    let j;
+    let k;
     for (i = 0; i < datasets.length; i++) {
         current_dataset = datasets[i].data;
         for (j = 0; j < current_dataset.length; j++) {
@@ -243,25 +243,19 @@ async function updateGraphAssumptions() {
 
 function updateProgramHeadLine() {
     // this function manipulates the HTML of the Bar Charts
-    var program_data = getUnmodifiedbyIdentProgram(currently_displayed_program)
-    var mvpf_to_print = program_data["mvpf"] == "Inf" ? "∞" : parseFloat(program_data["mvpf"]).toFixed(2);
-    var current_html = programHeadLine.innerHTML;
-    // find pattern to replace
-    var start = current_html.indexOf("MVPF = ");
-    var end = current_html.indexOf("</span>");
-    var toReplace = current_html.substring(start + 6, end);
-    var current_html = current_html.replace(toReplace, " " + mvpf_to_print);
-    programHeadLine.innerHTML = current_html;
+    let program_data = getUnmodifiedbyIdentProgram(currently_displayed_program)
+    let mvpf_to_print = program_data["mvpf"] == "Inf" ? "∞" : parseFloat(program_data["mvpf"]).toFixed(2);
+    document.querySelector("#mvpfDisplay").innerHTML = `MVPF = ${mvpf_to_print}`;
 }
 
 function updateAxis(axis, value, label) {
     if (axis === "x") {
         // Update the value to plot
         mvpfChart.options.parsing.xAxisKey = value;
-        mvpfChart.options.scales = getScales(variable = value, xLab = label, ylab = mvpfChart.options.scales.y.scaleLabel.labelString);
     }
     else if (axis === "y") {
         mvpfChart.options.parsing.yAxisKey = value;
+        // If we update the y axis, we need to update the scales
         mvpfChart.options.scales = getScales(variable = value, xLab = mvpfChart.options.scales.x.scaleLabel.labelString, ylab = label);
     }
     mvpfChart.update();
@@ -274,6 +268,17 @@ function getScales(variable,
         return ({
             y: {
                 display: true,
+                grid: {
+                    /* Use this to make infinity line black. Commented out because the other axis draws over the infinity line causing a grey overlap
+                    color: (context) => {
+                        console.log("huii");
+                        if (context.tick.value === infinity_cutoff + 1) {
+                            return '#000000';
+                        }
+                        return "rgba(0, 0, 0, 0.1)";
+                    }
+                    */
+                },
                 scaleLabel: {
                     display: true,
                     labelString: yLab
@@ -302,7 +307,7 @@ function getScales(variable,
             },
             x: {
                 display: true,
-                gridLines: {
+                grid: {
                     display: false
                 },
                 scaleLabel: {
@@ -347,7 +352,7 @@ function getScales(variable,
             },
             x: {
                 display: true,
-                gridLines: {
+                grid: {
                     display: false
                 },
                 scaleLabel: {
@@ -392,7 +397,7 @@ function getScales(variable,
             },
             x: {
                 display: true,
-                gridLines: {
+                grid: {
                     display: false
                 },
                 scaleLabel: {
@@ -419,7 +424,7 @@ function getScales(variable,
             },
             x: {
                 display: true,
-                gridLines: {
+                grid: {
                     display: false
                 },
                 scaleLabel: {
@@ -439,15 +444,15 @@ function getScales(variable,
 
 function updateGraphDataSet(csv_as_array) {
     // Update the main Chart by updating the data of each dataset
-    var updatedDatasets = generateDatasets(csv_as_array);
-    var i;
-    for (i = 0; i < updatedDatasets.length; i++) {
+    let updatedDatasets = generateDatasets(csv_as_array);
+    
+    for (let i = 0; i < updatedDatasets.length; i++) {
         mvpfChart.data.datasets[i].data = updatedDatasets[i].data;
     }
     mvpfChart.update();
 
     // Update Bar Charts
-    var range = getScalesMinMax(currently_displayed_program);
+    let range = getScalesMinMax(currently_displayed_program);
 
     if (governmentCostChart) {
         updatedDatasets = generateBarData(csv_as_array, "government_net_costs", currently_displayed_program);
@@ -485,11 +490,10 @@ function getCSVLocation(specifiedAssumptions) {
 function getGraphAssumptions() {
     // The assumption Select Box Ids have to be in the correct order!!
     // The correct order is given by order of the assumptions in the csv / json file names
-    var assumptionSelectBoxesIds = ["discountRateAssumption", "taxRateAssumption", "returnsToSchoolingAssumption", "valueOfStatisticalLifeAssumption", "co2externality", "wage_growth_rate", "eti"];
-    var specifiedAssumptions = [];
+    let assumptionSelectBoxesIds = ["discountRateAssumption", "taxRateAssumption", "returnsToSchoolingAssumption", "valueOfStatisticalLifeAssumption", "co2externality", "wage_growth_rate", "eti"];
+    let specifiedAssumptions = [];
 
-    var i;
-    for (i = 0; i < assumptionSelectBoxesIds.length; i++) {
+    for (let i = 0; i < assumptionSelectBoxesIds.length; i++) {
         specifiedAssumptions.push(document.getElementById(assumptionSelectBoxesIds[i]).value);
     }
     return (specifiedAssumptions);
@@ -554,15 +558,15 @@ function openTooltipCurrentProgram() {
 
 function openTooltip(program) {
     // Find coordinates of point:
-    var coordinates;
-    var i = 0
+    let coordinates;
+    let i = 0
     while (true) {
         // Use infinite loop and try catch here because I could not find an easy way of determining the number of DatasetMetas. The current code looks at the next meta until an exception is thrown.
         try {
-            var currentDataSetMeta = mvpfChart.getDatasetMeta(i);
+            let currentDataSetMeta = mvpfChart.getDatasetMeta(i);
             // Check if program is in this Meta:
-            var j
-            var current_data = Object.values(currentDataSetMeta._dataset.data)
+            let j
+            let current_data = Object.values(currentDataSetMeta._dataset.data)
             for (j = 0; j < current_data.length; j++) {
                 if (current_data[j].program === program) {
                     coordinates = currentDataSetMeta.data[j].getCenterPoint();
@@ -578,7 +582,7 @@ function openTooltip(program) {
 
     // Thx; @jwerre https://stackoverflow.com/questions/39283177/programmatically-open-and-close-chart-js-tooltip
     // Open Tooltip by simulating a mouse press
-    var mouseMoveEvent, rectangle;
+    let mouseMoveEvent, rectangle;
     rectangle = mvpfChart.canvas.getBoundingClientRect();
 
     mouseMoveEvent = new MouseEvent('mousemove', {
@@ -589,8 +593,7 @@ function openTooltip(program) {
 }
 
 function getUnmodifiedProgram(program_name) {
-    var i;
-    for (i = 0; i < unmodified_dataset.length; i++) {
+    for (let i = 0; i < unmodified_dataset.length; i++) {
         if (unmodified_dataset[i].program_name == program_name) {
             return unmodified_dataset[i];
         }
@@ -599,8 +602,7 @@ function getUnmodifiedProgram(program_name) {
 }
 
 function getUnmodifiedbyIdentProgram(programIdent) {
-    var j;
-    for (j = 0; j < unmodified_dataset.length; j++) {
+    for (let j = 0; j < unmodified_dataset.length; j++) {
         if (unmodified_dataset[j].program == programIdent) {
             return unmodified_dataset[j];
         }
@@ -611,8 +613,8 @@ function getUnmodifiedbyIdentProgram(programIdent) {
 
 function selectColor(number, background = false) {
     // returns a string in the format rgba(123,123,123,0.6)
-    background_opa = 0.7
-    foreground_opa = 0.9
+    let background_opa = 0.7
+    let foreground_opa = 0.9
     if (number > colors.length) {
         console.log("Color not in range of supplied colors in colors.json");
         // Reuse last color in this case
@@ -623,9 +625,9 @@ function selectColor(number, background = false) {
 }
 
 function addAllPositivesSubtractAllNegatives(array) {
-    var negative = 0;
-    var positive = 0;
-    var i;
+    let negative = 0;
+    let positive = 0;
+    let i;
     for (i = 0; i < array.length; i++) {
         if (array[i] > 0) {
             positive += array[i];
@@ -639,18 +641,17 @@ function addAllPositivesSubtractAllNegatives(array) {
 
 function getScalesMinMax(program) {
     // we want the same scale on all of the bar plots. To ensure this we calculate the required min length of the x-axis for each plot and apply the largest to all.
-    var relevant_datapoint = unmodified_dataset.find(function (datapoint) {
+    let relevant_datapoint = unmodified_dataset.find(function (datapoint) {
         return (datapoint.program === program);
     });
 
-    var max = addAllPositivesSubtractAllNegatives([
+    let max = addAllPositivesSubtractAllNegatives([
         Math.abs(parseFloat(relevant_datapoint["willingness_to_pay"]),
             -Math.abs(parseFloat(relevant_datapoint["government_net_costs"])))
     ]);
-    var mappingEntry;
+    let mappingEntry;
 
-    var i;
-    for (i = 0; i < variable_mapping.length; i++) {
+    for (let i = 0; i < variable_mapping.length; i++) {
         if (variable_mapping[i].program === program) {
             mappingEntry = variable_mapping[i];
             break;
@@ -658,8 +659,8 @@ function getScalesMinMax(program) {
     }
 
     barComponents = mappingEntry["willingness_to_pay"];
-    var array = [];
-    var component;
+    let array = [];
+    let component;
     for (component in barComponents) {
         array.push(parseFloat(relevant_datapoint[component]));
     }
@@ -677,9 +678,9 @@ function getScalesMinMax(program) {
 }
 
 function generateBarData(csv_as_array, variable_to_plot, program) {
-    var datasets = [];
-    var barComponents;
-    var relevant_datapoint = unmodified_dataset.find(function (datapoint) {
+    let datasets = [];
+    let barComponents;
+    let relevant_datapoint = unmodified_dataset.find(function (datapoint) {
         return (datapoint.program === program);
     });
 
@@ -699,8 +700,7 @@ function generateBarData(csv_as_array, variable_to_plot, program) {
         bar_counter += 2;
         return (datasets);
     }
-    var i;
-    for (i = 0; i < variable_mapping.length; i++) {
+    for (let i = 0; i < variable_mapping.length; i++) {
         if (variable_mapping[i].program === program) {
             barComponents = variable_mapping[i][variable_to_plot];
             break;
@@ -726,13 +726,14 @@ function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
     Chart.defaults.font.family = 'Open Sans';
 
     // Get Plotting range
-    var range = getScalesMinMax(program);
+    let range = getScalesMinMax(program);
 
     // Check if the screen size is small
-    var smallscreen = jQuery(window).width() < 1450 ? true : false
+    let smallscreen = jQuery(window).width() < 1450 ? true : false
     barChart = new Chart(chartElement, {
         type: 'bar',
         data: {
+            labels: '.', // In ChartJS Beta 3.0 this could be left empty. If we leave it empty in 3.3, there is no graph drawn anymore. (And the tooltip is now shared for all areas of the chart in 3.3). 
             datasets: generateBarData(csv_as_array, variable_to_plot, program)
         },
         options: {
@@ -741,10 +742,28 @@ function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
             maintainAspectRatio: false,
             aspectRatio: smallscreen ? 2 : 4,
             //devicePixelRatio: 4, //Set this to save a high res png. Otherwise leave default
-            legend: {
-                position: 'bottom',
-                usePointStyle: true,
-                onClick: () => {} //This disables the ability to click on the legend and remove effects.
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    usePointStyle: true,
+                    onClick: () => {} //This disables the ability to click on the legend and remove effects.
+                },
+                tooltip: {
+                    enabled: true,
+                    displayColors: false,
+                    bodyColor: "black",
+                    backgroundColor: "white",
+                    borderWidth: 2,
+                    cornerRadius: 8,
+                    bodyFont: {weight: 600},
+                    borderColor: getComputedStyle(document.body).getPropertyValue('--primary-color'),
+                    mode: 'nearest',
+                    callbacks: {
+                        title: function (data) {
+                            return null;
+                        }
+                    }
+                }
             },
             scales: {
                 x: {
@@ -752,14 +771,16 @@ function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
                     ticks: {
                         maxTicksLimit: 3
                     },
-                    gridLines: {
-                        drawOnChartArea: false
+                    grid: {
+                        drawOnChartArea: false,
+                        lineWidth: 0,
+                        tickWidth: 1
                     },
                     min: -range,
                     max: range,
                     afterTickToLabelConversion: function(data) {
                         // this adds € signs to the tick marks on the x-axis.
-                        ticks = data.ticks;
+                        let ticks = data.ticks;
                         for (var i = 0; i < ticks.length; i++) {
                             ticks[i].label = ticks[i].label.replace(".", "placeholder").replace(",", ".").replace("placeholder", ",") + "€";
                         }
@@ -768,20 +789,7 @@ function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
                 },
                 y: {
                     stacked: variable_to_plot == "mvpf" ? false : true,
-                    gridLines: {
-                        drawBorder: false,
-                        display: false
-                    }
-                }
-            },
-            tooltips: {
-                enabled: true,
-                displayColors: false,
-                mode: 'nearest',
-                callbacks: {
-                    title: function (data) {
-                        return null;
-                    }
+                    display: false
                 }
             }
         }
@@ -795,9 +803,9 @@ function drawMVPFChart(csv_as_array) {
     Chart.defaults.font.family = 'Open Sans';
 
     // Number Of Programs at Tooltip.
-    var tooltip_number = 1;
+    let tooltip_number = 1;
 
-    var mvpfChartElement = document.getElementById('mvpfChart');
+    let mvpfChartElement = document.getElementById('mvpfChart');
     mvpfChart = new Chart(mvpfChartElement, {
         type: 'scatter',
         data: {
@@ -812,61 +820,74 @@ function drawMVPFChart(csv_as_array) {
                 xAxisKey: 'year'
             },
             scales: getScales("mvpf", "Year", "Marginal Value of Public Funds"),
-            legend: {
-                position: 'bottom',
-                usePointStyle: true,
-                labels: {
-                    filter: function(legendItem, chartData) {
-                        //return true;
-                        if (legendItem.text == "Other") {
-                            return false;
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    usePointStyle: true,
+                    labels: {
+                        filter: function(legendItem, chartData) {
+                            //return true;
+                            if (legendItem.text == "Other") {
+                                return false;
+                            }
+                            else {
+                                return true;
+                            }
                         }
-                        else {
-                            return true;
+                    }
+                },
+                tooltip: {
+                    enabled: true,
+                    displayColors: false,
+                    bodyColor: "black",
+                    titleColor: "black",
+                    backgroundColor: "white",
+                    borderWidth: 2,
+                    cornerRadius: 8,
+                    bodyFont: { weight: 500 },
+                    borderColor: getComputedStyle(document.body).getPropertyValue('--primary-color'),
+                    mode: 'point',
+                    callbacks: {
+                        title: function (data) {
+                            if (data.length > 1) {
+                                tooltip_number = data.length;
+                                tooltip_counter = 1;
+                                let title = data[0].dataset.data[data[0].dataIndex]["program_name"];
+                                for (let i = 1; i < data.length; i++) {
+                                    title += ` &\n${data[i].dataset.data[data[i].dataIndex]["program_name"]}`
+                                }
+                                return title;
+                            }
+                            tooltip_number = 1;
+                            tooltip_counter = 1;
+                            return data[0].dataset.data[data[0].dataIndex]["program_name"];
+                        },
+                        label: function (data) {
+                            // Get the name of the program. Since we have censored the data to draw the graph we need to look up the true values:
+                            let program_name = data.dataset.data[data.dataIndex]["program_name"];
+                            let unmodified_datapoint = getUnmodifiedProgram(program_name);
+                            let tooltip = [];
+                            let mvpfIsInfinity = unmodified_datapoint["mvpf"] == "Inf"
+    
+                            if (tooltip_number > 1) {
+                                tooltip.push(program_name + ":");
+                            }
+    
+                            tooltip.push("Willingness to Pay: " + +parseFloat(unmodified_datapoint["willingness_to_pay"]).toFixed(2) + "€");
+                            tooltip.push("Government Net Cost: " + +parseFloat(unmodified_datapoint["government_net_costs"]).toFixed(2) + "€");
+                            tooltip.push("MVPF: " + (mvpfIsInfinity ? "∞" : +parseFloat(unmodified_datapoint["mvpf"]).toFixed(2)));
+    
+                            if (tooltip_number > 1 & tooltip_counter < tooltip_number) {
+                                tooltip.push("");
+                            }
+                            tooltip_counter++;
+                            return tooltip;
                         }
                     }
                 }
             },
             hover: {
                 mode: "point"
-            },
-            tooltips: {
-                enabled: true,
-                displayColors: false,
-                mode: 'point',
-                callbacks: {
-                    title: function (data) {
-                        if (data.length > 1) {
-                            tooltip_number = data.length;
-                            tooltip_counter = 1;
-                            return null;
-                        }
-                        tooltip_number = 1;
-                        tooltip_counter = 1;
-                        return data[0].dataset.data[data[0].dataIndex]["program_name"];
-                    },
-                    label: function (data) {
-                        // Get the name of the program. Since we have censored the data to draw the graph we need to look up the true values:
-                        var program_name = data.dataset.data[data.dataIndex]["program_name"];
-                        var unmodified_datapoint = getUnmodifiedProgram(program_name);
-                        var tooltip = [];
-                        var mvpfIsInfinity = unmodified_datapoint["mvpf"] == "Inf" ? true : false
-
-                        if (tooltip_number > 1) {
-                            tooltip.push(program_name + ":");
-                        }
-
-                        tooltip.push("Willingness to Pay: " + +parseFloat(unmodified_datapoint["willingness_to_pay"]).toFixed(2) + "€");
-                        tooltip.push("Government Net Cost: " + +parseFloat(unmodified_datapoint["government_net_costs"]).toFixed(2) + "€");
-                        tooltip.push("MVPF: " + (mvpfIsInfinity ? "∞" : +parseFloat(unmodified_datapoint["mvpf"]).toFixed(2)));
-
-                        if (tooltip_number > 1 & tooltip_counter < tooltip_number) {
-                            tooltip.push("");
-                        }
-                        tooltip_counter++;
-                        return tooltip;
-                    }
-                }
             }
         }
     });
@@ -874,12 +895,12 @@ function drawMVPFChart(csv_as_array) {
     mvpfChartElement.onclick = function (evt) {
         //This is totally weird, see https://github.com/chartjs/Chart.js/issues/2292
         //But it works now!!!!!
-        var activePoints = mvpfChart.getElementsAtEventForMode(evt, 'point', mvpfChart.options);
-        var firstPoint = activePoints[0];
+        let activePoints = mvpfChart.getElementsAtEventForMode(evt, 'point', mvpfChart.options);
+        let firstPoint = activePoints[0];
         // activePoints is undefined in case no point is pressed. if(undefined) is false, this condition prevents
         // the code from being executed if nothing is clicked.
         if (activePoints[0]) {
-            var clicked_program = mvpfChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index].program;
+            let clicked_program = mvpfChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index].program;
             changeBarChartProgram(clicked_program);
         }
     };
@@ -890,8 +911,8 @@ function changeBarChartProgram(program) {
     generateLeftSideHTMLCharts(program);
 
     // Update Highlighted Program on left side panel:
-    var selection = document.querySelector('#highlightProgram');
-    for (var i = 0; i < selection.options.length; i++) {
+    let selection = document.querySelector('#highlightProgram');
+    for (let i = 0; i < selection.options.length; i++) {
         if (selection.options[i].value == program) {
             selection.selectedIndex = i;
         }
@@ -924,9 +945,9 @@ function generateProgramsHTML() {
     // This function can generate plots for all programs and add them to an html div element. This turned out to be complicated. 
     // I think I found a fix for the aspect ratio problem. But I like the simplicity of the current solution.
     //var allProgramsDiv = document.querySelector("#allProgram");
-    var allBarCharts = [];
+    let allBarCharts = [];
 
-    var i = 0;
+    let i = 0;
     for (i = 0; i < variable_mapping.length; i++) {
         var current_program = variable_mapping[i].program;
         singleHTML = generateSingleProgramHTML(current_program);
@@ -970,13 +991,13 @@ function generateSingleProgramHTML(program) {
     let authors = program_data.sources.split(";");
     let listElements = "";
     for (let i = 0; i < authors.length; i++) {
-        listElements += `<li>${authors[i]}, <a href="${links[i]}" class="btn btn-primary linkbutton" target="_blank">URL</a></li>`
+        listElements += `<li>${authors[i]} <a href="${links[i]}" class="btn linkbutton" target="_blank">LINK</a></li>`
     }
 
     // Generate Description, Bar Chart divs etc..
     rightHandSideDiv = document.querySelector("#rightsidebarcharts");
     rightHandSideDiv.innerHTML = `
-    <h3>${program_data.program_name}<hr style="margin-bottom: 5px"><small class="text-muted" style="font-style: italic;">MVPF = ${program_data["mvpf"] == "Inf" ? "∞" : parseFloat(program_data["mvpf"]).toFixed(2)}</small></h3>
+    <h3>${program_data.program_name}<hr style="margin-bottom: 5px"><small class="text-muted" id="mvpfDisplay" style="font-style: italic;">MVPF = ${program_data["mvpf"] == "Inf" ? "∞" : parseFloat(program_data["mvpf"]).toFixed(2)}</small></h3>
 
             <button type="button" class="btn collapseicon" data-toggle="collapse"
               data-target="#refdescription">Description</button>
@@ -1106,9 +1127,9 @@ function generateSingleProgramHTML(program) {
 
 function populatePrograms() {
     // adds available programs to the programs select box
-    var selection = document.querySelector('#highlightProgram');
-    var i;
-    for (i in unmodified_dataset) {
+    let selection = document.querySelector('#highlightProgram');
+    
+    for (let i in unmodified_dataset) {
         var current_program = getUnmodifiedbyIdentProgram(unmodified_dataset[i].program);
         var option = document.createElement("option");
         option.value = current_program.program;
@@ -1122,9 +1143,9 @@ function populatePrograms() {
 
 function populateCategories() {
     // adds available categories to the categories select box
-    var selection = document.querySelector('#highlightCategory');
-    var i;
-    for (i in categories) {
+    let selection = document.querySelector('#highlightCategory');
+
+    for (let i in categories) {
         var option = document.createElement("option");
         option.value = categories[i];
         option.innerHTML = categories[i];
