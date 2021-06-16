@@ -12,6 +12,7 @@ To add a new reform, two files and a folder have to created:
 This file contains all the logic necesarry to calculate the MVPF. 
 All of these `.R` files follow the same pattern. Read the explanation in `exampleProgram.R` for further details.
 3. Add a `.xlsx` excel file named `WhateverTheIdentifierIs.xlsx` to the estimates folder. A sample file which details the contents of this file is located in the sample_files folder.
+4. (Optional) To add the reform to the interactive Chart (see the web folder & https://mvpfde.de), a new entry to `variable_mapping.json` has to added. This file maps the return values of the `WhateverTheIdentifierIs.R` file to individual effects as displayed in the bar charts. For this to work, the willingness to pay and the government net cost need to be expressable as the sum of the other return values of the `WhateverTheIdentifierIs` function. See the  `exampleProgram.R` file in the `sample_files` folder for further explanations.
 
 The folder structure should then look like this:
 ```
@@ -19,6 +20,7 @@ Project Folder
 │   README.md
 │   main.R
 |   programs.xlsx
+|   variable_mapping.json
 │   ...
 │
 └───programs
