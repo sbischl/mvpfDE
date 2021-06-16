@@ -1,0 +1,17 @@
+---
+title: "Einkommenssteuerreformen"
+output: html_document
+---
+
+```{r echo=FALSE, include=FALSE}
+# Run the code necessary to get a list named res to access all the results. (Returned from listifyResults(.)) Probably it makes sense to load from disk, because caluclating every time is really slow.
+res <- readRDS(file="results.RData")
+format <- function(result) {
+  toString(round(result,2))
+}
+```
+
+# Does this work as normal markdown?
+ `r format(res$maternityLeave79$mvpf)`
+
+

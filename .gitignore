@@ -29,3 +29,9 @@ UnifiedWelfareGer.iml
 
 # JSON export folder
 /json_export/*
+
+# HTML files inside rmarkdwon
+/rmarkdown/*.html
+
+#All RData Files:
+*.RData

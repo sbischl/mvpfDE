@@ -105,6 +105,16 @@ quietelyRunPrograms <- function(programs, bootstrap = FALSE) {
   return(results)
 }
 
+# Takes in results e.g. from getPointEstimates and transforms the dataframe in a list. This makes it easier to access
+# specific elements
+listifyResults <- function(results, saveToRMarkDownFolder = FALSE) {
+  list <- setNames(split(results, seq(nrow(results))), results$program)
+  if (saveToRMarkDownFolder) {
+    saveRDS(list, "./rmarkdown/results.RData")
+  }
+  return(list)
+}
+
 # Deflates using the cpi
 deflate <- function(from, to) {
   if (!exists("cpi")) {
