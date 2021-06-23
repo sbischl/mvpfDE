@@ -1,17 +1,111 @@
 ---
 title: "Bildungsreformen"
-output: html_document
+output:
+    html_document:
+        fig_retina: 1
 ---
 
 ```{r echo=FALSE, include=FALSE}
 # Run the code necessary to get a list named res to access all the results. (Returned from listifyResults(.)) Probably it makes sense to load from disk, because caluclating every time is really slow.
 res <- readRDS(file="results.RData")
+
 format <- function(result, flipsign = FALSE) {
   if (flipsign) {
     result = - result
   }
   toString(round(result,2))
 }
+
+library(ggplot2)
+library(rjson)
+library(scales)
+library(showtext)
+
+# Try to load the alternative font that is used in the pdf exports.
+# If this font is not installed / cannot be found, the standard one will be used
+tryCatch({
+  plot_font <<- "Calibri"
+  font_add(plot_font, "OpenSans-Regular.ttf")
+}, error = function(e) {
+  warning("Font is not installed. Plots are going to use the standard font instead.")
+  plot_font <<- "sans"
+})
+showtext_auto()
+
+makePlot <- function(program, type) {
+  if (missing(program) || missing(type)) {
+    print("Need to specify program and type")
+    return(0)
+  }
+
+  label <- switch(type, "wtp" = "Zahlungsbereitschaft", "cost" = "Fiskalische Kosten")
+  variable <- switch(type, "wtp" = "willingness_to_pay", "cost" = "government_net_costs")
+
+  variable_mapping = rjson::fromJSON(file = "variable_mapping.json")
+
+  # Construct the dataset
+  for (i in 1:length(variable_mapping)) {
+    if (variable_mapping[[i]]$program == program) {
+      relevant_data <- variable_mapping[[i]]
+    }
+  }
+
+  colors <- c(rgb(46,139,87, maxColorValue = 255),
+              rgb(30,144,255, maxColorValue = 255),
+              rgb(255,165,0, maxColorValue = 255),
+              rgb(220,20,60, maxColorValue = 255),
+              rgb(0,128,128, maxColorValue = 255),
+              rgb(0,0,139, maxColorValue = 255),
+              rgb(255,20,147, maxColorValue = 255),
+              rgb(165,42,42, maxColorValue = 255),
+              rgb(154,205,50, maxColorValue = 255),
+              rgb(196, 196, 126, maxColorValue = 255),
+              rgb(189,189,189, maxColorValue = 255))
+
+  getValue <- function(name) {
+    return(res[[program]][[name]])
+  }
+  data <- data.frame(values = sapply(names(relevant_data[[variable]]), getValue),
+                     labels = unlist(relevant_data[[variable]], use.names=FALSE), x = 0)
+
+  plot <- ggplot(data) + geom_col(aes(y = values, x = x, fill = labels)) +
+          coord_flip() + theme(legend.position = "bottom") +
+          scale_y_continuous(labels = function(x) paste0(x, "€")) +
+          scale_fill_manual(values = colors) +
+          scale_shape_manual(values = 21) +
+          ylab(label) +
+          guides(fill=guide_legend(ncol=3,byrow=TRUE)) +
+          theme_minimal(base_size=20,  base_family=plot_font) %+replace%
+          theme (
+          # axis.line.x|y control whether the x and y axis are drawn. It can look stylish to omit one or both:
+          # axis.line.y = element_blank() to omit
+          # e.g: axis.line.x = element_line(color = "darkgrey", size = 0.5) to draw
+          axis.line.y = element_blank(),
+          axis.line.x = element_line(color = "grey", size = 0.75),
+          axis.title.y=element_blank(),
+          panel.border = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.grid.major = element_blank(),
+          # Enable or Disable Axis ticks:
+          axis.ticks = element_line(color = "grey", size = 0.75),
+          axis.ticks.y = element_blank(),
+          # Removes Legend Explanation:
+          legend.title=element_blank(),
+          # Set location of legend:
+          legend.position = "bottom",
+          # Legend font size
+          legend.text = element_text(size=10.5),
+          # Axis (ticks) size
+          axis.text = element_text(size=11.5),
+          axis.text.y = element_blank(),
+          # Axis label size
+          axis.title = element_text(size=14),
+          # Change Legend Stacking to vertical:
+          legend.box="vertical"
+          )
+  print(plot)
+}
+
 ```
 
 ## Bafög Reform 1990
@@ -19,17 +113,34 @@ format <- function(result, flipsign = FALSE) {
 Im Jahr 1990 wurde die staatliche Förderung von Studierenden nach dem Bundesausbildungsförderungsgesetz (BAföG) grundlegend zu gunsten der BAföG berechtigten Studierenden angepasst. Zwischen 1983 und 1989 bestand die BAföG Leistung aus einem zinsfreien Darlehen, das nach Abschluss des Studiums vollständig zurückgezahlt werden musste. Nach der Reform im Jahr 1990 wurde im Regelfall etwa die Hälfte des Darlehens als Zuschuss gewährt, der nicht zurückgezahlt werden muss. Es sollten somit die Anreize ein Universitätsstudium aufzunehmen für Studierende deren Eltern über geringe Einkommen verfügen verbessert werden. [Baumgartner & Steiner (2006)](https://ideas.repec.org/p/iza/izadps/dp2034.html) evaluieren den Effekt der BAföG Reform auf die Anzahl an geförderten Studierenden die ein Studium an deutschen Universitäten aufnehmen. Es wird ein Effekt von 4 Prozentpunkten auf die Wahrscheinlichkeit ein Universitätsstudium aufzunehmen gefunden. Dieser Schätzer ist zentral für die Berechnung des MVPF.
 
 Der Wert der Reform für die Begünstigten der Reform, also den von BAföG geförderten Studierenden, besteht aus zwei Effekte. Zunächst erhalten Studierende die BAföG beziehen `r format(res$bafoegRepayment$bafoeg_valuation)` Euro (Barwert diskontiert über die Dauer des Studiums) durch die Erlassung von 50% der BAföG-Schulden. Studierende die aufgrund der BAföG Reform ein Studium aufnehmen, also diejenigen die nicht studiert hätten, wenn die Reform nicht durchgeführt worden wäre, profitieren aufgrund der hohen Bildungsrenditen in Deutschland stark von der Reform. Der Effekt der zusätzlichen Bildung wird mithilfe einer Einkommensprojektion auf Basis von administrativen Daten des IAB abgeschätzt. Es ergibt sich eine Zunahme des erwarteten Einkommen pro BAföG-Berechtigten von `r format(res$bafoegRepayment$net_income_increase)` Euro. Die Summe der Zahlungsbereitschaften für die Reform beträgt somit `r format(res$bafoegRepayment$willingness_to_pay)` Euro.
-
+```{r echo = FALSE, fig.align = 'center', fig.width = 8, fig.height = 2.4, fig.showtext=TRUE, fig.cap = "Zahlungsbereitschaft für die BAföG Reform 2001"}
+makePlot("bafoegRepayment", "wtp")
+```
 Die Kosten des Staates setzen sich aus vier Komponenten zusammen. Zunächst muss der Staat auf 50% der Rückzahlung des Kredits verzichten. Es entstehen Kosten in Höhe von `r format(res$bafoegRepayment$bafoeg_valuation)` Euro pro BAföG-Berechtigten. Die zusätzlichen Studierenden verursachen zusätzliche Bildungsausgaben in Höhe von `r format(res$bafoegRepayment$education_cost)` Euro. Die Berechnung dieser Kosten beruht auf Daten des [statistischen Bundesamts](https://www.statistischebibliothek.de/mir/receive/DESerie_mods_00000117) über die jährlichen Ausgaben pro Studierenden an deutschen Universitäten. Ebenso steigt durch die zusätzlichen Studienanfänger die Anzahl an von BAföG geförderten Studenten. Diese Kostenkomponente wird auf `r format(res$bafoegRepayment$bafoeg_cost)` Euro geschätzt. Letztlich kann der Staat einen erheblichen Teil der zusätzlichen Ausgaben durch zusätzliche Steuereinnahmen zurückgewinnen. Studierende, die aufgrund der Reform ein höheres Bildungsniveau erreichen, erzielen über ihre gesamte berufliche Laufbahn höhere Bruttoeinkommen, wodurch zusätzliches Steueraufkommen generiert wird. Unter Verwendung der zuvor genannten Einkommensprojektion ergibt sich ein zusätzliches Steueraufkommen von `r format(res$bafoegRepayment$tax_revenue_increase, T)` Euro pro BAföG-Berechtigten. Die Summe der Effekte auf das Budget des Staates beträgt `r format(res$bafoegRepayment$government_net_costs)` Euro.
+```{r echo = FALSE, fig.align = 'center', fig.width = 8, fig.height = 2.75, fig.showtext=TRUE, fig.cap = "Zahlungsbereitschaft für die BAföG Reform 2001"}
+makePlot("bafoegRepayment", "cost")
+```
 
 Der Marginal Value of Public Funds ist definiert als das Verhältnis der Wert der Reform für die Begünstigten der Reform zu den fiskalischen Kosten der Reform. Folglich ergibt sich ein MVPF von `r format(res$bafoegRepayment$mvpf)` für die BAföG Reform des Jahres 1990. Pro Euro Steuergeld der in die Finanzierung der BAföG Reform investiert wurden, erhielten BAföG berechtigte Studierende einen Wert von `r format(res$bafoegRepayment$mvpf)` Euro.
 
 ## Bafög Reform 2001
 Eine Reform des BAföG (Bafög) aus dem Jahr 2001 erweiterte den Kreis der Bafög Berechtigten. Das elterliche Einkommen, bis zu welchem die gesamte Förderung beansprucht werden kann, wurde um circa 20% angehoben. Dies hatte zur Folge, dass die Anzahl an Bafög Berechtigen Studierenden um mehr als 50% zunahm. Baumgartner & Steiner (2006) untersuchen, inwiefern es dieser Politikmaßnahme gelang die Anzahl an Studienanfänger zu erhöhen. Mit einem Difference-in-Difference Ansatz finden die Autoren, dass die Studienanfängerquote um 1,5 Prozentpunkte gesteigert werden konnte. Zur Evaluierung dieser Reform im Rahmen des MVPF Frameworks, müssen sowohl der Wertschätzung (Zahlungsbereitschaft) der Bafög Bezieher für die Implementierung der Reform, als auch die Kosten die auf Seite des Staates entstehen berechnet werden. Die Zahlungsbereitschaft setzt sich aus zwei Komponenten zusammen. Erstens erhalten weitere Studierende nun BAföG Förderung, wovon nur circa die Hälfte zurückgezahlt werden muss. Dieser Effekt beträgt gemittelt über alle potenziellen Studienanfänger `r format(res$bafoeg2001$reform_valuation)` Euro. Dazu kommt das gestiegene erwartete Einkommen welches Studierende die aufgrund des erweiterten Bafög ein Studium aufnehmen erzielen. Zur Berechnung der Bildungsrenditen wird eine Einkommensprojektion auf Basis von Daten des IAB verwendet. Gemittelt über alle potenziellen Studienanfänger ergibt sich ein Effekt von `r format(res$bafoeg2001$net_income_increase)` Euro.
 
-Demgegenüber stehen die fiskalischen Kosten. Hier werden drei Komponenten berücksichtigt. Die Auszahlung der BAföG-Föderung an weitere Studierende verursacht diskontiert unter Berücksichtigung der Rückzahlung von 50% der Förderung, Kosten in Höhe von `r format(res$bafoeg2001$program_cost)` Euro. Zur Berechnung dieses Wertes wurde die durchschnittliche Höhe der BAföG-Förderung im Jahr 2001 verwendet und eine durchschnittliche Studiendauer von 5 Jahren angenommen. Die zusätzlichen Studienanfänger verursachen Kosten im Bildungssystem. Da deutsche Universitäten staatlich finanziert sind, kommt der Staat für die Mehrkosten des Studiums gegenüber einer Ausbilung auf. Aus Daten des statistischen Bundesamt über die Ausgaben für Universitäten und Berufsschulen errechnen sich Mehrkosten in Höhe von `r format(res$bafoeg2001$education_cost)`. Schließlich profitiert der Staatshaushalt von gestiegenen Einkommen der zusätzlichen Studienanfänger und den damit einhergehenden Einkommenssteuerzahlungen. Unter Berücksichtigung des deutschen Einkommenssteuersystems ergibt sich gemäß der verwendeten Einkommensprojektion ein diskontiertes zusätzliches Steueraufkommen in Höhe von `r format(res$bafoeg2001$tax_revenue_increase, T)` Euro. Nach aufsummieren der fiskalischen Kosten und der Zahlungsbereitschaft für die Reform ergibt sich ein Kosten-Nutzen Verhältnis von `r format(res$bafoeg2001$mvpf)`.
+```{r echo = FALSE, fig.align = 'center', fig.width = 8, fig.height = 2.4, fig.showtext=TRUE, fig.cap = "Zahlungsbereitschaft für die BAföG Reform 2001"}
+makePlot("bafoeg2001", "wtp")
+```
+
+Demgegenüber stehen die fiskalischen Kosten. Hier werden drei Komponenten berücksichtigt. Die Auszahlung der BAföG-Föderung an weitere Studierende verursacht diskontiert unter Berücksichtigung der Rückzahlung von 50% der Förderung, Kosten in Höhe von `r format(res$bafoeg2001$program_cost)` Euro. Zur Berechnung dieses Wertes wurde die durchschnittliche Höhe der BAföG-Förderung im Jahr 2001 verwendet und eine durchschnittliche Studiendauer von 5 Jahren angenommen. Die zusätzlichen Studienanfänger verursachen Kosten im Bildungssystem. Da deutsche Universitäten staatlich finanziert sind, kommt der Staat für die Mehrkosten des Studiums gegenüber einer Ausbilung auf. Aus Daten des statistischen Bundesamt über die Ausgaben für Universitäten und Berufsschulen errechnen sich Mehrkosten in Höhe von `r format(res$bafoeg2001$education_cost)`. Schließlich profitiert der Staatshaushalt von gestiegenen Einkommen der zusätzlichen Studienanfänger und den damit einhergehenden Einkommenssteuerzahlungen. Unter Berücksichtigung des deutschen Einkommenssteuersystems ergibt sich gemäß der verwendeten Einkommensprojektion ein diskontiertes zusätzliches Steueraufkommen in Höhe von `r format(res$bafoeg2001$tax_revenue_increase, T)` Euro.
+```{r echo = FALSE, fig.align = 'center', fig.width = 8, fig.height = 2.4, fig.showtext=TRUE, fig.cap = "Zahlungsbereitschaft für die BAföG Reform 2001"}
+makePlot("bafoeg2001", "cost")
+```
+Nach aufsummieren der fiskalischen Kosten und der Zahlungsbereitschaft für die Reform ergibt sich ein Kosten-Nutzen Verhältnis von `r format(res$bafoeg2001$mvpf)`.
 
 ## Realschulabschluss mit Beendigung 10. Klasse Gymnasium
 Zwischen 1965 und 1996 wurde in allen deutschen Bundesländern die mittlere Reife, also der Realschulabschluss als Zwischenabschluss des Gymnasiums eingeführt. Mit erfolgreicher Beendigung der 10. Klasse erhalten Schüler die mittlere Reife, auch wenn sie die Oberstufe des Gymnasiums nicht abschließen. Diese Reform sollte verhindern, dass Schüler bei nicht Bestehen des Abiturs die Schule ohne Abschluss verlassen müssen. Die Reform ist insbesondere für Schüler relevant, die die Möglichkeit haben ein Gymnasium zu besuchen, aber aufgrund der Möglichkeit des späten Scheiterns in der Oberstufe sich dazu entscheiden die Realschule zu besuchen. Der Realschulabschluss nach der 10. Klasse stellt eine Versicherung gegen diesen Fall dar und könnte somit zusätzlichen Schülern den Anreiz geben das Gymnasium zu besuchen.
 
-[Obergruber & Zierow (2020)](https://ideas.repec.org/a/eee/ecoedu/v75y2020ics0272775718307179.html) zeigen, dass die Reform den gewünschten Effekt hatte. Die Wahrscheinlichkeit das Gymnasium erfolgreich abzuschließen stieg um 24.5 Prozentpunkte. Im Schnitt verlängerte die Reform die durchschnittliche Anzahl der Schuljahre um 0.767. Da diese Reform keine direkten Kosten versucht sind lediglich die vom Staat getragenen Kosten für die zusätzlichen Schuljahre am Gymnasium relevant. Aus Daten des [statistischen Bundesamts](https://www.statistischebibliothek.de/mir/receive/DESerie_mods_00002310) über die finanziellen Aufwendungen pro Schüler gestaffelt nach Schulart errechnen sich zusätzliche Kosten in Höhe von `r format(res$interimDegrees$education_cost, T)`. Diese Kosten sind kleiner als der erwartete Anstieg der Steuereinnahmen aufgrund des höheren Bildungsniveaus (`r format(res$interimDegrees$tax_revenue_increase)`€). Zur Berechnung der Bildungsrenditen über das gesamte Berufsleben werden administrative Daten des IAB verwendet. Die Bildungsreform hatte folglich netto einen positiven Effekt auf das Staatsbudget. Ebenso profitieren Schüler von dem Abschluss des Gymnasiums. Es wird eine Zunahme des Lebenszeitnettoeinkommen von `r format(res$interimDegrees$net_income_increase)` prognostiziert. Das Kosten-Nutzen Verhältnis, definiert als Marginal Value of Public Funds, ist somit unendlich. Es entstanden dem Staat keine Kosten; es konnte sogar zusätzliches Steueraufkommen generiert werden während einige Schüler ebenso gestellt wurden durch ihr höheres Bildungsniveau.
+[Obergruber & Zierow (2020)](https://ideas.repec.org/a/eee/ecoedu/v75y2020ics0272775718307179.html) zeigen, dass die Reform den gewünschten Effekt hatte. Die Wahrscheinlichkeit das Gymnasium erfolgreich abzuschließen stieg um 24.5 Prozentpunkte. Im Schnitt verlängerte die Reform die durchschnittliche Anzahl der Schuljahre um 0.767. Da diese Reform keine direkten Kosten versucht sind lediglich die vom Staat getragenen Kosten für die zusätzlichen Schuljahre am Gymnasium relevant. Aus Daten des [statistischen Bundesamts](https://www.statistischebibliothek.de/mir/receive/DESerie_mods_00002310) über die finanziellen Aufwendungen pro Schüler gestaffelt nach Schulart errechnen sich zusätzliche Kosten in Höhe von `r format(res$interimDegrees$education_cost, T)`. Diese Kosten sind kleiner als der erwartete Anstieg der Steuereinnahmen aufgrund des höheren Bildungsniveaus (`r format(res$interimDegrees$tax_revenue_increase)`€). Zur Berechnung der Bildungsrenditen über das gesamte Berufsleben werden administrative Daten des IAB verwendet. Die Bildungsreform hatte folglich netto einen positiven Effekt auf das Staatsbudget. Ebenso profitieren Schüler von dem Abschluss des Gymnasiums. Es wird eine Zunahme des Lebenszeitnettoeinkommen von `r format(res$interimDegrees$net_income_increase)` prognostiziert.
+ ```{r echo = FALSE, fig.align = 'center', fig.width = 8, fig.height = 2.4, fig.showtext=TRUE, fig.cap = "Zahlungsbereitschaft für die BAföG Reform 2001"}
+makePlot("interimDegrees", "cost")
+```
+ Das Kosten-Nutzen Verhältnis, definiert als Marginal Value of Public Funds, ist somit unendlich. Es entstanden dem Staat keine Kosten; es konnte sogar zusätzliches Steueraufkommen generiert werden während einige Schüler besser gestellt wurden durch ihr höheres Bildungsniveau.
