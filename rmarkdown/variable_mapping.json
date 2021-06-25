@@ -2,564 +2,564 @@
   {
     "program": "taxReform1990",
     "willingness_to_pay": {
-      "willingness_to_pay": "Tax reduction"
+      "willingness_to_pay": "Steuerreduktion"
     },
     "government_net_costs": {
-      "willingness_to_pay": "Tax reduction",
-      "fiscal_externality": "Fiscal externality"
+      "willingness_to_pay": "Steuerreduktion",
+      "fiscal_externality": "Fiskalische Externalität"
     }
   },
   {
     "program": "taxReform2001",
     "willingness_to_pay": {
-      "willingness_to_pay": "Tax reduction"
+      "willingness_to_pay": "Steuerreduktion"
     },
     "government_net_costs": {
-      "willingness_to_pay": "Tax reduction",
-      "fiscal_externality": "Fiscal externality"
+      "willingness_to_pay": "Steuerreduktion",
+      "fiscal_externality": "Fiskalische Externalität"
     }
   },
   {
     "program": "taxReform2004",
     "willingness_to_pay": {
-      "willingness_to_pay": "Tax reduction"
+      "willingness_to_pay": "Steuerreduktion"
     },
     "government_net_costs": {
-      "willingness_to_pay": "Tax reduction",
-      "fiscal_externality": "Fiscal externality"
+      "willingness_to_pay": "Steuerreduktion",
+      "fiscal_externality": "Fiskalische Externalität"
     }
   },
   {
     "program": "taxReform2005",
     "willingness_to_pay": {
-      "willingness_to_pay": "Tax reduction"
+      "willingness_to_pay": "Steuerreduktion"
     },
     "government_net_costs": {
-      "willingness_to_pay": "Tax reduction",
-      "fiscal_externality": "Fiscal externality"
+      "willingness_to_pay": "Steuerreduktion",
+      "fiscal_externality": "Fiskalische Externalität"
     }
   },
   {
     "program": "BestUpInformationWorkshop",
     "willingness_to_pay": {
-      "net_income_increase": "Lifetime effect on net income",
-      "bafoeg_cost": "Receipt of Bafög ",
-      "bafoeg_repayment": "Bafög repayment"
+      "net_income_increase": "Lebenszeiteinkommen",
+      "bafoeg_cost": "BAföG Föderung",
+      "bafoeg_repayment": "BAföG Rückzahlung"
     },
     "government_net_costs": {
-      "program_cost": "Workshop cost",
-      "tax_revenue_increase": "Lifetime tax revenue effect",
-      "education_cost": "Education cost difference",
-      "bafoeg_cost": "Bafög payment",
-      "bafoeg_repayment": "Bafög repayment"
+      "program_cost": "Workshop Kosten",
+      "tax_revenue_increase": "Lebenszeitsteuerzahlungen",
+      "education_cost": "Ausbildungskosten",
+      "bafoeg_cost": "BAföG Föderung",
+      "bafoeg_repayment": "BAföG Rückzahlung"
     }
   },
   {
     "program": "mentoringBalu",
     "willingness_to_pay": {
-      "net_income_increase": "Lifetime effect on net income"
+      "net_income_increase": "Lebenszeiteinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Cost of mentor mentee pair",
-      "tax_revenue_increase": "Lifetime tax revenue effect",
-      "education_cost": "Education cost difference"
+      "program_cost": "Mentoringkosten",
+      "tax_revenue_increase": "Lebenszeitsteuerzahlungen",
+      "education_cost": "Ausbildungskosten"
     }
   },
   {
     "program": "G8",
     "willingness_to_pay": {
-      "net_income_increase": "Lifetime effect on net income",
-      "earlier_labor_market_participation_net_income": "Earlier labor force participation"
+      "net_income_increase": "Lebenszeiteinkommen",
+      "earlier_labor_market_participation_net_income": "Früherer Eintritt Erwerbsbevölkerung"
     },
     "government_net_costs": {
-      "earlier_labor_market_participation_tax_revenue": "tax revenue from earlier labor force participation",
-      "tax_revenue_increase": "Lifetime tax revenue effect",
-      "education_cost": "Education cost difference"
+      "earlier_labor_market_participation_tax_revenue": "Früherer Eintritt Erwerbsbevölkerung",
+      "tax_revenue_increase": "Lebenszeitsteuerzahlungen",
+      "education_cost": "Ausbildungskosten"
     }
   },
   {
     "program": "tuitionFees",
     "willingness_to_pay": {
-      "net_income_increase": "Lifetime effect on net income",
-      "program_cost": "Tuition fees"
+      "net_income_increase": "Lebenszeiteinkommen",
+      "program_cost": "Studiengebühren"
     },
     "government_net_costs": {
-      "program_cost": "Tuition fees",
-      "education_cost": "Education cost difference",
-      "tax_revenue_increase": "Lifetime tax revenue effect"
+      "program_cost": "Studiengebühren",
+      "education_cost": "Ausbildungskosten",
+      "tax_revenue_increase": "Lebenszeitsteuerzahlungen"
     }
   },
   {
     "program": "longTraining",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Training cost",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Trainingskosten",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "shortTraining",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Training cost",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Trainingskosten",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "practiceFirm",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Participation cost",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Partizipationskosten",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "retraining",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Training cost",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Trainingskosten",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "classRoomTraining",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Training cost",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Trainingskosten",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "trainingMeasures",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Training cost",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Trainingskosten",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "bridgingAllowance",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Cost of paying subsidy",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Trainingskosten",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "startupSubsidy",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Cost of paying subsidy",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Zuschusskosten",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "startupGrant",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Cost of paying start-up grant",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Zuschusskosten",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "trainingVoucher",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Training cost",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Trainingskosten",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "speedLimitA3",
     "willingness_to_pay": {
-      "cost_increased_travel_time": "Cost of longer travel time",
-      "private_safer_traffic_valuation": "Private valuation of fewer accidents",
-      "private_fuel_cost_saving": "Lower fuel consumption",
-      "local_emission_reduction": "Less local emissions",
-      "co2_emission_reducation": "Less CO2 emissions"
+      "cost_increased_travel_time": "Längere Reisezeit",
+      "private_safer_traffic_valuation": "Höhere Verkehrssicherheit",
+      "private_fuel_cost_saving": "Niedriger Streibstoffverbrauch",
+      "local_emission_reduction": "Weniger lokale Emissionen",
+      "co2_emission_reducation": "Weniger CO2 Emissionen"
     },
     "government_net_costs": {
-      "public_safer_traffic_valuation": "Public valuation of fewer Accidents",
-      "energy_tax_loss": "Energy tax loss",
-      "value_added_tax_loss": "VAT loss"
+      "public_safer_traffic_valuation": "Öffentliche Wertschätzung weniger Unfälle",
+      "energy_tax_loss": "Energiesteuerverlust",
+      "value_added_tax_loss": "Mehrwertssteuerverlust"
     }
   },
   {
     "program": "speedLimitA61",
     "willingness_to_pay": {
-      "cost_increased_travel_time": "Cost of longer travel time",
-      "private_safer_traffic_valuation": "Private valuation of fewer Accidents",
-      "private_fuel_cost_saving": "Lower fuel consumption",
-      "local_emission_reduction": "Less local emissions",
-      "co2_emission_reducation": "Less CO2 emissions"
+      "cost_increased_travel_time": "Längere Reisezeit",
+      "private_safer_traffic_valuation": "Höhere Verkehrssicherheit",
+      "private_fuel_cost_saving": "Niedriger Streibstoffverbrauch",
+      "local_emission_reduction": "Weniger lokale Emissionen",
+      "co2_emission_reducation": "Weniger CO2 Emissionen"
     },
     "government_net_costs": {
-      "public_safer_traffic_valuation": "Public valuation of fewer Accidents",
-      "energy_tax_loss": "Energy tax loss",
-      "value_added_tax_loss": "VAT loss"
+      "public_safer_traffic_valuation": "Öffentliche Wertschätzung weniger Unfälle",
+      "energy_tax_loss": "Energiesteuerverlust",
+      "value_added_tax_loss": "Mehrwertssteuerverlust"
     }
   },
   {
     "program": "jobCreationSchemes",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Cost of job creation scheme",
-      "tax_revenue_increase": "Tax revenue effect",
-      "benefit_receipt": "Effect on receipt of welfare benefits"
+      "program_cost": "Subventionskosten",
+      "tax_revenue_increase": "Steuerzahlungen",
+      "benefit_receipt": "Erhalt von Sozialleistungen"
     }
   },
   {
     "program": "oneEuroJobs",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Cost of job creation scheme",
-      "tax_revenue_increase": "Tax revenue effect",
-      "benefit_receipt": "Effect on receipt of welfare benefits"
+      "program_cost": "Subventionskosten",
+      "tax_revenue_increase": "Steuerzahlungen",
+      "benefit_receipt": "Erhalt von Sozialleistungen"
     }
   },
   {
     "program": "subsidizedJobOpportunities",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Cost of job creation scheme",
-      "tax_revenue_increase": "Tax revenue effect",
-      "benefit_receipt": "Effect on receipt of welfare benefits"
+      "program_cost": "Subventionskosten",
+      "tax_revenue_increase": "Steuerzahlungen",
+      "benefit_receipt": "Erhalt von Sozialleistungen"
     }
   },
   {
     "program": "bicycleHelmet",
     "willingness_to_pay": {
-      "private_safer_traffic_valuation": "Private valuation of less severe accidents",
-      "utility_loss_helmet": "Utility loss of wearing a helmet",
-      "helmet_cost": "Cost of buying helmets",
-      "co2_emission_reducation": "More CO2 emissions",
-      "private_health_cost": "Health effect of less cycling"
+      "private_safer_traffic_valuation": "Weniger schwere Unfälle",
+      "utility_loss_helmet": "Nutzenverlust durch Helmpflicht",
+      "helmet_cost": "Helmkosten",
+      "co2_emission_reducation": "CO2 Emissionen",
+      "private_health_cost": "Effekt auf Gesundheit"
     },
     "government_net_costs": {
-      "public_safer_traffic_valuation": "Public valuation of less severe Accidents",
-      "public_health_cost": "Health effect of less cycling",
-      "value_added_tax_loss": "VAT Gain"
+      "public_safer_traffic_valuation": "Öffentliche Wertschätzung weniger Unfälle",
+      "public_health_cost": "Effekt auf Gesundheit",
+      "value_added_tax_loss": "Mehrwertssteuerzahlungen"
     }
   },
   {
     "program": "maternityLeave79",
     "willingness_to_pay": {
-      "benefit_receipt": "Valuation of additional maternity benefits",
-      "net_income_increase": "Effect on children's net income"
+      "benefit_receipt": "Zusätzliches Mutterschaftsgeld",
+      "net_income_increase": "Lebenszeiteinkommen (Kinder)"
     },
     "government_net_costs": {
-      "program_cost": "Cost of paying maternity benefit",
-      "tax_revenue_increase": "Effect on tax revenue from mothers",
-      "tax_revenue_increase_children": "Effect on tax revenue from children"
+      "program_cost": "Zusätzliches Mutterschaftsgeld",
+      "tax_revenue_increase": "Steueraufkommen (Mütter)",
+      "tax_revenue_increase_children": "Steueraufkommen (Kinder)"
     }
   },
   {
     "program": "maternityLeave86",
     "willingness_to_pay": {
-      "benefit_receipt": "Valuation of additional maternity benefits",
-      "net_income_increase": "Effect on children's net income"
+      "benefit_receipt": "Zusätzliches Mutterschaftsgeld",
+      "net_income_increase": "Lebenszeiteinkommen (Kinder)"
     },
     "government_net_costs": {
-      "program_cost": "Cost of paying maternity benefit",
-      "tax_revenue_increase": "Effect on tax revenue from mothers",
-      "tax_revenue_increase_children": "Effect on tax revenue from children",
-      "education_cost": "Education cost difference"
+      "program_cost": "Zusätzliches Mutterschaftsgeld",
+      "tax_revenue_increase": "Steueraufkommen (Mütter)",
+      "tax_revenue_increase_children": "Steueraufkommen (Kinder)",
+      "education_cost": "Ausbildungskosten"
     }
   },
   {
     "program": "maternityLeave92",
     "willingness_to_pay": {
-      "net_income_increase": "Net Income Effect on Children"
+      "net_income_increase": "Lebenszeiteinkommen (Kinder)"
     },
     "government_net_costs": {
-      "tax_revenue_increase": "Effect on Tax Revenue from mothers",
-      "tax_revenue_increase_children": "Effect on Tax Revenue from children",
-      "education_cost": "Education cost difference"
+      "tax_revenue_increase": "Steueraufkommen (Mütter)",
+      "tax_revenue_increase_children": "Steueraufkommen (Kinder)",
+      "education_cost": "Ausbildungskosten"
     }
   },
   {
     "program": "homeCareSubsidy",
     "willingness_to_pay": {
-      "willingness_to_pay": "Valuation of the home care subsidy"
+      "willingness_to_pay": "Betreuungsgeld"
     },
     "government_net_costs": {
-      "program_cost": "Cost of paying the subsidy",
-      "child_care_cost_reduction": "Lower take-up of subsidized child care",
-      "tax_revenue_increase": "Effect on tax revenue from mothers"
+      "program_cost": "Betreuungsgeld",
+      "child_care_cost_reduction": "Geringere Inanspruchnahme von subventionierter Kinderbetreuung",
+      "tax_revenue_increase": "Steueraufkommen (Elternteil)"
     }
   },
   {
     "program": "parentalLeave2007",
     "willingness_to_pay": {
-      "willingness_to_pay": "Valuation of the increased benefit payment"
+      "willingness_to_pay": "Zusätzlicher Transfer"
     },
     "government_net_costs": {
-      "program_cost": "Cost of the increased benefit payment",
-      "tax_revenue_increase": "Effect on tax revenue from mothers"
+      "program_cost": "Zusätzlicher Transfer",
+      "tax_revenue_increase": "Steueraufkommen (Mütter)"
     }
   },
   {
     "program": "coronavirusRestrictions",
     "willingness_to_pay": {
-      "valuation_lower_risk_of_dying": "Valuation lower risk of dying",
-      "income_loss": "Income loss"
+      "valuation_lower_risk_of_dying": "Niedrigeres Sterberisiko",
+      "income_loss": "Einkommensverlust"
     },
     "government_net_costs": {
-      "program_cost": "Fiscal cost of restrictions",
-      "tax_revenue_increase": "Resource cost of averted deaths"
+      "program_cost": "Steuerverlust",
+      "tax_revenue_increase": "Gerettete Ressourcen"
     }
   },
   {
     "program": "bafoegRepayment",
     "willingness_to_pay": {
-      "net_income_increase": "Lifetime effect on net income",
-      "bafoeg_valuation": "Reduced repayment"
+      "net_income_increase": "Lebenszeiteinkommen",
+      "bafoeg_valuation": "Reduzierte Rückzahlung"
     },
     "government_net_costs": {
-      "program_cost": "Only partial repayment",
-      "tax_revenue_increase": "Lifetime tax revenue effect",
-      "education_cost": "Education cost difference",
-      "bafoeg_cost": "Additional Bafög recipients"
+      "program_cost": "Reduzierte Rückzahlung",
+      "tax_revenue_increase": "Lebenszeitsteuerzahlungen",
+      "education_cost": "Ausbildungskosten",
+      "bafoeg_cost": "Zusätzliche BAföG Empfänger"
     }
   },
   {
     "program": "bafoeg2001",
     "willingness_to_pay": {
-      "net_income_increase": "Lifetime Effect on net income",
-      "reform_valuation": "Receipt of Bafög"
+      "net_income_increase": "Lebenszeiteinkommen",
+      "reform_valuation": "BAföG Förderung"
     },
     "government_net_costs": {
-      "program_cost": "Additional Bafög recipients",
-      "tax_revenue_increase": "Lifetime tax revenue effect",
-      "education_cost": "Education cost difference"
+      "program_cost": "BAföG Förderung",
+      "tax_revenue_increase": "Lebenszeitsteuerzahlungen",
+      "education_cost": "Ausbildungskosten"
     }
   },
   {
     "program": "unemploymentBenefits42",
     "willingness_to_pay": {
-      "program_cost": "Benefit payment",
-      "valuation_reduced_risk": "Valuation of risk reduction"
+      "program_cost": "Arbeitslosengeldzahlung",
+      "valuation_reduced_risk": "Versicherung gegen Jobverlust"
     },
     "government_net_costs": {
-      "program_cost": "Benefit Payment",
-      "fiscal_externality": "Fiscal Externality due to longer unemployment"
+      "program_cost": "Arbeitslosengeldzahlung",
+      "fiscal_externality": "Effekt auf Arbeitsanreize"
     }
   },
   {
     "program": "unemploymentBenefits44",
     "willingness_to_pay": {
-      "program_cost": "Benefit payment",
-      "valuation_reduced_risk": "Valuation of risk reduction"
+      "program_cost": "Arbeitslosengeldzahlung",
+      "valuation_reduced_risk": "Versicherung gegen Jobverlust"
     },
     "government_net_costs": {
-      "program_cost": "Benefit payment",
-      "fiscal_externality": "Fiscal externality due to longer unemployment"
+      "program_cost": "Arbeitslosengeldzahlung",
+      "fiscal_externality": "Effekt auf Arbeitsanreize"
     }
   },
   {
     "program": "unemploymentBenefits49",
     "willingness_to_pay": {
-      "program_cost": "Benefit payment",
-      "valuation_reduced_risk": "Valuation of risk reduction"
+      "program_cost": "Arbeitslosengeldzahlung",
+      "valuation_reduced_risk": "Versicherung gegen Jobverlust"
     },
     "government_net_costs": {
-      "program_cost": "Benefit payment",
-      "fiscal_externality": "Fiscal externality due to longer unemployment"
+      "program_cost": "Arbeitslosengeldzahlung",
+      "fiscal_externality": "Effekt auf Arbeitsanreize"
     }
   },
   {
     "program": "unemploymentBenefits2002",
     "willingness_to_pay": {
-      "program_cost": "Benefit payment",
-      "valuation_reduced_risk": "Valuation of risk reduction"
+      "program_cost": "Arbeitslosengeldzahlung",
+      "valuation_reduced_risk": "Versicherung gegen Jobverlust"
     },
     "government_net_costs": {
-      "program_cost": "Benefit payment",
-      "fiscal_externality": "Fiscal externality due to longer unemployment"
+      "program_cost": "Arbeitslosengeldzahlung",
+      "fiscal_externality": "Effekt auf Arbeitsanreize"
     }
   },
   {
     "program": "unemploymentBenefits2006",
     "willingness_to_pay": {
-      "program_cost": "Benefit payment",
-      "valuation_reduced_risk": "Valuation of risk reduction"
+      "program_cost": "Arbeitslosengeldzahlung",
+      "valuation_reduced_risk": "Versicherung gegen Jobverlust"
     },
     "government_net_costs": {
-      "program_cost": "Benefit payment",
-      "fiscal_externality": "Fiscal externality due to longer unemployment"
+      "program_cost": "Arbeitslosengeldzahlung",
+      "fiscal_externality": "Effekt auf Arbeitsanreize"
     }
   },
   {
     "program": "jobSearchInformation",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Brochure cost",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Broschüre",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "relocationAssistance",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Subsidy cost",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Subventionskosten",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "sportsExpenditure",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Sports expenditure",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Ausgaben für Sportstädten",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "negativeIncomeTax",
     "willingness_to_pay": {
-      "reform_valuation": "Valuation of transfer"
+      "reform_valuation": "Subventionszahlung"
     },
     "government_net_costs": {
-      "program_cost": "Subsidy cost",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Subventionszahlung",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "placementService",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Cost of providing service inhouse",
-      "benefit_receipt": "Effect on receipt of unemployment benefits",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Kosten von Inhousecounseling",
+      "benefit_receipt": "Erhalt von Arbeitslosengeld",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "expectedPensionLetter",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Letter cost",
-      "tax_revenue_increase": "Tax revenue effect"
+      "program_cost": "Briefkosten",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "decentralizedEmploymentServices",
     "willingness_to_pay": {
-      "net_income_increase": "Effect on net income"
+      "net_income_increase": "Effekt auf Nettoeinkommen"
     },
     "government_net_costs": {
-      "benefit_receipt": "Cost of paying unemployment benefits",
-      "tax_revenue_increase": "Tax revenue effect"
+      "benefit_receipt": "Arbeitslosengeldzahlungen",
+      "tax_revenue_increase": "Steuerzahlungen"
     }
   },
   {
     "program": "eegWind",
     "willingness_to_pay": {
-      "co2_emission_reducation": "Less CO2 emissions",
-      "income_loss": "Effect on producer rents",
-      "price_effect": "Effect on electricity prices"
+      "co2_emission_reducation": "CO2 Emissionen",
+      "income_loss": "Produzentengewinne",
+      "price_effect": "Strompreis"
     },
     "government_net_costs": {
-      "program_cost": "Subsidy cost"
+      "program_cost": "Subventionskosten"
     }
   },
   {
     "program": "eegSolar",
     "willingness_to_pay": {
-      "co2_emission_reducation": "Less CO2 emissions",
-      "income_loss": "Effect on producer rents",
-      "price_effect": "Effect on electricity prices"
+      "co2_emission_reducation": "CO2 Emissionen",
+      "income_loss": "Produzentengewinne",
+      "price_effect": "Strompreis"
     },
     "government_net_costs": {
-      "program_cost": "Subsidy cost"
+      "program_cost": "Subventionskosten"
     }
   },
   {
     "program": "compulsarySchooling",
     "willingness_to_pay": {
-      "net_income_increase": "Lifetime effect on childrens' net income",
-      "net_income_increase_parents": "Lifetime effect on parents' net income"
+      "net_income_increase": "Lebenszeitnettoeinkommen (Kinder)",
+      "net_income_increase_parents": "Lebenszeitnettoeinkommen (Eltern)"
     },
     "government_net_costs": {
-      "program_cost": "Cost of providing one additional year of schooling",
-      "tax_revenue_increase": "Lifetime effect on childrens' tax payments",
-      "tax_revenue_increase_parents": "Lifetime effect on parents' tax payments",
-      "education_cost": "Additional education of sons"
+      "program_cost": "Zusätzliches Schuljahr",
+      "tax_revenue_increase": "Lebenszeitsteuerzahlungen (Kinder)",
+      "tax_revenue_increase_parents": "Lebenszeitsteuerzahlungen (Eltern)",
+      "education_cost": "Ausbildungskosten (Kinder)"
     }
   },
   {
     "program": "trackingBavaria",
     "willingness_to_pay": {
-      "net_income_increase": "Projected lifetime net earnings effect"
+      "net_income_increase": "Lebenszeitnettoeinkommen"
     },
     "government_net_costs": {
-      "tax_revenue_increase": "Projected lifetime tax revenue effect"
+      "tax_revenue_increase": "Lebenszeitsteuerzahlungen"
     }
   },
   {
     "program": "schoolFees",
     "willingness_to_pay": {
-      "net_income_increase": "Lifetime effect on net income",
-      "program_cost": "Waived school fees"
+      "net_income_increase": "Lebenszeitnettoeinkommen",
+      "program_cost": "Schulgebühren"
     },
     "government_net_costs": {
-      "program_cost": "Waived school fees",
-      "tax_revenue_increase": "Lifetime tax revenue effect",
-      "education_cost": "Cost higher Gymnasium attendance"
+      "program_cost": "Schulgebühren",
+      "tax_revenue_increase": "Lebenszeitsteuerzahlungen",
+      "education_cost": "Ausbildungskosten"
     }
   },
   {
     "program": "rockYourLife",
     "willingness_to_pay": {
-      "net_income_increase": "Lifetime effect on net income"
+      "net_income_increase": "Lebenszeitnettoeinkommen"
     },
     "government_net_costs": {
-      "program_cost": "Cost of mentor mentee pair",
-      "tax_revenue_increase": "Lifetime tax revenue effect"
+      "program_cost": "Mentoringkosten",
+      "tax_revenue_increase": "Lebenszeitsteuerzahlungen"
     }
   },
   {
     "program": "interimDegrees",
     "willingness_to_pay": {
-      "net_income_increase": "Lifetime effect on net income"
+      "net_income_increase": "Lebenszeitnettoeinkommen"
     },
     "government_net_costs": {
-      "education_cost": "Cost higher Gymnasium attendance",
-      "tax_revenue_increase": "Lifetime tax revenue effect"
+      "education_cost": "Ausbildungskosten",
+      "tax_revenue_increase": "Lebenszeitsteuerzahlungen"
     }
   }
 ]
