@@ -8,6 +8,7 @@ output:
 ```{r echo=FALSE, include=FALSE}
 # Run the code necessary to get a list named res to access all the results. (Returned from listifyResults(.)) Probably it makes sense to load from disk, because caluclating every time is really slow.
 res <- readRDS(file="results.RData")
+number_of_js_plots <- 0
 
 format <- function(result, flipsign = FALSE) {
   if (flipsign) {
@@ -32,7 +33,7 @@ tryCatch({
 })
 showtext_auto()
 
-makePlot <- function(program, type) {
+makePlot <- function(program, type, js = T) {
   if (missing(program) || missing(type)) {
     print("Need to specify program and type")
     return(0)
@@ -40,6 +41,295 @@ makePlot <- function(program, type) {
 
   label <- switch(type, "wtp" = "Zahlungsbereitschaft", "cost" = "Fiskalische Kosten")
   variable <- switch(type, "wtp" = "willingness_to_pay", "cost" = "government_net_costs")
+
+  if (js == TRUE) {
+    if (number_of_js_plots > 0) {
+      return(htmltools::HTML(sprintf(r"(<canvas id="chart%s" style="width: 100%%; height: %ipx"></canvas>
+      <script>
+      async function drawGraphs() {
+        while(true) {
+          if (content_loaded) {
+            break;
+          }
+          else {
+            await new Promise(r => setTimeout(r, 200));
+          }
+        }
+        console.log("attenotubg ti draw");
+        drawChart(unmodified_dataset, "%s", "%s");
+      }
+      drawGraphs();
+      </script>
+      )", paste0(program,variable), 170, variable, program)))
+    }
+
+  # We have to split this in multiple strings because sprintf cannot print into strings longer than 8000 characters..
+  variable_decs <- sprintf(r"(<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.3.0/chart.min.js"></script>
+  <canvas id="chart%s" style="width: 100%%; height: %ipx"></canvas>
+  <script>
+    var unmodified_dataset;
+    var document_root = "";
+    var content_loaded = false;
+    var additional_program_info;
+    var categories;
+    var colors;
+    var variable_mapping;
+    var tooltip_counter = 1;
+    )", paste0(program,variable), 170)
+
+    functions <- r"(async function loadJSON(url) {
+    var json;
+    await fetch(url).then(response => {
+        json = response.json();
+    });
+    return json;
+    }
+
+    async function readjson(assumption_string) {
+    // depends on additional_program_info being loaded as we need some way of determining which government policies exist before this function can be called
+
+    // This will be the array carrying the data. It should be compatible to the array returned from readcsv with the only difference that the json format omits all the keys with NA values.
+    var json_as_array;
+
+    // First we need to get a list of all programs. Where the entries are strings
+    var programs = additional_program_info.map(program => {
+        return program.program_identifier;
+    });
+
+    // Individual json requests to all of the programs
+    var requests = programs.map(program => {
+        // Note: usually one would expect that this code runs the loadJSON and stores the
+        // result in requests. This is not what we want, as the http requests should be
+        // run in parallel for better performance. Fortunately, this is not what is happening. loadJSON is a async function. And async functions return promises. which are not automatically resolved.
+        return loadJSON(document_root + "data/" + program + "/" + assumption_string + ".json");
+    });
+
+    // Resolve promises in parallel
+    await Promise.all(requests).then((result) => json_as_array = result);
+
+    // This loop merges the loaded ddata with the details about each reform (description, sources, age etc..) form programs.json. The resulting array of objects then contains all relevant data.
+
+    for (var i = 0; i < json_as_array.length; i++) {
+        Object.assign(json_as_array[i], additional_program_info[i]);
+        // Rename program identifier to program. (For compatibility with the old solution)
+        json_as_array[i]["program"] = json_as_array[i]["program_identifier"];
+        delete json_as_array[i]["program_identifier"];
+    }
+
+    unmodified_dataset = JSON.parse(JSON.stringify(json_as_array));
+
+    // sort by category & ensure that categories is defined already
+    if (typeof(categories) != "undefined") {
+        unmodified_dataset.sort(function(a, b){
+            return categories.indexOf(a.category) - categories.indexOf(b.category);
+        });
+    }
+    return json_as_array;
+}
+
+function getScalesMinMax(program) {
+    // we want the same scale on all of the bar plots. To ensure this we calculate the required min length of the x-axis for each plot and apply the largest to all.
+    let relevant_datapoint = unmodified_dataset.find(function (datapoint) {
+        return (datapoint.program === program);
+    });
+
+    let max = addAllPositivesSubtractAllNegatives([
+        Math.abs(parseFloat(relevant_datapoint["willingness_to_pay"]),
+            -Math.abs(parseFloat(relevant_datapoint["government_net_costs"])))
+    ]);
+    let mappingEntry;
+
+    for (let i = 0; i < variable_mapping.length; i++) {
+        if (variable_mapping[i].program === program) {
+            mappingEntry = variable_mapping[i];
+            break;
+        }
+    }
+
+    barComponents = mappingEntry["willingness_to_pay"];
+    let array = [];
+    let component;
+    for (component in barComponents) {
+        array.push(parseFloat(relevant_datapoint[component]));
+    }
+    max = Math.max(addAllPositivesSubtractAllNegatives(array), max);
+
+
+    barComponents = mappingEntry["government_net_costs"];
+    array = [];
+    for (component in barComponents) {
+        array.push(parseFloat(relevant_datapoint[component]));
+    }
+    max = Math.max(addAllPositivesSubtractAllNegatives(array), max);
+
+    return (max);
+}
+
+function selectColor(number, background = false) {
+    // returns a string in the format rgba(123,123,123,0.6)
+    let background_opa = 0.7
+    let foreground_opa = 0.9
+    if (number > colors.length) {
+        console.log("Color not in range of supplied colors in colors.json");
+        // Reuse last color in this case
+        number = colors.length;
+    }
+    color_triple = colors[number - 1];
+    return `rgba(${color_triple[0]},${color_triple[1]},${color_triple[2]},${background ? background_opa : foreground_opa})`;
+}
+
+function addAllPositivesSubtractAllNegatives(array) {
+    let negative = 0;
+    let positive = 0;
+    let i;
+    for (i = 0; i < array.length; i++) {
+        if (array[i] > 0) {
+            positive += array[i];
+        }
+        else {
+            negative -= array[i];
+        }
+    }
+    return (Math.max(Math.abs(positive), Math.abs(negative)));
+}
+
+function generateBarData(csv_as_array, variable_to_plot, program) {
+    let datasets = [];
+    let barComponents;
+    let bar_counter = 1;
+    let relevant_datapoint = unmodified_dataset.find(function (datapoint) {
+        return (datapoint.program === program);
+    });
+    if (variable_to_plot === "mvpf") {
+        datasets.push({
+            label: "Government Net Cost",
+            data: [parseFloat(relevant_datapoint["government_net_costs"])],
+            backgroundColor: selectColor(bar_counter, true),
+            borderColor: selectColor(bar_counter),
+        });
+        datasets.push({
+            label: "Willingness to Pay",
+            data: [relevant_datapoint["willingness_to_pay"]],
+            backgroundColor: selectColor(bar_counter + 1, true),
+            borderColor: selectColor(bar_counter + 1),
+        });
+        bar_counter += 2;
+        return (datasets);
+    }
+    for (let i = 0; i < variable_mapping.length; i++) {
+        if (variable_mapping[i].program === program) {
+            barComponents = variable_mapping[i][variable_to_plot];
+            break;
+        }
+    }
+    for (component in barComponents) {
+        datasets.push({
+            label: barComponents[component],
+            data: [relevant_datapoint[component]],
+            backgroundColor: selectColor(bar_counter, true),
+            borderColor: selectColor(bar_counter)
+        });
+        bar_counter++;
+    }
+    bar_counter = 1;
+    return (datasets);
+}
+)"
+
+drawChart <- r"(function drawChart(csv_as_array, variable_to_plot, program) {
+    let chartElement = document.getElementById('chart' + program + variable_to_plot);
+    // Get Plotting range
+    let range = getScalesMinMax(program);
+    let chart = new Chart(chartElement, {
+        type: 'bar',
+        data: {
+            labels: '.', // In ChartJS Beta 3.0 this could be left empty. If we leave it empty in 3.3, there is no graph drawn anymore. (And the tooltip is now shared for all areas of the chart in 3.3).
+            datasets: generateBarData(csv_as_array, variable_to_plot, program)
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: false,
+            maintainAspectRatio: false,
+            aspectRatio: 4,
+            //devicePixelRatio: 4, //Set this to save a high res png. Otherwise leave default
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    usePointStyle: true,
+                    onClick: () => {} //This disables the ability to click on the legend and remove effects.
+                },
+                tooltip: {
+                    enabled: true,
+                    displayColors: false,
+                    bodyColor: "black",
+                    backgroundColor: "white",
+                    borderWidth: 2,
+                    cornerRadius: 8,
+                    bodyFont: {weight: 600},
+                    //borderColor: getComputedStyle(document.body).getPropertyValue('--primary-color'),
+                    mode: 'nearest',
+                    callbacks: {
+                        title: function (data) {
+                            return null;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: {
+                        maxTicksLimit: 3
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                        lineWidth: 0,
+                        tickWidth: 1
+                    },
+                    min: -range,
+                    max: range,
+                    afterTickToLabelConversion: function(data) {
+                        // this adds € signs to the tick marks on the x-axis.
+                        let ticks = data.ticks;
+                        for (var i = 0; i < ticks.length; i++) {
+                            ticks[i].label = ticks[i].label.replace(".", "placeholder").replace(",", ".").replace("placeholder", ",") + "€";
+                        }
+                        return data;
+                    }
+                },
+                y: {
+                    stacked: true,
+                    display: false
+                }
+            }
+        }
+    });
+})"
+    js_exec <- sprintf(r"(if (true) {
+        // load the dataset:
+        Promise.all([
+        loadJSON(document_root + "data/programs.json"),
+        loadJSON(document_root + "data/categories.json")
+    ]).then(return_values => {
+        additional_program_info = return_values[0];
+        categories = return_values[1];
+        return Promise.all([
+            readjson("default"),
+            loadJSON(document_root + "data/variable_mapping.json"),
+            loadJSON(document_root + "data/colors.json")
+        ]);
+    }).then((return_values) => {
+        variable_mapping = return_values[1];
+        colors = return_values[2];
+        drawChart(return_values[0], "%s", "%s");
+        content_loaded = true;
+    });
+}
+</script>)",variable, program)
+    number_of_js_plots <<- number_of_js_plots + 1
+    return(htmltools::HTML(paste0(variable_decs, functions, drawChart, js_exec)))
+  }
+
 
   variable_mapping = rjson::fromJSON(file = "variable_mapping.json")
 
@@ -172,6 +462,8 @@ Im Jahr 2005 kippte das Bundesverfassungsgericht ein seit 2001 geltendes Verbot 
 makePlot("tuitionFees", "cost")
 ```
 ```{r echo = FALSE, fig.align = 'center', fig.width = 8, fig.height = 2.4, fig.showtext=TRUE, fig.cap = "Zahlungsbereitschaft für die Einführung von Studiengebühren"}
-makePlot("tuitionFees", "wtp")
+makePlot("tuitionFees", "wtp", js = T)
 ```
 Es fällt auf, dass sowohl die Zahlungsbereitschaft als auch die fiskalischen Kosten in Summe negativ sind. Dies ist zunächst nicht überraschend; durch die Einführung der Studiengebühren spart der Staat also Geld. Gleichzeitig verlieren Studienberechtigte durch die Erhebung der Studiengebühren und durch die geringere Studienanfängerquote. Jedoch geht ein relevanter Teil der Einnahmen durch die Studiengebühren wieder durch niedrigere Steuereinnahmen der im Durchschnitt nun weniger gebildeten Studienberechtigte verloren. Der MVPF beträgt `r format(res$tuitionFees$mvpf)`. Da sowohl der Nenner als auch der Zähler negativ sind, gibt der MVPF an wie viel Wert auf Seiten der Studienberechtigten pro Euro generierten Steueraufkommen verloren gehen. Ein zusätzlicher Euro Steueraufkommen hatte also einen Verlust von `r format(res$tuitionFees$mvpf)` auf Seiten der Studienberechtigten zur Folge.
+
+
