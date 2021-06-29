@@ -1,0 +1,285 @@
+<!--Minimal exmaple of adding a bar chart. Give the canvas the id: chart"reform""variable"
+replace drawChart(json, reform, variable) with the reform and variable that should be plotted
+
+If there are multiple Charts in a document we want to avoid reloading the date every time. Can use the code below to check if it is loaded every 200ms and then draw once data is loaded.
+<canvas id="chartbafoeg2001willingness_to_pay" style="width: 100%; height: 170px"></canvas>
+<script>
+    async function drawGraphs() {
+        while (true) {
+            if (content_loaded) {
+                break;
+            }
+            else {
+                await new Promise(r => setTimeout(r, 200));
+            }
+        }
+        drawChart(unmodified_dataset, "willingness_to_pay", "bafoeg2001", "WTP Bafoeg 2001");
+    }
+    drawGraphs();
+</script>
+-->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.3.0/chart.min.js"></script>
+<canvas id="chartbafoeg2001willingness_to_pay" style="width: 100%; height: 170px"></canvas>
+<script>
+    var unmodified_dataset;
+    var document_root = "";
+    var content_loaded = false;
+    var additional_program_info;
+    var categories;
+    var colors;
+    var variable_mapping;
+    var tooltip_counter = 1;
+    async function loadJSON(url) {
+        var json;
+        await fetch(url).then(response => {
+            json = response.json();
+        });
+        return json;
+    }
+
+    async function readjson(assumption_string) {
+        // depends on additional_program_info being loaded as we need some way of determining which government policies exist before this function can be called
+
+        // This will be the array carrying the data. It should be compatible to the array returned from readcsv with the only difference that the json format omits all the keys with NA values.
+        var json_as_array;
+
+        // First we need to get a list of all programs. Where the entries are strings
+        var programs = additional_program_info.map(program => {
+            return program.program_identifier;
+        });
+
+        // Individual json requests to all of the programs
+        var requests = programs.map(program => {
+            // Note: usually one would expect that this code runs the loadJSON and stores the
+            // result in requests. This is not what we want, as the http requests should be
+            // run in parallel for better performance. Fortunately, this is not what is happening. loadJSON is a async function. And async functions return promises. which are not automatically resolved.
+            return loadJSON(document_root + "data/" + program + "/" + assumption_string + ".json");
+        });
+
+        // Resolve promises in parallel
+        await Promise.all(requests).then((result) => json_as_array = result);
+
+        // This loop merges the loaded ddata with the details about each reform (description, sources, age etc..) form programs.json. The resulting array of objects then contains all relevant data.
+
+        for (var i = 0; i < json_as_array.length; i++) {
+            Object.assign(json_as_array[i], additional_program_info[i]);
+            // Rename program identifier to program. (For compatibility with the old solution)
+            json_as_array[i]["program"] = json_as_array[i]["program_identifier"];
+            delete json_as_array[i]["program_identifier"];
+        }
+
+        unmodified_dataset = JSON.parse(JSON.stringify(json_as_array));
+
+        // sort by category & ensure that categories is defined already
+        if (typeof (categories) != "undefined") {
+            unmodified_dataset.sort(function (a, b) {
+                return categories.indexOf(a.category) - categories.indexOf(b.category);
+            });
+        }
+        return json_as_array;
+    }
+
+    function getScalesMinMax(program) {
+        // we want the same scale on all of the bar plots. To ensure this we calculate the required min length of the x-axis for each plot and apply the largest to all.
+        let relevant_datapoint = unmodified_dataset.find(function (datapoint) {
+            return (datapoint.program === program);
+        });
+
+        let max = addAllPositivesSubtractAllNegatives([
+            Math.abs(parseFloat(relevant_datapoint["willingness_to_pay"]),
+                -Math.abs(parseFloat(relevant_datapoint["government_net_costs"])))
+        ]);
+        let mappingEntry;
+
+        for (let i = 0; i < variable_mapping.length; i++) {
+            if (variable_mapping[i].program === program) {
+                mappingEntry = variable_mapping[i];
+                break;
+            }
+        }
+
+        barComponents = mappingEntry["willingness_to_pay"];
+        let array = [];
+        let component;
+        for (component in barComponents) {
+            array.push(parseFloat(relevant_datapoint[component]));
+        }
+        max = Math.max(addAllPositivesSubtractAllNegatives(array), max);
+
+
+        barComponents = mappingEntry["government_net_costs"];
+        array = [];
+        for (component in barComponents) {
+            array.push(parseFloat(relevant_datapoint[component]));
+        }
+        max = Math.max(addAllPositivesSubtractAllNegatives(array), max);
+
+        return (max);
+    }
+
+    function selectColor(number, background = false) {
+        // returns a string in the format rgba(123,123,123,0.6)
+        let background_opa = 0.7
+        let foreground_opa = 0.9
+        if (number > colors.length) {
+            console.log("Color not in range of supplied colors in colors.json");
+            // Reuse last color in this case
+            number = colors.length;
+        }
+        color_triple = colors[number - 1];
+        return `rgba(${color_triple[0]},${color_triple[1]},${color_triple[2]},${background ? background_opa : foreground_opa})`;
+    }
+
+    function addAllPositivesSubtractAllNegatives(array) {
+        let negative = 0;
+        let positive = 0;
+        let i;
+        for (i = 0; i < array.length; i++) {
+            if (array[i] > 0) {
+                positive += array[i];
+            }
+            else {
+                negative -= array[i];
+            }
+        }
+        return (Math.max(Math.abs(positive), Math.abs(negative)));
+    }
+
+    function generateBarData(csv_as_array, variable_to_plot, program) {
+        let datasets = [];
+        let barComponents;
+        let bar_counter = 1;
+        let relevant_datapoint = unmodified_dataset.find(function (datapoint) {
+            return (datapoint.program === program);
+        });
+        if (variable_to_plot === "mvpf") {
+            datasets.push({
+                label: "Government Net Cost",
+                data: [parseFloat(relevant_datapoint["government_net_costs"])],
+                backgroundColor: selectColor(bar_counter, true),
+                borderColor: selectColor(bar_counter),
+            });
+            datasets.push({
+                label: "Willingness to Pay",
+                data: [relevant_datapoint["willingness_to_pay"]],
+                backgroundColor: selectColor(bar_counter + 1, true),
+                borderColor: selectColor(bar_counter + 1),
+            });
+            bar_counter += 2;
+            return (datasets);
+        }
+        for (let i = 0; i < variable_mapping.length; i++) {
+            if (variable_mapping[i].program === program) {
+                barComponents = variable_mapping[i][variable_to_plot];
+                break;
+            }
+        }
+        for (component in barComponents) {
+            datasets.push({
+                label: barComponents[component],
+                data: [relevant_datapoint[component]],
+                backgroundColor: selectColor(bar_counter, true),
+                borderColor: selectColor(bar_counter)
+            });
+            bar_counter++;
+        }
+        bar_counter = 1;
+        return (datasets);
+    }
+    function drawChart(csv_as_array, variable_to_plot, program, heading = "") {
+        let chartElement = document.getElementById('chart' + program + variable_to_plot);
+        // Get Plotting range
+        let range = getScalesMinMax(program);
+        let chart = new Chart(chartElement, {
+            type: 'bar',
+            data: {
+                labels: '.', // In ChartJS Beta 3.0 this could be left empty. If we leave it empty in 3.3, there is no graph drawn anymore. (And the tooltip is now shared for all areas of the chart in 3.3).
+                datasets: generateBarData(csv_as_array, variable_to_plot, program)
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: false,
+                maintainAspectRatio: false,
+                aspectRatio: 4,
+                //devicePixelRatio: 4, //Set this to save a high res png. Otherwise leave default
+                plugins: {
+                    title: {
+                    display: true,
+                    text: heading,
+                    align: "start",
+                    position: "top"
+                    },
+                    legend: {
+                        position: 'bottom',
+                        usePointStyle: true,
+                        onClick: () => { } //This disables the ability to click on the legend and remove effects.
+                    },
+                    tooltip: {
+                        enabled: true,
+                        displayColors: false,
+                        bodyColor: "black",
+                        backgroundColor: "white",
+                        borderWidth: 2,
+                        cornerRadius: 8,
+                        bodyFont: { weight: 600 },
+                        borderColor: "#2b6ebe",
+                        mode: 'nearest',
+                        callbacks: {
+                            title: function (data) {
+                                return null;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: {
+                            maxTicksLimit: 3
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                            lineWidth: 0,
+                            tickWidth: 1
+                        },
+                        min: -range,
+                        max: range,
+                        afterTickToLabelConversion: function (data) {
+                            // this adds € signs to the tick marks on the x-axis.
+                            let ticks = data.ticks;
+                            for (var i = 0; i < ticks.length; i++) {
+                                ticks[i].label = ticks[i].label.replace(".", "placeholder").replace(",", ".").replace("placeholder", ",") + "€";
+                            }
+                            return data;
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+    if (true) {
+        // load the dataset:
+        Promise.all([
+            loadJSON(document_root + "data/programs.json"),
+            loadJSON(document_root + "data/categories.json")
+        ]).then(return_values => {
+            additional_program_info = return_values[0];
+            categories = return_values[1];
+            return Promise.all([
+                readjson("default"),
+                loadJSON(document_root + "data/variable_mapping.json"),
+                loadJSON(document_root + "data/colors.json")
+            ]);
+        }).then((return_values) => {
+            variable_mapping = return_values[1];
+            colors = return_values[2];
+            drawChart(return_values[0], "willingness_to_pay", "bafoeg2001");
+            content_loaded = true;
+        });
+    }
+</script>
