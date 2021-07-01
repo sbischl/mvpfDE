@@ -19,6 +19,7 @@ schoolFees <- function (bootstrap_replication = 0, use_constant_ols_return_to_sc
   school_fee_eur <- school_fee * dm_eur_conversion_rate
   duration_of_school_alternative <- 6
   duration_of_school_advanced <- 9
+  share_gymnasium <- 0.1 # The Share of students who attended the advanced track "Gymnasium" before the reform.
 
   advanced_track_attendence_effect <- estimates$advanced_track_attendance_effect # This is simulated and comes from
   # Table 2, Estimation C
@@ -31,15 +32,12 @@ schoolFees <- function (bootstrap_replication = 0, use_constant_ols_return_to_sc
   # Direct effects of abolishing fees
   #--------------------------------------------------------------------------------------------------------------------#
 
-  # Discounted value of the fee. This cost is borne by the public. Students or Parents (does not matter) value the
-  # cost they no longer have to pay. To be perfectly accurate here we would have to distinguish between tracks
-  # and account for the fact that students who attend the advanced school (Gymnasium) would have payed the fee longer.
-  # However, we dont know what share would have gone to Gymnasium without the treatment, and there was a general
-  # trend towards more people attending Gymnasiumm. Still at the time it was probably a rather small share. About 10 percent
-  # Hard to find a value. Should be okay to ignore this for now.
-  discounted_school_fee <- discount(from = 1957, to = prices_year) *
-    sum(rep(school_fee_eur, duration_of_school_alternative) *
-          discountVector(duration_of_school_alternative))
+  # Discounted value of the fee. This cost is borne by the public. Students or Parents (does not matter) who attend Gymnasium
+  # value the cost they no longer have to pay. Still at the time it was probably a rather small share. About 10 percent
+  # Hard to find a exact value. See Figure 6 of Riphan (2012)
+  discounted_school_fee <- share_gymnasium * discount(from = 1957, to = prices_year) *
+    sum(rep(school_fee_eur, duration_of_school_advanced) *
+          discountVector(duration_of_school_advanced))
 
   # Government loses the fees.
   government_net_costs <- discounted_school_fee
