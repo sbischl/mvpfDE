@@ -93,8 +93,19 @@ parentalLeave2007 <- function (bootstrap_replication = 0) {
   # Government Net Cost:
   #--------------------------------------------------------------------------------------------------------------------#
 
-  # The government has to pay the new benefit (Elterngeld) instead of the old scheme (Erziehungsgeld).
-  program_cost <- discountMonthlyCashFlow(subsidy_amount, subsidy_period) - discountMonthlyCashFlow(previous_subsidy_amount, previous_subsidy_period)
+  elterngeld_benefit <- discountMonthlyCashFlow(subsidy_amount, subsidy_period)
+
+  # Erziehungsgeld is means-tested. If the net income exceeds certain thresholds, the benefit is reduced.
+  # During the first six months, couples whose combined income exceeded 30.000 € got reduced benefits
+  # From month 7 till month 24 this threshold was 16500€. If it exceeded 22.086€ no benefit was payed.
+  # It is hard to tell which share of individuals falls in which group. To simplify we assume that for the first six months
+  # all received "Erziehungsgeld". For the months 7 - 24 only the low income mothers as defined in Frodermann et al. (2020)
+  erziehungsgeld_benefit <- discountMonthlyCashFlow(previous_subsidy_amount, 6) +
+    (1 - share_high_income_mothers) * discountMonthlyCashFlow(previous_subsidy_amount, 18)
+  print(erziehungsgeld_benefit)
+
+    # The government has to pay the new benefit (Elterngeld) instead of the old scheme (Erziehungsgeld).
+  program_cost <- elterngeld_benefit - erziehungsgeld_benefit
   government_net_costs <- program_cost
 
   # The parental leave reform had an impact on mothers earnings.
