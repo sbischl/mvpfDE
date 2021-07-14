@@ -102,7 +102,6 @@ parentalLeave2007 <- function (bootstrap_replication = 0) {
   # all received "Erziehungsgeld". For the months 7 - 24 only the low income mothers as defined in Frodermann et al. (2020)
   erziehungsgeld_benefit <- discountMonthlyCashFlow(previous_subsidy_amount, 6) +
     (1 - share_high_income_mothers) * discountMonthlyCashFlow(previous_subsidy_amount, 18)
-  print(erziehungsgeld_benefit)
 
     # The government has to pay the new benefit (Elterngeld) instead of the old scheme (Erziehungsgeld).
   program_cost <- elterngeld_benefit - erziehungsgeld_benefit
@@ -161,23 +160,53 @@ parentalLeave2007 <- function (bootstrap_replication = 0) {
 
   government_net_costs = government_net_costs - tax_revenue_increase
 
+  # Since many of the mothers are working part time and ~70% are married, the marginal income tax would depend heavily on the income of the father, which we do not have.
+  # -> Use constant marginal tax rate
+  net_income_effect_1after <- (1 - global_flat_tax) * (daily_earnings_effect_1after_high_income_mother * share_high_income_mothers +
+    daily_earnings_effect_1after_low_income_mother * (1- share_high_income_mothers))
+  net_income_effect_2after <- (1 - global_flat_tax) * (daily_earnings_effect_2after_high_income_mother * share_high_income_mothers +
+    daily_earnings_effect_2after_low_income_mother * (1- share_high_income_mothers))
+  net_income_effect_3after <- (1 - global_flat_tax) * (daily_earnings_effect_3after_high_income_mother * share_high_income_mothers +
+    daily_earnings_effect_3after_low_income_mother * (1- share_high_income_mothers))
+  net_income_effect_4after <- (1 - global_flat_tax) * (daily_earnings_effect_4after_high_income_mother * share_high_income_mothers +
+    daily_earnings_effect_4after_low_income_mother * (1- share_high_income_mothers))
+  net_income_effect_5after <- (1 - global_flat_tax) * (daily_earnings_effect_5after_high_income_mother * share_high_income_mothers +
+    daily_earnings_effect_5after_low_income_mother * (1- share_high_income_mothers))
+  net_income_effect_6after <- (1 - global_flat_tax) * (daily_earnings_effect_6after_high_income_mother * share_high_income_mothers +
+    daily_earnings_effect_6after_low_income_mother * (1- share_high_income_mothers))
+  net_income_effect_7after <- (1 - global_flat_tax) * (daily_earnings_effect_7after_high_income_mother * share_high_income_mothers +
+    daily_earnings_effect_7after_low_income_mother * (1- share_high_income_mothers))
+  net_income_effect_8after <- (1 - global_flat_tax) * (daily_earnings_effect_8after_high_income_mother * share_high_income_mothers +
+    daily_earnings_effect_8after_low_income_mother * (1- share_high_income_mothers))
+  net_income_effect_9after <- (1 - global_flat_tax) * (daily_earnings_effect_9after_high_income_mother * share_high_income_mothers +
+    daily_earnings_effect_9after_low_income_mother * (1- share_high_income_mothers))
+
+  net_income_increase <- sum(c(net_income_effect_1after, net_income_effect_2after, net_income_effect_3after, net_income_effect_4after,
+                              net_income_effect_5after, net_income_effect_6after, net_income_effect_7after, net_income_effect_8after,
+                              net_income_effect_9after) * 365 * discountVector(9))
+
+  willingness_to_pay <- net_income_increase
+
   #--------------------------------------------------------------------------------------------------------------------#
   # Willingness to Pay:
   #--------------------------------------------------------------------------------------------------------------------#
 
-  # Assume that the valuation is equal to the increase in subsidy payed. This should be the lower bound valuation. The reform
-  # induced women to return to work earlier because the subsidy after the 12th month is zero and hence working has gotten relatively
-  # cheaper. Women who started working because of the removal of the subsidy during months 12 to 24 receive the entire
-  # subsidy, but can also work which is worth something between 0 and 300 € to them.
+  # Assume that the valuation is equal to the increase in subsidy payed + the effect on net earnings. An argument could
+  # be made claiming that the earnings change is somehow based on changed effort or labor supply and the result of an
+  # optimization problem in which case the evelope theorem would apply, and the WTP for the changed earnings would be zero.
+  # However, this would be against the results of the paper which explicitly says that the increased earnings do not
+  # come from increased labor supply.
   subsidy_valuation <- program_cost
+  willingness_to_pay <- willingness_to_pay + subsidy_valuation
 
   # All considered effects only take the mother into account. The reform also includes a so-called daddy bonus. The daddy bonus
   # allows the partner who did not make use of the full 12 months to take two months off and also receive the same subsidy of 67%
   # of the last net wage. It might be possible that some of the positive effect on earnings is offset by lower earnings of the
   # the father. However, Kluve & Tamm (2013) find no significant effect on fathers' labor supply.
 
-  return_values <- list(willingness_to_pay =  subsidy_valuation,
+  return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs,
+                        net_income_increase = net_income_increase,
                         tax_revenue_increase = - tax_revenue_increase,
                         program_cost = program_cost,
                         prices_year = prices_year)

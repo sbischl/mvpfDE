@@ -317,7 +317,8 @@
   {
     "program": "parentalLeave2007",
     "willingness_to_pay": {
-      "willingness_to_pay": "Zusätzlicher Transfer"
+      "program_cost": "Zusätzlicher Transfer",
+      "net_income_increase": "Gesteigertes Einkommen über 8 Jahre"
     },
     "government_net_costs": {
       "program_cost": "Zusätzlicher Transfer",

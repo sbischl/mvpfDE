@@ -317,6 +317,7 @@
   {
     "program": "parentalLeave2007",
     "willingness_to_pay": {
+      "net_income_increase": "Earnings increase over 8 years",
       "willingness_to_pay": "Valuation of the increased benefit payment"
     },
     "government_net_costs": {
