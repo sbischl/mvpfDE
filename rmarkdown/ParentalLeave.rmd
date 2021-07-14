@@ -1,0 +1,439 @@
+---
+title: "Elternzeit"
+output:
+    html_document:
+        fig_retina: 1
+---
+
+```{r echo=FALSE, include=FALSE}
+# Run the code necessary to get a list named res to access all the results. (Returned from listifyResults(.)) Probably it makes sense to load from disk, because caluclating every time is really slow.
+res <- readRDS(file="results.RData")
+number_of_js_plots <- 0
+
+format <- function(result, flipsign = FALSE) {
+  if (flipsign) {
+    result = - result
+  }
+  toString(round(result,2))
+}
+
+library(ggplot2)
+library(rjson)
+library(scales)
+library(showtext)
+
+# Try to load the alternative font that is used in the pdf exports.
+# If this font is not installed / cannot be found, the standard one will be used
+tryCatch({
+  plot_font <<- "Calibri"
+  font_add(plot_font, "OpenSans-Regular.ttf")
+}, error = function(e) {
+  warning("Font is not installed. Plots are going to use the standard font instead.")
+  plot_font <<- "sans"
+})
+showtext_auto()
+
+makePlot <- function(program, type, heading = "", js = T) {
+  if (missing(program) || missing(type)) {
+    print("Need to specify program and type")
+    return(0)
+  }
+
+  label <- switch(type, "wtp" = "Zahlungsbereitschaft", "cost" = "Fiskalische Kosten")
+  variable <- switch(type, "wtp" = "willingness_to_pay", "cost" = "government_net_costs")
+
+  if (js == TRUE) {
+    if (number_of_js_plots > 0) {
+      return(htmltools::HTML(sprintf(r"(<canvas id="chart%s" style="width: 100%%; height: %ipx"></canvas>
+      <script>
+      async function drawGraphs() {
+        while(true) {
+          if (content_loaded) {
+            break;
+          }
+          else {
+            await new Promise(r => setTimeout(r, 200));
+          }
+        }
+        drawChart(unmodified_dataset, "%s", "%s", "%s");
+      }
+      drawGraphs();
+      </script>
+      )", paste0(program,variable), 170, variable, program, heading)))
+    }
+
+    # We have to split this in multiple strings because sprintf cannot print into strings longer than 8000 characters..
+    variable_decs <- sprintf(r"(<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.3.0/chart.min.js"></script>
+  <canvas id="chart%s" style="width: 100%%; height: %ipx"></canvas>
+  <script>
+    var unmodified_dataset;
+    var document_root = "";
+    var content_loaded = false;
+    var additional_program_info;
+    var categories;
+    var colors;
+    var variable_mapping;
+    var tooltip_counter = 1;
+    )", paste0(program,variable), 170)
+
+    functions <- r"(async function loadJSON(url) {
+    var json;
+    await fetch(url).then(response => {
+        json = response.json();
+    });
+    return json;
+    }
+
+    async function readjson(assumption_string) {
+    // depends on additional_program_info being loaded as we need some way of determining which government policies exist before this function can be called
+
+    // This will be the array carrying the data. It should be compatible to the array returned from readcsv with the only difference that the json format omits all the keys with NA values.
+    var json_as_array;
+
+    // First we need to get a list of all programs. Where the entries are strings
+    var programs = additional_program_info.map(program => {
+        return program.program_identifier;
+    });
+
+    // Individual json requests to all of the programs
+    var requests = programs.map(program => {
+        // Note: usually one would expect that this code runs the loadJSON and stores the
+        // result in requests. This is not what we want, as the http requests should be
+        // run in parallel for better performance. Fortunately, this is not what is happening. loadJSON is a async function. And async functions return promises. which are not automatically resolved.
+        return loadJSON(document_root + "data/" + program + "/" + assumption_string + ".json");
+    });
+
+    // Resolve promises in parallel
+    await Promise.all(requests).then((result) => json_as_array = result);
+
+    // This loop merges the loaded ddata with the details about each reform (description, sources, age etc..) form programs.json. The resulting array of objects then contains all relevant data.
+
+    for (var i = 0; i < json_as_array.length; i++) {
+        Object.assign(json_as_array[i], additional_program_info[i]);
+        // Rename program identifier to program. (For compatibility with the old solution)
+        json_as_array[i]["program"] = json_as_array[i]["program_identifier"];
+        delete json_as_array[i]["program_identifier"];
+    }
+
+    unmodified_dataset = JSON.parse(JSON.stringify(json_as_array));
+
+    // sort by category & ensure that categories is defined already
+    if (typeof(categories) != "undefined") {
+        unmodified_dataset.sort(function(a, b){
+            return categories.indexOf(a.category) - categories.indexOf(b.category);
+        });
+    }
+    return json_as_array;
+}
+
+function getScalesMinMax(program) {
+    // we want the same scale on all of the bar plots. To ensure this we calculate the required min length of the x-axis for each plot and apply the largest to all.
+    let relevant_datapoint = unmodified_dataset.find(function (datapoint) {
+        return (datapoint.program === program);
+    });
+
+    let max = addAllPositivesSubtractAllNegatives([
+        Math.abs(parseFloat(relevant_datapoint["willingness_to_pay"]),
+            -Math.abs(parseFloat(relevant_datapoint["government_net_costs"])))
+    ]);
+    let mappingEntry;
+
+    for (let i = 0; i < variable_mapping.length; i++) {
+        if (variable_mapping[i].program === program) {
+            mappingEntry = variable_mapping[i];
+            break;
+        }
+    }
+
+    barComponents = mappingEntry["willingness_to_pay"];
+    let array = [];
+    let component;
+    for (component in barComponents) {
+        array.push(parseFloat(relevant_datapoint[component]));
+    }
+    max = Math.max(addAllPositivesSubtractAllNegatives(array), max);
+
+
+    barComponents = mappingEntry["government_net_costs"];
+    array = [];
+    for (component in barComponents) {
+        array.push(parseFloat(relevant_datapoint[component]));
+    }
+    max = Math.max(addAllPositivesSubtractAllNegatives(array), max);
+
+    return (max);
+}
+
+function selectColor(number, background = false) {
+    // returns a string in the format rgba(123,123,123,0.6)
+    let background_opa = 0.7
+    let foreground_opa = 0.9
+    if (number > colors.length) {
+        console.log("Color not in range of supplied colors in colors.json");
+        // Reuse last color in this case
+        number = colors.length;
+    }
+    color_triple = colors[number - 1];
+    return `rgba(${color_triple[0]},${color_triple[1]},${color_triple[2]},${background ? background_opa : foreground_opa})`;
+}
+
+function addAllPositivesSubtractAllNegatives(array) {
+    let negative = 0;
+    let positive = 0;
+    let i;
+    for (i = 0; i < array.length; i++) {
+        if (array[i] > 0) {
+            positive += array[i];
+        }
+        else {
+            negative -= array[i];
+        }
+    }
+    return (Math.max(Math.abs(positive), Math.abs(negative)));
+}
+
+function generateBarData(csv_as_array, variable_to_plot, program) {
+    let datasets = [];
+    let barComponents;
+    let bar_counter = 1;
+    let relevant_datapoint = unmodified_dataset.find(function (datapoint) {
+        return (datapoint.program === program);
+    });
+    if (variable_to_plot === "mvpf") {
+        datasets.push({
+            label: "Government Net Cost",
+            data: [parseFloat(relevant_datapoint["government_net_costs"])],
+            backgroundColor: selectColor(bar_counter, true),
+            borderColor: selectColor(bar_counter),
+        });
+        datasets.push({
+            label: "Willingness to Pay",
+            data: [relevant_datapoint["willingness_to_pay"]],
+            backgroundColor: selectColor(bar_counter + 1, true),
+            borderColor: selectColor(bar_counter + 1),
+        });
+        bar_counter += 2;
+        return (datasets);
+    }
+    for (let i = 0; i < variable_mapping.length; i++) {
+        if (variable_mapping[i].program === program) {
+            barComponents = variable_mapping[i][variable_to_plot];
+            break;
+        }
+    }
+    for (component in barComponents) {
+        datasets.push({
+            label: barComponents[component],
+            data: [relevant_datapoint[component]],
+            backgroundColor: selectColor(bar_counter, true),
+            borderColor: selectColor(bar_counter)
+        });
+        bar_counter++;
+    }
+    bar_counter = 1;
+    return (datasets);
+}
+)"
+    drawChart <- r"(function drawChart(csv_as_array, variable_to_plot, program, heading = "") {
+    let chartElement = document.getElementById('chart' + program + variable_to_plot);
+    // Get Plotting range
+    let range = getScalesMinMax(program);
+    let chart = new Chart(chartElement, {
+        type: 'bar',
+        data: {
+            labels: '.', // In ChartJS Beta 3.0 this could be left empty. If we leave it empty in 3.3, there is no graph drawn anymore. (And the tooltip is now shared for all areas of the chart in 3.3).
+            datasets: generateBarData(csv_as_array, variable_to_plot, program)
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: false,
+            maintainAspectRatio: false,
+            aspectRatio: 4,
+            //devicePixelRatio: 4, //Set this to save a high res png. Otherwise leave default
+            plugins: {
+                title: {
+                    display: true,
+                    text: heading,
+                    align: "start",
+                    position: "top"
+                },
+                legend: {
+                    position: 'bottom',
+                    usePointStyle: true,
+                    onClick: () => {} //This disables the ability to click on the legend and remove effects.
+                },
+                tooltip: {
+                    enabled: true,
+                    displayColors: false,
+                    bodyColor: "black",
+                    backgroundColor: "white",
+                    borderWidth: 2,
+                    cornerRadius: 8,
+                    bodyFont: {weight: 600},
+                    borderColor: "#2b6ebe",
+                    mode: 'nearest',
+                    callbacks: {
+                        title: function (data) {
+                            return null;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: {
+                        maxTicksLimit: 3
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                        lineWidth: 0,
+                        tickWidth: 1
+                    },
+                    min: -range,
+                    max: range,
+                    afterTickToLabelConversion: function(data) {
+                        // this adds € signs to the tick marks on the x-axis.
+                        let ticks = data.ticks;
+                        for (var i = 0; i < ticks.length; i++) {
+                            ticks[i].label = ticks[i].label.replace(".", "placeholder").replace(",", ".").replace("placeholder", ",") + "€";
+                        }
+                        return data;
+                    }
+                },
+                y: {
+                    stacked: true,
+                    display: false
+                }
+            }
+        }
+    });
+})"
+    js_exec <- sprintf(r"(if (true) {
+        // load the dataset:
+        Promise.all([
+        loadJSON(document_root + "data/programs.json"),
+        loadJSON(document_root + "data/categories.json")
+    ]).then(return_values => {
+        additional_program_info = return_values[0];
+        categories = return_values[1];
+        return Promise.all([
+            readjson("default"),
+            loadJSON(document_root + "data/variable_mapping.json"),
+            loadJSON(document_root + "data/colors.json")
+        ]);
+    }).then((return_values) => {
+        variable_mapping = return_values[1];
+        colors = return_values[2];
+        drawChart(return_values[0], "%s", "%s", "%s");
+        content_loaded = true;
+    });
+}
+</script>)",variable, program, heading)
+    number_of_js_plots <<- number_of_js_plots + 1
+    return(htmltools::HTML(paste0(variable_decs, functions, drawChart, js_exec)))
+  }
+
+
+  variable_mapping = rjson::fromJSON(file = "variable_mapping.json")
+
+  # Construct the dataset
+  for (i in 1:length(variable_mapping)) {
+    if (variable_mapping[[i]]$program == program) {
+      relevant_data <- variable_mapping[[i]]
+    }
+  }
+
+  colors <- c(rgb(46,139,87, maxColorValue = 255),
+              rgb(30,144,255, maxColorValue = 255),
+              rgb(255,165,0, maxColorValue = 255),
+              rgb(220,20,60, maxColorValue = 255),
+              rgb(0,128,128, maxColorValue = 255),
+              rgb(0,0,139, maxColorValue = 255),
+              rgb(255,20,147, maxColorValue = 255),
+              rgb(165,42,42, maxColorValue = 255),
+              rgb(154,205,50, maxColorValue = 255),
+              rgb(196, 196, 126, maxColorValue = 255),
+              rgb(189,189,189, maxColorValue = 255))
+
+  getValue <- function(name) {
+    return(res[[program]][[name]])
+  }
+  getRange <- function(data) {
+    positives = 0
+    negatives = 0
+    for (i in 1:length(data$values)) {
+      if (data$values[[i]] >= 0) {
+        positives = positives + data$values[[i]]
+      }
+      else {
+        negatives = negatives - data$values[[i]]
+      }
+    }
+    return(max(c(positives, negatives)))
+  }
+
+  data <- data.frame(values = sapply(names(relevant_data[[variable]]), getValue),
+                     labels = unlist(relevant_data[[variable]], use.names=FALSE), x = 0)
+
+  plot <- ggplot(data) + geom_col(aes(y = values, x = x, fill = labels)) +
+    coord_flip() + theme(legend.position = "bottom") +
+    scale_y_continuous(labels = function(x) paste0(x, "€"), limits = c(-getRange(data), getRange(data))) +
+    scale_fill_manual(values = colors) +
+    scale_shape_manual(values = 21) +
+    ylab(label) +
+    guides(fill=guide_legend(ncol=3,byrow=TRUE)) +
+    theme_minimal(base_size=20,  base_family=plot_font) %+replace%
+      theme (
+      # axis.line.x|y control whether the x and y axis are drawn. It can look stylish to omit one or both:
+      # axis.line.y = element_blank() to omit
+      # e.g: axis.line.x = element_line(color = "darkgrey", size = 0.5) to draw
+      axis.line.y = element_blank(),
+      axis.line.x = element_line(color = "darkgrey", size = 0.75),
+      axis.title.y=element_blank(),
+      panel.border = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      # Enable or Disable Axis ticks:
+      axis.ticks = element_line(color = "darkgrey", size = 0.75),
+      axis.ticks.y = element_blank(),
+      # Removes Legend Explanation:
+      legend.title=element_blank(),
+      # Set location of legend:
+      legend.position = "bottom",
+      # Legend font size
+      legend.text = element_text(size=10.5),
+      # Axis (ticks) size
+      axis.text = element_text(size=11.5),
+      axis.text.y = element_blank(),
+      # Axis label size
+      axis.title = element_text(size=14),
+      # Change Legend Stacking to vertical:
+      legend.box="vertical"
+      )
+  print(plot)
+}
+
+```
+
+## Elterngeld
+Im Jahr 2007 löste das Elterngeld das Erziehungsgeld als die staatliche Transferleistung für Eltern, die aufgrund der Betreung ihrer Kinder vorübergehend nicht berufstätig sind, ab. Dabei wurde das System der Transferzahlungen erheblich verändert. Statt eines fixen Betrages von 300€, welcher bis zu einem gemeinsamen Nettoeinkommen von 30000€ gezahl wurde, ist die Höhe des Elterngeldes an das Nettoeinkommen des beziehenden Elternteils gebunden. Die Höhe des Transfers beträgt 67% des Nettoeinkommens vor der Geburt des Kindes, maximal aber 1800€. Die Bezugsdauer des Elterngeldes ist auf 12 Monate begrenzt. Das Erziehungsgeld konnte bis zu 24 Monate bezogen werden, wobei jedoch ab dem 7. Monat für Paare deren Nettoeinkommen 16.500 Euro überstieg die Transferzahlung reduziert wurde. Wenn das Einkommen 22.086€ überstieg, gab es keinen Anspruch auf Erziehungsgeld mehr. Die meisten Paare erhalten unter dem neuen System eine höhere Transferleistung. Insbesondere Paare mit hohem Einkommen sind besser gestellt. Negativ wirkte sich die Reform auf Eltern aus, die vor der Geburt nicht erwerbstätig waren. [Frodermann et al. (2020)](https://ideas.repec.org/p/iza/izadps/dp12935.html) untersuchen den Effekt der Elterngeldreform auf das Einkommen von Müttern. Da für die Zahlung von Elterngeld oder Erziehungsgeld das Geburtsdatum entscheidend ist, kann die Elterngeldreform unter Verwendung eines Difference in Difference Ansatzes evaluiert werden. Hierbei dienen Mütter deren Kinder im letzten Quartal 2006 geboren wurden als Kontrollgruppe. Die Autorinnen verwenden administrativen Daten, die das Einkommen aller in Deutschland sozialversicherungspflichtig beschäftigten Personen für bis zu 9 Jahre nach Inkrafttreten der Reform enthalten. Somit ist es Frodermann et al. (2020) möglich, die langfristigen Auswirkungen der Elterngeldreform auf die Arbeitseinkommen der Mütter genau zu bestimmen. Die Autorinnen unterscheiden zwischen Müttern mit niedrigen und hohem Einkommen, wobei 56% in die Gruppe mit hohem Einkommen fallen. Der Effekt der Reform unterscheidet sich zwischen Müttern mit hohem und niedrigem Einkommen vor der Geburt. Während für Mütter mit hohem Einkommen ein signifikant positiver Effekt auf das Einkommen gefunden wird, sind die Effekte für Mütter mit niedrigem Einkommen nahe bei null. Die Effektstärke ist am größten in den Jahren eins bis drei nach der Geburt. So wird zwei Jahre nach der Geburt ein Einkommensanstieg um 9.9% für Mütter mit hohem Einkommen gemessen. Der Betrag des   Effekts geht mit den Jahren etwas zurück, bleibt aber auch 9 Jahre nach der Geburt positiv.
+
+Um den MVPF für die Elterngeldreform zu berechnen werden die von Frodermann et al. (2020) geschätzen Effekte auf das Einkommen aufsummiert und mit einer Diskontrate von 3% diskontiert. Die Summe der Einkommensänderungen beträgt im Durchschnitt `r format(res$parentalLeave2007$net_income_increase - res$parentalLeave2007$tax_revenue_increase)`. Um den Anteil des Staates zu berechhnen, wird ein Steuersatz von 28,1 Prozent angenommen. Dies entspricht dem Steuersatz, den eine in Vollzeit arbeitende Person im Jahr 2020 zahlt. Darin enthalten sind auch Beiträge zur Kranken- und Pflegeversicherung. Die Sozialversicherungsbeiträge die für die Arbeitslosenversicherung und für die Rentenversicherung entrichtet werden müssen werden nicht als Steuer interpretiert. Es ergibt sich somit ein Anstieg der Nettoeinkommen der Mütter um  `r format(res$parentalLeave2007$net_income_increase - res$parentalLeave2007$tax_revenue_increase)`€ ✕ (1 - 0.281) =  `r format(res$parentalLeave2007$net_income_increase)`€. Um die Zahlungsbereitschaft für die Reform zu ermitteln, muss zu dem gesteigerten Nettoeinkommen noch der Effekt auf die Höhe des Transfers berechnet werden. Hierfür wird vereinfacht angenommen, dass Mütter mit niedrigem Einkommen das Erziehungsgeld von 300€ über die vollen 24 Monate erhielten. Mütter mit hohem Einkommen erhalten den Transfer nur für die ersten 6 Monate. Zur Berechnung des Elterngeldes wird das durchschnittliche Nettoeinkommen welches von Frodermann et al. (2020) für die beiden Einkommensgruppen angegeben wird verwendet. Im Durchschnitt liegt die Elterngeldzahlung um  `r format(res$parentalLeave2007$program_cost)`€ über der Erziehungsgeldzahlung. Die Zahlungsbereitschaft für die Reform beträgt insgesamt  `r format(res$parentalLeave2007$net_income_increase)`€ + `r format(res$parentalLeave2007$program_cost)`€ = `r format(res$parentalLeave2007$willingness_to_pay)`€.
+ ```{r echo = FALSE, fig.align = 'center', fig.width = 8, fig.height = 2.4, fig.showtext=TRUE}
+makePlot("parentalLeave2007", "wtp", "Zahlungsbereitschaft für Elterngeld")
+```
+Die zusätzlichen Transferzahlungen in Höhe von  `r format(res$parentalLeave2007$program_cost)`€ fallen eins zu eins auf Seiten des Staates als Kosten an. Der Staat profitiert von gesteigerten Steuereinnahmen in Folge von gesteigerte Einkommen der Mütter mit hohem Einkommen in Höhe von `r format(res$parentalLeave2007$net_income_increase - res$parentalLeave2007$tax_revenue_increase)`€ ✕ 0.281 =  `r format(res$parentalLeave2007$tax_revenue_increase, T)`€ und kann so einen Teil der gestiegen Ausgaben wieder einnehmen. Die beiden Kostenkomponenten der Elterngeldreform sind in folgender Grafik dargestellt:
+ ```{r echo = FALSE, fig.align = 'center', fig.width = 8, fig.height = 2.4, fig.showtext=TRUE}
+makePlot("parentalLeave2007", "cost", "Kostenkomposition Elterngeld")
+```
+Die Zahlungsbereitschaft für die Elterngeldreform übersteigt die Kosten. Das Kosten-Nutzen Verhältnis ausgedrückt als MVPF beträgt `r format(res$parentalLeave2007$mvpf)`. Pro Euro, der in die Zahlung von Elterngeld investiert wurde, entsteht eine Zahlungsbereitschaft in Höhe von `r format(res$parentalLeave2007$mvpf)`€. Es wurden in der Berechnung des MVPF für die Elterngeldreform lediglich die Mütter betrachtet. Es wäre möglich, dass das gesteigerte Einkommen der Mütter mit einem sinkenden Einkommen bei den Vätern einhergeht. Dazu macht die Studie von Frodermann et al. (2020) keine Aussage, verweist aber auf eine Studie von [Kluve & Tamm (2013](https://ideas.repec.org/a/spr/jopoec/v26y2013i3p983-1005.html) welche keinen negativen Effekt auf das Arbeitsangebot von Vätern findet.
+
+## Betreuungsgeld
+Das Betreuungsgeld stellte eine Transferleistung dar, die Familien in Anspruch nehmen konnten deren Kinder keine staatlich geförderten Kindertagesstätte besuchen. Das Betreuungsgeld sollte als Anerkennung und Unterstützung für Familien deren Kinder im privaten Umfeld betreut werden dienen. Ebenso spielte ein Gerechtigkeitsmotiv bei der Einführung eine Rolle. Für Eltern deren Kinder zu Hause betreut werden, müssen keine Betreuungsplätze an staatlich finanzierten Kindertagesstätten bereitgestellt werden. Durch das Betreuungsgeld erhalten Eltern also eine Kompensation für die privat erbrachte Betreuungsleistung, die sonst aus Steuermitteln finanziert werden müsste. Das Betreuungsgeld wurde 2013 bundesweit eingeführt. Es betrug 100€ und konnte für 22 Monate bezogen werden.  Im Jahr 2015 entschied das Bundesverfassungsgericht, dass die Zahlung von Betreuungsgeld nicht in den Kompetenzbereich des Bundes fällt. Das Betreuungsgeld auf Bundesebene war damit wieder abgeschafft. Lediglich in Bayern entschied man sich dazu das Betreuungsgeld weiter anzubieten.
+
+Um die Kosten und den Nutzen der Betreuungsgeldreform zu berechnen müssen zwei Effekte abgewogen werden. Erstens, wie hoch ist die Anzahl der Kinder die aufgrund der günstigeren Anreize zu Hause betreut werden und welche Einsparungen sind dadurch zu erwarten. Zweitens muss berücksichtigt werden, dass Eltern die ihre Kinder zu Hause betreuen ein geringeres Arbeitsangebot aufweisen, geringere Arbeitseinkommen erzielen und somit weniger Steuern bezahlen. Collischon et al. (2020) evaluieren die Effekte der Betreuungsgeldreform auf berechtigte Mütter mit einem Difference-in-Difference Ansatz. Da Eltern nur für Kinder die nach dem 1. August 2012 geboren wurden Betreuungsgeld beziehen konnten, kann dieser Stichtag zur Identifikation der Auswirkungen der Betreunugsgeldreform genutzt werden. Entscheidend dabei ist, dass der genaue Zeitpunkt der Geburt, und damit die Berechtigung für das Betreuungsgeld quasi zufällig sind. Die Resultate von Collischon et al. (2020) zeigen, dass die Berechtigung Betreuungsgeld zu beziehen mit einer über 36 Monate aufsummierten Einkommensreduktion von 907€ bei berechtigten Müttern einher geht.  Um den resultierenden Steuerverlust zu berechnen, wird ein Steuersatz von 28,1 Prozent angenommen. Dies entspricht dem Steuersatz, den eine in Vollzeit arbeitende Person im Jahr 2020 zahlt. In diesem Steuersatz enthalten sind auch Beiträge zur Kranken- und Pflegeversicherung. Die Sozialversicherungsbeiträge für die Arbeitslosenversicherung und für die Rentenversicherung werden nicht als Steuer interpretiert. Es folgt eine Reduktion des Steueraufkommens von  907€ ✕ 0.281 = `r format(res$homeCareSubsidy$tax_revenue_increase)`€. Die Wahrscheinlichkeit von staatlich subventionierter Kinderbetreung gebrauch zu machen, sinkt durch den Anspruch auf Betreuungsgeld um 5.3 Prozentpunkte. Collischon et al. (2020) geben fiskalische Kosten in Höhe von 620€ pro Monat für die Bereitstellung eines Kinderbetreungsplatzes an. Zur Berechnung des MVPFs wird angenommen, dass die Kosten für die Kinderbetreuung über den Zeitraum der Betreuungsgeldzahlung (22 Monate) eingespart werden. Es ergibt sich eine durchschnittliche Kostenreduktion von `r format(res$homeCareSubsidy$child_care_cost_reduction, T)`€ durch geringere Inanspruchnahme von subventionierter Kinderbetreuung pro berechtigter Mutter. Die Zahlung des Betreuungsgeldes von 100€ über 22 Monate entspricht einem Barwert von  `r format(res$homeCareSubsidy$program_cost)`€, wenn Zahlungen die im zweiten Jahr anfallen mit einer Diskontrate von 3% abgezinst werden. Die Zahlung des Betreuungsgeldes ist die letzte Kostenkomponente der Betreungsgeldreform.
+ ```{r echo = FALSE, fig.align = 'center', fig.width = 8, fig.height = 2.4, fig.showtext=TRUE}
+makePlot("parentalLeave2007", "cost", "Kostenkomposition Betreungsgeldreform")
+```
+Um die Zahlungsbereitschaft für die Reform zu ermitteln wird unterschieden zwischen Müttern, die auch ohne die Reform ihr Kind zu Hause betreut hätten und Müttern die aufgrund des Betreuungsgeldes nicht von staatlich geförderter Kinderbetreuung gebrauch machen. Erstere Gruppe macht einen Anteil von 90% unter den Bezieherinnen von Betreuungsgeld aus. Für diese Gruppe stellt das Betreuungsgeld einen Mitnahmeeffekt in Höhe des erhaltenen Transfers dar. Insgesamt beziehen 53.5% der berechtigten Mütter Betreuungsgeld. Es ergibt sich eine Wertschätzung von `r format(res$homeCareSubsidy$willingness_to_pay)`€. Für Mütter die ihr Verhalten ändern in Folge der Reform wird eine Wertschätzung von null für das erhaltene Betreuungsgeld angenommen. Für die Inanspruchnahme des Betreuungsgeldes ist eine Verhaltensänderung erforderlich, welche unter dem bisherigen Anreizen nicht optimal gewesen wäre. Bei einer marginalen Reform sind die Kosten der Verhaltensänderung gleich dem Nutzen durch die Verhaltensänderung (Envelope Theorem). Durch Teilen der Zahlungbereitschaft von `r format(res$homeCareSubsidy$willingness_to_pay)`€ durch die Nettokosten in Höhe von `r format(res$homeCareSubsidy$government_net_costs)`€ ergibt sich ein MVPF von `r format(res$homeCareSubsidy$government_net_costs)`. Die Einsparungen durch niedrigere Nutzung von öffentlich finanzierten Kindertagesstätten sind etwas größer als die verlorenen Steuereinnahmen. Dennoch führt das Betreuungsgeld zu erheblichen fiskalischen Kosten und ist weit davon entfernt selbstfinanzierend zu sein.
