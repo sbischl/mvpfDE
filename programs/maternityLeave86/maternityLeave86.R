@@ -44,13 +44,13 @@ maternityLeave86 <- function (bootstrap_replication = 0, use_constant_ols_return
   # of 750 DM from month 3 onwards)
   # Mothers who would have stayed at home even if the maternity benefit remained at the pre-reform level value the
   # transfer euro for euro.
-  valuation_maternity_benefit <- (maternity_benefit * 10 -  maternity_benefit_before_reform * 4) * share_of_inframarginal_mothers
+  valuation_maternity_benefit <- (maternity_benefit * 8 -  maternity_benefit_before_reform * 4) * share_of_inframarginal_mothers
   willingness_to_pay <- valuation_maternity_benefit
   # The valuation for women who change their behavior, i.e. who stay longer at home because of the reform is unclear.
   # In case of a marginal reform the envelope theorem would imply that the valuation is zero.
 
   # The subsidy has to be payed for by the government:
-  program_cost <- share_of_benefit_receivers * (maternity_benefit * 10 -  maternity_benefit_before_reform * 4)
+  program_cost <- share_of_benefit_receivers * (maternity_benefit * 8 -  maternity_benefit_before_reform * 4)
   government_net_costs <- program_cost
 
   # In addition the mothers who stay at home do not receive a labor income. Dustmann & Schönberg (2011) do not report
@@ -61,7 +61,7 @@ maternityLeave86 <- function (bootstrap_replication = 0, use_constant_ols_return
 
   # By subtracting the increase in benefit difference before and after the reform
   # times the take-up rate, we can try to infer the effect on net_income that was taxed.
-  net_income_effect <- available_income_effect_40months - share_of_benefit_receivers * (maternity_benefit * 10 -  maternity_benefit_before_reform * 4)
+  net_income_effect <- available_income_effect_40months - share_of_benefit_receivers * (maternity_benefit * 8 -  maternity_benefit_before_reform * 4)
 
   gross_income_effect <- getGrossIncome(net_income = net_income_effect,
                                         flat_tax = global_flat_tax,
