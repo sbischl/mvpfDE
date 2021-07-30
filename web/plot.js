@@ -1005,13 +1005,13 @@ function generateSingleProgramHTML(program) {
 
             <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#costgraphdiv">Willingness
               to Pay:</button>
-            <div class="barChartDiv collapse show" id="costgraphdiv">
+            <div class="barChartDiv collapse show" id="wtpgraphdiv">
             <canvas id="costgraph"></canvas>
             </div>
 
             <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#wtpgraphdiv">Government Net
               Cost:</button>
-            <div class="barChartDiv collapse show" id="wtpgraphdiv">
+            <div class="barChartDiv collapse show" id="costgraphdiv">
             <canvas id="wtpgraph"></canvas>
             </div>
 
