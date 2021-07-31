@@ -61,7 +61,7 @@ decentralizedEmploymentServices <- function (bootstrap_replication = 0) {
   # by the share returned to work under full employment:
   share_working <- share_working_pre_reform * share_working
 
-  # The reported effects are over a time span of 1.5 years
+  # The reported effects are over a time span of 5 years
   reform_impact <- project_medium_run_impact(impact_magnitude = log_earnings_effect,
                                              yearly_control_income = earnings_control_group * 12,
                                              number_of_periods = 5,
