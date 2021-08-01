@@ -19,7 +19,7 @@ jobCreationSchemes <- function (bootstrap_replication = 0, extend_effect = 0) {
   monthly_cost <- (1370 + 1111) / 2
 
   # Program Duration:
-  program_duration <- 12 # Hohmeyer & Wolff (2010) Table 3, 6 to 7 months
+  program_duration <- 12 # Hohmeyer & Wolff (2010) Table 3
 
   # Relative size of each of the studied subgroups. Estimated from Hohmeyer & Wolff (2010), Table 1
   total_west <- 10.4

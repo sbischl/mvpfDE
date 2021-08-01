@@ -4,6 +4,8 @@
 
 # Relevant Literature:
 # Krug & Stephan (2013)
+# There is also a Version published in IRL Review (2016). It seems that all the estimates are the same as in the working
+# paper.
 
 placementService <- function (bootstrap_replication = 0) {
   program_name <- toString(match.call()[1])
@@ -75,14 +77,13 @@ placementService <- function (bootstrap_replication = 0) {
   # It is odd that the effect on earnings is a lot smaller than the reduction in unemployment benefits received. This would
   # imply that individuals in the treatment group are worse off even though they have higher earnings and are more likely
   # to be employed. Such a result is not compatible with the German tax system since marginal tax rates typically do not
-  # exceed 1 and definitely not to the extent to explain such a large difference. Assume that the willingness to pay as at
-  # least equal to the benefit reduction MINUS the earnings change
-  willingness_to_pay <- max(net_income_increase, unemployment_benefits_effect - earnings_effect)
+  # exceed 1 and definitely not to the extent to explain such a large difference.
+  willingness_to_pay <- net_income_increase
 
   return_values <- list(willingness_to_pay =  willingness_to_pay,
                         government_net_costs = government_net_costs,
                         program_cost = program_cost,
-                        net_income_increase =  max(net_income_increase, unemployment_benefits_effect - earnings_effect),
+                        net_income_increase =  net_income_increase,
                         tax_revenue_increase = -tax_revenue_increase,
                         benefit_receipt = -unemployment_benefits_effect,
                         prices_year = prices_year)
