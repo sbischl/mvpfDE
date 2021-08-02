@@ -54,10 +54,6 @@ trainingMeasures <- function (bootstrap_replication = 0, extend_effect = 0) {
   # Average age of training participants:
   average_age <- 37 # About 37, see Online Appendix of Biewen et al. (2014) Table A2, A3
 
-  control_income <- 1700 # There is no information about this in the paper. In the appendix
-  # log wage earnings are reported. But these seem implausible.
-  # The control income only matters if the marginal tax rate is not constant.
-
   # Training cost:
   enrollment_length <- 1.2 # Biewen et al. (2014), Table 1 Column 2000
   monthly_cost <- 580 # Biewen et al. (2014) Table 1 Column 2000
@@ -84,6 +80,8 @@ trainingMeasures <- function (bootstrap_replication = 0, extend_effect = 0) {
     earnings_effect_2year_women_strat2 * (number_women_stratum_2 / total_number_class_room_training) +
     earnings_effect_2year_men_strat3 * (number_men_stratum_3 / total_number_class_room_training) +
     earnings_effect_2year_women_strat3 * (number_women_stratum_3 / total_number_class_room_training)
+
+  print(c(impact_magnitude_year_1 * 12, impact_magnitude_year_2 * 12))
 
   reform_impact <- project_medium_run_impact(absolute_impact_magnitude = c(impact_magnitude_year_1 * 12, impact_magnitude_year_2 * 12),
                                              yearly_control_income = control_income * 12,
