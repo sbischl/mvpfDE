@@ -44,12 +44,13 @@ eegSolar <- function (bootstrap_replication = 0, carbon_leakage_rate = 0) {
   subsidy_per_ton_co2_reduction <- subsidy_per_MWh / co2_offset_per_MWh
 
   # Since the price effect and subsidy_per_ton_co2_reduction sum to the consumer cost, we can calculate the
-  # price effect as. The paper claims that this effect has to be negative because ineffient producers are pushed out
-  # of the market. As a sanity check, we check if this negative .... it is negative
+  # price effect as:
   price_effect <- consumer_cost - subsidy_per_ton_co2_reduction
+  # The paper claims that this effect has to be negative because ineffient producers are pushed out
+  # of the market. As a sanity check, we check if this negative .... it is negative
 
   # To summarize: 1) We have the price effect which lowers prices for consumers
-  # 2) we have the producer cost which is incurredy producers due to lower prices (and maybe also other channels)
+  # 2) we have the producer cost which is incurred by producers due to lower prices (and maybe also other channels)
   # 3) we have the cost of the subsidy
 
   subsidy_cost <- subsidy_per_ton_co2_reduction

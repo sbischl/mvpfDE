@@ -1,0 +1,428 @@
+---
+title: "Erneuerbare Energien Gesetz"
+output:
+    html_document:
+        fig_retina: 1
+---
+
+```{r echo=FALSE, include=FALSE}
+# Run the code necessary to get a list named res to access all the results. (Returned from listifyResults(.)) Probably it makes sense to load from disk, because caluclating every time is really slow.
+res <- readRDS(file="results.RData")
+number_of_js_plots <- 0
+
+format <- function(result, flipsign = FALSE) {
+  if (flipsign) {
+    result = - result
+  }
+  toString(round(result,2))
+}
+
+library(ggplot2)
+library(rjson)
+library(scales)
+library(showtext)
+
+# Try to load the alternative font that is used in the pdf exports.
+# If this font is not installed / cannot be found, the standard one will be used
+tryCatch({
+  plot_font <<- "Calibri"
+  font_add(plot_font, "OpenSans-Regular.ttf")
+}, error = function(e) {
+  warning("Font is not installed. Plots are going to use the standard font instead.")
+  plot_font <<- "sans"
+})
+showtext_auto()
+
+makePlot <- function(program, type, heading = "", js = T) {
+  if (missing(program) || missing(type)) {
+    print("Need to specify program and type")
+    return(0)
+  }
+
+  label <- switch(type, "wtp" = "Zahlungsbereitschaft", "cost" = "Fiskalische Kosten")
+  variable <- switch(type, "wtp" = "willingness_to_pay", "cost" = "government_net_costs")
+
+  if (js == TRUE) {
+    if (number_of_js_plots > 0) {
+      return(htmltools::HTML(sprintf(r"(<canvas id="chart%s" style="width: 100%%; height: %ipx"></canvas>
+      <script>
+      async function drawGraphs() {
+        while(true) {
+          if (content_loaded) {
+            break;
+          }
+          else {
+            await new Promise(r => setTimeout(r, 200));
+          }
+        }
+        drawChart(unmodified_dataset, "%s", "%s", "%s");
+      }
+      drawGraphs();
+      </script>
+      )", paste0(program,variable), 170, variable, program, heading)))
+    }
+
+    # We have to split this in multiple strings because sprintf cannot print into strings longer than 8000 characters..
+    variable_decs <- sprintf(r"(<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.3.0/chart.min.js"></script>
+  <canvas id="chart%s" style="width: 100%%; height: %ipx"></canvas>
+  <script>
+    var unmodified_dataset;
+    var document_root = "";
+    var content_loaded = false;
+    var additional_program_info;
+    var categories;
+    var colors;
+    var variable_mapping;
+    var tooltip_counter = 1;
+    )", paste0(program,variable), 170)
+
+    functions <- r"(async function loadJSON(url) {
+    var json;
+    await fetch(url).then(response => {
+        json = response.json();
+    });
+    return json;
+    }
+
+    async function readjson(assumption_string) {
+    // depends on additional_program_info being loaded as we need some way of determining which government policies exist before this function can be called
+
+    // This will be the array carrying the data. It should be compatible to the array returned from readcsv with the only difference that the json format omits all the keys with NA values.
+    var json_as_array;
+
+    // First we need to get a list of all programs. Where the entries are strings
+    var programs = additional_program_info.map(program => {
+        return program.program_identifier;
+    });
+
+    // Individual json requests to all of the programs
+    var requests = programs.map(program => {
+        // Note: usually one would expect that this code runs the loadJSON and stores the
+        // result in requests. This is not what we want, as the http requests should be
+        // run in parallel for better performance. Fortunately, this is not what is happening. loadJSON is a async function. And async functions return promises. which are not automatically resolved.
+        return loadJSON(document_root + "data/" + program + "/" + assumption_string + ".json");
+    });
+
+    // Resolve promises in parallel
+    await Promise.all(requests).then((result) => json_as_array = result);
+
+    // This loop merges the loaded ddata with the details about each reform (description, sources, age etc..) form programs.json. The resulting array of objects then contains all relevant data.
+
+    for (var i = 0; i < json_as_array.length; i++) {
+        Object.assign(json_as_array[i], additional_program_info[i]);
+        // Rename program identifier to program. (For compatibility with the old solution)
+        json_as_array[i]["program"] = json_as_array[i]["program_identifier"];
+        delete json_as_array[i]["program_identifier"];
+    }
+
+    unmodified_dataset = JSON.parse(JSON.stringify(json_as_array));
+
+    // sort by category & ensure that categories is defined already
+    if (typeof(categories) != "undefined") {
+        unmodified_dataset.sort(function(a, b){
+            return categories.indexOf(a.category) - categories.indexOf(b.category);
+        });
+    }
+    return json_as_array;
+}
+
+function getScalesMinMax(program) {
+    // we want the same scale on all of the bar plots. To ensure this we calculate the required min length of the x-axis for each plot and apply the largest to all.
+    let relevant_datapoint = unmodified_dataset.find(function (datapoint) {
+        return (datapoint.program === program);
+    });
+
+    let max = addAllPositivesSubtractAllNegatives([
+        Math.abs(parseFloat(relevant_datapoint["willingness_to_pay"]),
+            -Math.abs(parseFloat(relevant_datapoint["government_net_costs"])))
+    ]);
+    let mappingEntry;
+
+    for (let i = 0; i < variable_mapping.length; i++) {
+        if (variable_mapping[i].program === program) {
+            mappingEntry = variable_mapping[i];
+            break;
+        }
+    }
+
+    barComponents = mappingEntry["willingness_to_pay"];
+    let array = [];
+    let component;
+    for (component in barComponents) {
+        array.push(parseFloat(relevant_datapoint[component]));
+    }
+    max = Math.max(addAllPositivesSubtractAllNegatives(array), max);
+
+
+    barComponents = mappingEntry["government_net_costs"];
+    array = [];
+    for (component in barComponents) {
+        array.push(parseFloat(relevant_datapoint[component]));
+    }
+    max = Math.max(addAllPositivesSubtractAllNegatives(array), max);
+
+    return (max);
+}
+
+function selectColor(number, background = false) {
+    // returns a string in the format rgba(123,123,123,0.6)
+    let background_opa = 0.7
+    let foreground_opa = 0.9
+    if (number > colors.length) {
+        console.log("Color not in range of supplied colors in colors.json");
+        // Reuse last color in this case
+        number = colors.length;
+    }
+    color_triple = colors[number - 1];
+    return `rgba(${color_triple[0]},${color_triple[1]},${color_triple[2]},${background ? background_opa : foreground_opa})`;
+}
+
+function addAllPositivesSubtractAllNegatives(array) {
+    let negative = 0;
+    let positive = 0;
+    let i;
+    for (i = 0; i < array.length; i++) {
+        if (array[i] > 0) {
+            positive += array[i];
+        }
+        else {
+            negative -= array[i];
+        }
+    }
+    return (Math.max(Math.abs(positive), Math.abs(negative)));
+}
+
+function generateBarData(csv_as_array, variable_to_plot, program) {
+    let datasets = [];
+    let barComponents;
+    let bar_counter = 1;
+    let relevant_datapoint = unmodified_dataset.find(function (datapoint) {
+        return (datapoint.program === program);
+    });
+    if (variable_to_plot === "mvpf") {
+        datasets.push({
+            label: "Government Net Cost",
+            data: [parseFloat(relevant_datapoint["government_net_costs"])],
+            backgroundColor: selectColor(bar_counter, true),
+            borderColor: selectColor(bar_counter),
+        });
+        datasets.push({
+            label: "Willingness to Pay",
+            data: [relevant_datapoint["willingness_to_pay"]],
+            backgroundColor: selectColor(bar_counter + 1, true),
+            borderColor: selectColor(bar_counter + 1),
+        });
+        bar_counter += 2;
+        return (datasets);
+    }
+    for (let i = 0; i < variable_mapping.length; i++) {
+        if (variable_mapping[i].program === program) {
+            barComponents = variable_mapping[i][variable_to_plot];
+            break;
+        }
+    }
+    for (component in barComponents) {
+        datasets.push({
+            label: barComponents[component],
+            data: [relevant_datapoint[component]],
+            backgroundColor: selectColor(bar_counter, true),
+            borderColor: selectColor(bar_counter)
+        });
+        bar_counter++;
+    }
+    bar_counter = 1;
+    return (datasets);
+}
+)"
+    drawChart <- r"(function drawChart(csv_as_array, variable_to_plot, program, heading = "") {
+    let chartElement = document.getElementById('chart' + program + variable_to_plot);
+    // Get Plotting range
+    let range = getScalesMinMax(program);
+    let chart = new Chart(chartElement, {
+        type: 'bar',
+        data: {
+            labels: '.', // In ChartJS Beta 3.0 this could be left empty. If we leave it empty in 3.3, there is no graph drawn anymore. (And the tooltip is now shared for all areas of the chart in 3.3).
+            datasets: generateBarData(csv_as_array, variable_to_plot, program)
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: false,
+            maintainAspectRatio: false,
+            aspectRatio: 4,
+            //devicePixelRatio: 4, //Set this to save a high res png. Otherwise leave default
+            plugins: {
+                title: {
+                    display: true,
+                    text: heading,
+                    align: "start",
+                    position: "top"
+                },
+                legend: {
+                    position: 'bottom',
+                    usePointStyle: true,
+                    onClick: () => {} //This disables the ability to click on the legend and remove effects.
+                },
+                tooltip: {
+                    enabled: true,
+                    displayColors: false,
+                    bodyColor: "black",
+                    backgroundColor: "white",
+                    borderWidth: 2,
+                    cornerRadius: 8,
+                    bodyFont: {weight: 600},
+                    borderColor: "#2b6ebe",
+                    mode: 'nearest',
+                    callbacks: {
+                        title: function (data) {
+                            return null;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: {
+                        maxTicksLimit: 3
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                        lineWidth: 0,
+                        tickWidth: 1
+                    },
+                    min: -range,
+                    max: range,
+                    afterTickToLabelConversion: function(data) {
+                        // this adds € signs to the tick marks on the x-axis.
+                        let ticks = data.ticks;
+                        for (var i = 0; i < ticks.length; i++) {
+                            ticks[i].label = ticks[i].label.replace(".", "placeholder").replace(",", ".").replace("placeholder", ",") + "€";
+                        }
+                        return data;
+                    }
+                },
+                y: {
+                    stacked: true,
+                    display: false
+                }
+            }
+        }
+    });
+})"
+    js_exec <- sprintf(r"(if (true) {
+        // load the dataset:
+        Promise.all([
+        loadJSON(document_root + "data/programs.json"),
+        loadJSON(document_root + "data/categories.json")
+    ]).then(return_values => {
+        additional_program_info = return_values[0];
+        categories = return_values[1];
+        return Promise.all([
+            readjson("default"),
+            loadJSON(document_root + "data/variable_mapping.json"),
+            loadJSON(document_root + "data/colors.json")
+        ]);
+    }).then((return_values) => {
+        variable_mapping = return_values[1];
+        colors = return_values[2];
+        drawChart(return_values[0], "%s", "%s", "%s");
+        content_loaded = true;
+    });
+}
+</script>)",variable, program, heading)
+    number_of_js_plots <<- number_of_js_plots + 1
+    return(htmltools::HTML(paste0(variable_decs, functions, drawChart, js_exec)))
+  }
+
+
+  variable_mapping = rjson::fromJSON(file = "variable_mapping.json")
+
+  # Construct the dataset
+  for (i in 1:length(variable_mapping)) {
+    if (variable_mapping[[i]]$program == program) {
+      relevant_data <- variable_mapping[[i]]
+    }
+  }
+
+  colors <- c(rgb(46,139,87, maxColorValue = 255),
+              rgb(30,144,255, maxColorValue = 255),
+              rgb(255,165,0, maxColorValue = 255),
+              rgb(220,20,60, maxColorValue = 255),
+              rgb(0,128,128, maxColorValue = 255),
+              rgb(0,0,139, maxColorValue = 255),
+              rgb(255,20,147, maxColorValue = 255),
+              rgb(165,42,42, maxColorValue = 255),
+              rgb(154,205,50, maxColorValue = 255),
+              rgb(196, 196, 126, maxColorValue = 255),
+              rgb(189,189,189, maxColorValue = 255))
+
+  getValue <- function(name) {
+    return(res[[program]][[name]])
+  }
+  getRange <- function(data) {
+    positives = 0
+    negatives = 0
+    for (i in 1:length(data$values)) {
+      if (data$values[[i]] >= 0) {
+        positives = positives + data$values[[i]]
+      }
+      else {
+        negatives = negatives - data$values[[i]]
+      }
+    }
+    return(max(c(positives, negatives)))
+  }
+
+  data <- data.frame(values = sapply(names(relevant_data[[variable]]), getValue),
+                     labels = unlist(relevant_data[[variable]], use.names=FALSE), x = 0)
+
+  plot <- ggplot(data) + geom_col(aes(y = values, x = x, fill = labels)) +
+    coord_flip() + theme(legend.position = "bottom") +
+    scale_y_continuous(labels = function(x) paste0(x, "€"), limits = c(-getRange(data), getRange(data))) +
+    scale_fill_manual(values = colors) +
+    scale_shape_manual(values = 21) +
+    ylab(label) +
+    guides(fill=guide_legend(ncol=3,byrow=TRUE)) +
+    theme_minimal(base_size=20,  base_family=plot_font) %+replace%
+      theme (
+      # axis.line.x|y control whether the x and y axis are drawn. It can look stylish to omit one or both:
+      # axis.line.y = element_blank() to omit
+      # e.g: axis.line.x = element_line(color = "darkgrey", size = 0.5) to draw
+      axis.line.y = element_blank(),
+      axis.line.x = element_line(color = "darkgrey", size = 0.75),
+      axis.title.y=element_blank(),
+      panel.border = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      # Enable or Disable Axis ticks:
+      axis.ticks = element_line(color = "darkgrey", size = 0.75),
+      axis.ticks.y = element_blank(),
+      # Removes Legend Explanation:
+      legend.title=element_blank(),
+      # Set location of legend:
+      legend.position = "bottom",
+      # Legend font size
+      legend.text = element_text(size=10.5),
+      # Axis (ticks) size
+      axis.text = element_text(size=11.5),
+      axis.text.y = element_blank(),
+      # Axis label size
+      axis.title = element_text(size=14),
+      # Change Legend Stacking to vertical:
+      legend.box="vertical"
+      )
+  print(plot)
+}
+
+```
+## EEG
+Durch das Erneuerbare-Energien-Gesetz (EEG) wird seit dem Jahr 2000 die Produktion von Strom aus erneuerbaren Energieträgern subventioniert. Die jährliche Fördersumme für grünen Strom bewegt sich im Bereich von 20 bis 30 Milliarden Euro. Abrell et al. (2019) stellen ein Gleichgewichtsmodell des europäischen Strommarktes auf, welches es den Autoren ermöglicht den Effekt der EEG-Förderung auf den CO2 Ausstoß als auch die von Stromkonsumenten und Produzenten getragenen Kosten zu ermitteln. Um den MVPF der EEG Förderung zu berechnen, muss zunächst die Höhe der EEG-Subvention pro eingesparter Tonne CO2 berechnet werden. Abrell et al. (2019) geben an, dass eine Megawattstunde (MWh) Windstrom mit 60,20€ subventioniert wird. Die Einspeisung einer marginalen MWh Windstrom führt zu mit einer Einsparung von 0,1752 Tonnen CO2. Dabei treffen die Autoren zwei zentrale Annahmen. Erstens,  exportierter Strom führt zu keinen CO2 Einsparung im Ausland. Zweitens, von Windstrom verdrängter Strom aus Wasserkraft und aus Pumpspeicherkraftwerken führt zu keiner CO2 Reduktion zu einem späteren Zeitpunkt. In einer weiteren Spezifikation des Modells von Abrell et al. (2019) sind die beiden Effekte berücksichtigt. Diese kann aber nicht für die Berechnung des MVPFs verwendet werden, weil die später benötigen Effekt auf die Konsumenten- und Produzentenkosten nur für die Basisspezifikation angegeben werden. Bei einer Subvention von 60,20€ und einer CO2 Einsparung von 0,1752 Tonnen pro MWh ergibt sich eine Subvention von 343,61€ pro eingesparter Tonne CO2. Für Solarstrom ergibt sich analog mit einer Subvention von 286,30€ pro MWh und einer CO2 Einsparung von 0,2332 Tonnen pro MWh, eine Förderung von 1227,70€ pro eingesparter Tonne CO2.
+ Als Nächstes muss berücksichtigt werden, wie das EEG die Renten von Konsumenten und Produzenten am Strommarkt verändern. Die Subventionierung von grünem Strom erhöht das Angebot und führt ceteris paribus zu niedrigeren Strompreisen. Produzenten erhalten eine niedrigere Entlohnung pro produzierter MWh. Umgekehrt profitieren Konsumenten von dem niedrigeren Strompreis. Abrell et al. (2019) geben an, dass die Produzenten mindestens 303€ pro durch Windstrom eingesparter Tonne CO2 verlieren. Die Autoren geben Konsumentenkosten in Höhe von -20,90€ an. Im Modell von Abrell et al. (2019) wird, wie es das EEG vorsieht, angenommen, dass die Subventionierung durch einen Aufschlag auf die Stromkosten (EEG-Umlage) durch die Konsumenten finanziert wird. Im Rahmen des MVPF Frameworks, ist die EEG-Umlage aber als Steuer zu interpretieren. Die Einnahmen aus der EEG Umlage könnten theoretisch auch für andere Zwecke verwendet werden. Um den Effekt des niedrigeren Preises auf die Konsumentenrente zu isolieren, muss deshalb die Subvention in Höhe von 343,61€ von den Konsumentenkosten abgezogen werden. Es werden also -20,90 - 343,61€ = 364,51€ durch niedrige Preise aufseiten der Konsumenten eingespart. Die Zahlungsbereitschaft setzt sich zusammen, aus den Verlusten der Produzenten, den Einsparungen der Konsumenten und Wertschätzung für eine eingesparte Tonne CO2. Bei einem CO2 Preis von 100€ pro Tonne ergibt sich eine Zahlungsbereitschaft für Subventionierung von Windstrom von -303€ + 364,51€ + 100€ = 161,51€:
+ ```{r echo = FALSE, fig.align = 'center', fig.width = 8, fig.height = 2.4, fig.showtext=TRUE}
+makePlot("eegWind", "wtp", "Zahlungsbereitschaft EEG Subvention für Windstrom")
+```
+Die Nettokosten entsprechen der pro Tonne CO2-Einsparung gezahlten Förderung von 343,61€. Der MVPF beträgt somit 161,51€ / 343,61€ = 0.47. Für Solarstrom wird die gleiche Rechnung wiederholt. Abrell et al. (2019) geben Produzenten- und Konsumentenkosten von jeweils 181,50€ und 780,20€ an. Nach Abzug der Subvention von 1227,70€ erhalten Konsumenten 1227,70€ - 780,20€ = 447,50€. Die Zahlungsbereitschaft beträgt -181,50€ + 447,50€ + 100€ = 366,00€:
+ ```{r echo = FALSE, fig.align = 'center', fig.width = 8, fig.height = 2.4, fig.showtext=TRUE}
+makePlot("eegSolar", "wtp", "Zahlungsbereitschaft EEG Subvention für Solarstrom")
+```
+Es folgt ein MVPF für die Förderung von Solarstrom durch das EEG von 366€ / 1227,70€ = 0.30. Bei einem CO2 Preis von 100€ pro Tonne CO2 ist die Wertschätzung für die CO2 Einsparung klein verglichen mit den Verteilungseffekten die aufgrund Preisänderungen auftreten. Insgesamt übersteigen die Kosten der Subvention deren Nutzen deutlich. In der Rechnung wird davon ausgegangen, dass das im Stromsektor eingesparte CO2, nicht an anderer Stelle ausgestoßen wird. Sollte es aufgrund der Decklung des CO2 Ausstoßes druch den europäischen Emissionshandels zu keiner effektiven Einsparung kommen, würden die MVPFs noch 0,18 bzw. 0,22 betragen.
