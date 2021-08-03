@@ -54,7 +54,9 @@ negativeIncomeTax <- function (bootstrap_replication = 0, extend_effect = 0) {
   #--------------------------------------------------------------------------------------------------------------------#
 
   # Multiply by 12 because the projection needs the yearly income
-  reform_impact <- project_medium_run_impact(absolute_impact_magnitude = earnings_effect * 12,
+  # Divide by share_enters_emloyment because we need the effect on earnings per receiver of the subsidy
+  # The effect for the others should be zero, they are still unemloyed.
+  reform_impact <- project_medium_run_impact(absolute_impact_magnitude = earnings_effect * 12 / share_enters_emloyment,
                                              yearly_control_income = earnings_control_group * 12,
                                              number_of_periods = 1,
                                              prices_year = prices_year)
