@@ -70,7 +70,7 @@ calculateMVPF <- function(willingness_to_pay , government_net_costs) {
 }
 
 # Calculate the point estimates of all programs.
-getPointEstimates <- function(programs) {
+getPointEstimates <- function(programs, disable_deflating = F) {
   mvpf_results <- data.frame(program = programs)
   for (i in 1:length(programs)) {
     message(paste("Running", programs[i], "once to get the point estimate."))
@@ -78,7 +78,7 @@ getPointEstimates <- function(programs) {
     return_values <- do.call(programs[i], list())
 
     # Deflate unless deflating is explicitely disabled.
-    if (!programs[i] %in% excluded_from_deflating) {
+    if (!disable_deflating && !programs[i] %in% excluded_from_deflating) {
       return_values <- deflateReturnValues(return_values, results_prices)
     }
 
