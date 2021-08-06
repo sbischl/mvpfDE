@@ -2371,6 +2371,7 @@ exportPlotJSON <- function(programs = getCompletePrograms(),
       current_program_results <- estimation_results[j,]
       relevant_variables_vector <- c(relevant_variables[[current_program]],
                                      "mvpf",
+                                     "prices_year",
                                      "willingness_to_pay_per_program_cost",
                                      "willingness_to_pay",
                                      "government_net_costs",
