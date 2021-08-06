@@ -2109,9 +2109,19 @@ getListOfAllMetaAssumptions <- function() {
     tax_rate = c("0", "10", "30", "50", "incometaxonly", "nonlinear"),
     returns_to_schooling = c("5","7", "11", "IAB"),
     value_of_statistical_life = c("1million", "2.5million", "5million"),
-    co2_externality = c("0","50","100","250"),
+    co2_externality = c("0", "100","250"),
     wage_growth_rate = c("0", "05", "1", "15"),
-    eti = c("base","0", "3", "6")
+    eti = c("base","0", "6")
+  )
+}
+
+getWhatWorksMetaAssumptions <- function() {
+  list_of_all_meta_assumptions <- list(
+    discount_rate = c("7", "3", "1"),
+    tax_rate = c("0", "10", "30", "50", "incometaxonly", "nonlinear"),
+    returns_to_schooling = c("5","7", "11", "IAB"),
+    co2_externality = c("0", "100","250"),
+    eti = c("base","0", "6")
   )
 }
 
@@ -2208,9 +2218,6 @@ setMetaAssumption <- function(key, value) {
     if (value == "0") {
       co2_externality <<- 0
     }
-    else if (value == "50") {
-      co2_externality <<- 50
-    }
     else if (value == "100") {
       co2_externality <<- 100
     }
@@ -2245,10 +2252,6 @@ setMetaAssumption <- function(key, value) {
     else if (value == "0") {
       overwrite_eti <<- TRUE
       global_eti <<- 0
-    }
-    else if (value == "3") {
-      overwrite_eti <<- TRUE
-      global_eti <<- 0.3
     }
     else if (value == "6") {
       overwrite_eti <<- TRUE
@@ -2341,7 +2344,7 @@ getVariableMapping <- function(program) {
 # Additionally, we add the option export individual programs. So we get a subfolder for each program, which contains a json
 # file for each specification
 exportPlotJSON <- function(programs = getCompletePrograms(),
-                           assumption_list = getListOfAllMetaAssumptions(),
+                           assumption_list = getWhatWorksMetaAssumptions(),
                            bootstrap  = FALSE,
                            meta_assumptions = TRUE,
                            only_default_specification = FALSE) {
@@ -2456,7 +2459,7 @@ exportPlotJSON <- function(programs = getCompletePrograms(),
 
 # This function calculates the MVPF of all possible combinations of assumptions. The resulting
 # csv file can be read by the web visualization in the ./web/ folder
-exportPlotCSV <- function(programs, assumption_list = getListOfAllMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE) {
+exportPlotCSV <- function(programs, assumption_list = getWhatWorksMetaAssumptions(), bootstrap  = FALSE, meta_assumptions = TRUE) {
   # assumption list is a list that specifies all the possible assumptions for which the code should be run.
   # Example:
   # assumption_list = list(tax_rate = c(0.5,0.3), discount_rate = c(0.1,0.2))

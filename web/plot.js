@@ -490,7 +490,7 @@ function getCSVLocation(specifiedAssumptions) {
 function getGraphAssumptions() {
     // The assumption Select Box Ids have to be in the correct order!!
     // The correct order is given by order of the assumptions in the csv / json file names
-    let assumptionSelectBoxesIds = ["discountRateAssumption", "taxRateAssumption", "returnsToSchoolingAssumption", "valueOfStatisticalLifeAssumption", "co2externality", "wage_growth_rate", "eti"];
+    let assumptionSelectBoxesIds = ["discountRateAssumption", "taxRateAssumption", "returnsToSchoolingAssumption", "co2externality", "eti"];
     let specifiedAssumptions = [];
 
     for (let i = 0; i < assumptionSelectBoxesIds.length; i++) {
@@ -1006,13 +1006,13 @@ function generateSingleProgramHTML(program) {
             <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#costgraphdiv">Willingness
               to Pay:</button>
             <div class="barChartDiv collapse show" id="wtpgraphdiv">
-            <canvas id="costgraph"></canvas>
+            <canvas id="wtpgraph"></canvas>
             </div>
 
             <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#wtpgraphdiv">Government Net
               Cost:</button>
             <div class="barChartDiv collapse show" id="costgraphdiv">
-            <canvas id="wtpgraph"></canvas>
+            <canvas id="costgraph"></canvas>
             </div>
 
             <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#wtpcostgraphdiv">Government Net Cost & Willingness to Pay:</button>
