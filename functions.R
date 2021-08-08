@@ -69,6 +69,12 @@ calculateMVPF <- function(willingness_to_pay , government_net_costs) {
   return(mvpf)
 }
 
+# helper function to quickly calculate the mvpf of a program, takes program identifier as input
+getMVFP <- function(program) {
+  result <- do.call(program, list())
+  calculateMVPF(result$willingness_to_pay, result$government_net_costs)
+}
+
 # Calculate the point estimates of all programs.
 getPointEstimates <- function(programs, disable_deflating = F) {
   mvpf_results <- data.frame(program = programs)
@@ -2181,17 +2187,11 @@ setMetaAssumption <- function(key, value) {
       global_flat_tax <<- 0.5
     }
     else if(value == "nonlinear") {
-      # Assume the german tax system with pension contributions as income
-      global_assume_flat_tax <<- FALSE
-      global_inculde_welfare_benefits_fraction <<- 1
-      global_income_fraction_of_pension_contribution <<- 1
-      global_income_fraction_of_unemployment_insurance_contribution <<- 1
-      global_income_fraction_of_health_insurance_contribution <<- 0 #The fraction of pension contributions that is considered income
-      global_income_fraction_of_long_term_care_contribution <<- 0
+      # No variables need to be set, this is the baseline!
     }
     else if(value == "incometaxonly") {
       # Assume that only the income tax (without soli) is relevant
-      global_income_tax_only <<- FALSE
+      global_income_tax_only <<- TRUE
     }
     else {
       warning(paste("Value", value, "of assumption", key, "not found"))
@@ -2424,7 +2424,7 @@ exportPlotJSON <- function(programs = getCompletePrograms(),
 
   foreach(i = 1:nrow(possible_assumption_combinations),
           .export =  ls(globalenv())[!ls(globalenv()) %in% c("programs")], #this gets rid of some warnings
-          .packages = c("dplyr", "readxl")) %dopar% {
+          .packages = c("dplyr", "readxl")) %do% {
     # Iterate over all possible assumption combinations
 
     # First reset all assumptions back to default:
