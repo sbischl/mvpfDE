@@ -1,4 +1,4 @@
-ba---
+---
 title: "Absenkungen des Spitzensteuersatzes"
 output: html_document
 ---

@@ -82,6 +82,7 @@ decentralizedEmploymentServices <- function (bootstrap_replication = 0) {
   yearly_cost_unemployed <- getTaxPayment(gross_income = 0,
                                           prices_year = prices_year,
                                           inculde_welfare_benefits_fraction = 1,
+                                          income_tax_only = FALSE,
                                           assume_flat_tax = FALSE)
 
   unemployment_benefits_cost <- -yearly_cost_unemployed * (additional_days_unemployed / 365)

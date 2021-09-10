@@ -3,7 +3,7 @@
 #----------------------------------------------------------------------------------------------------------------------#
 
 # Relevant Literature:
-# Baumgartner & Steiner (2006)
+# Baumgartner & Steiner (2004)
 
 bafoegRepayment <- function (bootstrap_replication = 0,
                                        use_constant_ols_return_to_schooling = global_use_constant_ols_return_to_schooling) {
@@ -16,7 +16,7 @@ bafoegRepayment <- function (bootstrap_replication = 0,
 
   dm_eur_conversion_rate <- 0.51129
 
-  # Effect on enrollment, see Table 5:
+  # Effect on enrollment, see Table 3:
   enrollment_effect <- estimates$enrollment_effect_extended_sample
 
   # The enrollment effect gives the effect on students who are eligible for bafög and have the necessary degree from
