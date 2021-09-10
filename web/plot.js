@@ -45,6 +45,9 @@ var variable_mapping;
 // Store the colors used for the Graph (loaded from data/colors.json);
 var colors;
 
+// Store additional information about the literature in a json file;
+var literature;
+
 // Store a unmodified, easy to access version of all programs:
 var unmodified_dataset;
 
@@ -994,10 +997,29 @@ function generateSingleProgramHTML(program) {
         listElements += `<li>${authors[i]} <a href="${links[i]}" class="btn linkbutton" target="_blank">LINK</a></li>`
     }
 
+    let headline_tags = "";
+    let identification = {
+        RCT : ["Randomized Control Trial", "https://en.wikipedia.org/wiki/Randomized_controlled_trial"],
+        IV : ["Instrumental Variable Approach", "https://en.wikipedia.org/wiki/Instrumental_variables_estimation"],
+        RDD : ["Regression Discontinuity Design", "https://en.wikipedia.org/wiki/Regression_discontinuity_design"],
+        DiD : ["Difference in Differences", "https://en.wikipedia.org/wiki/Difference_in_differences"],
+        CSR : ["Cross-sectional Regression", "https://en.wikipedia.org/wiki/Cross-sectional_regression"],
+        SEM : ["Structural Equilibrium Model", "https://en.wikipedia.org/wiki/Simultaneous_equations_model"],
+        PSM : ["Propensity Score Matching", "https://en.wikipedia.org/wiki/Propensity_score_matching"],
+        Other : ["Other", ""]
+    }
+    headline_tags += `<a href=${identification[program_data.identification][1]} class="btn linkbutton" target="_blank">${identification[program_data.identification][0]}</a>`
+    headline_tags += `<a href="https://whatworksgrowth.org/public/files/Scoring-Guide.pdf" style="" class="btn linkbutton" target="_blank">Maryland SMS: ${program_data.maryland_scale}</a>`
+    headline_tags += program_data.what_works_included ? `<a href="" style="pointer-events: none;" class="btn linkbutton" target="_blank">Included in What Works</a>` : ""
+    headline_tags += program_data.peer_reviewed ? `<a href="" style="pointer-events: none;" class="btn linkbutton" target="_blank">Primary Source Peer Reviewed</a>` : ""
+    console.log(program_data)
+
     // Generate Description, Bar Chart divs etc..
     rightHandSideDiv = document.querySelector("#rightsidebarcharts");
     rightHandSideDiv.innerHTML = `
-    <h3>${program_data.program_name}<hr style="margin-bottom: 5px"><small class="text-muted" id="mvpfDisplay" style="font-style: italic;">MVPF = ${program_data["mvpf"] == "Inf" ? "∞" : parseFloat(program_data["mvpf"]).toFixed(2)}</small></h3>
+    <h3>${program_data.program_name}<hr style="margin-bottom: 5px"><small class="text-muted" id="mvpfDisplay" style="font-style: italic;">
+    MVPF = ${program_data["mvpf"] == "Inf" ? "∞" : parseFloat(program_data["mvpf"]).toFixed(2)}</small></h3>
+    ${headline_tags}
 
             <button type="button" class="btn collapseicon" data-toggle="collapse"
               data-target="#refdescription">Description</button>
@@ -1184,12 +1206,14 @@ function main() {
         return Promise.all([
             readjson("default"),
             loadJSON(document_root + "data/variable_mapping.json"),
-            loadJSON(document_root + "data/colors.json")
+            loadJSON(document_root + "data/colors.json"),
+            loadJSON(document_root + "data/literature.json")
         ]);
     }).then((return_values) => {
         csv = return_values[0];
         variable_mapping = return_values[1];
         colors = return_values[2];
+        literature = return_values[3];
         drawMVPFChart(csv);
         populatePrograms();
         populateCategories();
