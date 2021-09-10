@@ -2305,6 +2305,11 @@ exportReformJSON <- function(programs = getCompletePrograms()) {
              average_earnings_beneficiary,
              sources,
              links,
+             bibtexkeys,
+             what_works_included,
+             identification,
+             maryland_scale,
+             peer_reviewed,
              short_description)
 
     df_to_json[i, names(df_row)] <- df_row

@@ -30,6 +30,9 @@ UnifiedWelfareGer.iml
 # JSON export folder
 /json_export/*
 
+# Third party scripts folder
+/scripts/thirdparty/*
+
 # HTML files inside rmarkdwon
 /rmarkdown/*.html
 
