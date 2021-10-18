@@ -2306,6 +2306,7 @@ exportReformJSON <- function(programs = getCompletePrograms()) {
              sources,
              links,
              bibtexkeys,
+             other_data_sources,
              what_works_included,
              identification,
              maryland_scale,
