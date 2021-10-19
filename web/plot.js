@@ -988,13 +988,58 @@ function generateLeftSideHTMLCharts(program) {
 function generateSingleProgramHTML(program) {
     program_data = getUnmodifiedbyIdentProgram(program);
     
-    
     // Generate author citiations
     let links = program_data.links.split(";");
     let authors = program_data.sources.split(";");
+    let bibtexkeys = program_data.bibtexkeys.split(";");
+    console.log(program_data)
+    let datasources;
+    if (!! program_data.other_data_sources){
+        datasources = program_data.other_data_sources.split(";");
+    }
     let listElements = "";
     for (let i = 0; i < authors.length; i++) {
-        listElements += `<li>${authors[i]} <a href="${links[i]}" class="btn linkbutton" target="_blank">LINK</a></li>`
+        let bibtexelement = literature[bibtexkeys[i]];
+        console.log(bibtexelement);
+        listElements += `<li>${authors[i]}, "${bibtexelement.title}", <i>${bibtexelement.journal.name}</i> <a href="${links[i]}" class="btn linkbutton" target="_blank">LINK</a></li>`
+    }
+
+    if (datasources) {
+        for (let i = 0; i < datasources.length; i++) {
+            let bibtexelement = literature[datasources[i]];
+             
+            // parse bibtex
+            function parseAuthors(authors, full_name) {
+                formatted_authors = authors.map(author => {
+                    // This splits first and last name of the authors. If there is no first name. E.g because the author is
+                    // Destatis, then the first name field is left empty
+                    let names = author.name.split(', ');
+                    let last_name = names[0];
+                    let first_name = names[1];
+                    if (first_name == " ") return last_name;
+                    return {
+                        first_name: first_name,
+                        last_name: last_name
+                    };
+                });
+                if (formatted_authors.length == 1) {
+                    if (full_name) return formatted_authors[0].first_name + " " + formatted_authors[0].last_name
+                    return formatted_authors[0].last_name;
+                }
+                else if (formatted_authors.length == 2) {
+                    return formatted_authors[0].last_name + " & " + formatted_authors[1].last_name
+                } 
+                else {
+                    return formatted_authors[0].last_name + "et al."
+                }
+            }
+
+            console.log(bibtexelement);
+            listElements += `<li>${parseAuthors(bibtexelement.author, bibtexelement.fullname == "yes")} (${bibtexelement.year}), "${bibtexelement.title}"
+            ${bibtexelement.journal ? `<i>${bibtexelement.journal.name}</i>` : ""} 
+            ${bibtexelement.url ? `<a href="${bibtexelement.url}" class="btn linkbutton" target="_blank">LINK</a>` : ""}</li>`
+
+        }
     }
 
     let headline_tags = "";
@@ -1006,13 +1051,16 @@ function generateSingleProgramHTML(program) {
         CSR : ["Cross-sectional Regression", "https://en.wikipedia.org/wiki/Cross-sectional_regression"],
         SEM : ["Structural Equilibrium Model", "https://en.wikipedia.org/wiki/Simultaneous_equations_model"],
         PSM : ["Propensity Score Matching", "https://en.wikipedia.org/wiki/Propensity_score_matching"],
-        Other : ["Other", ""]
+        Other : ["Other", "https://mvpfde.de"]
     }
+    // Assign to identification "Other" if the value is somehow not defined or not known
+    program_data.identification = program_data.identification in identification ? program_data.identification  : "Other"
+
     headline_tags += `<a href=${identification[program_data.identification][1]} class="btn linkbutton" target="_blank">${identification[program_data.identification][0]}</a>`
     headline_tags += `<a href="https://whatworksgrowth.org/public/files/Scoring-Guide.pdf" style="" class="btn linkbutton" target="_blank">Maryland SMS: ${program_data.maryland_scale}</a>`
-    headline_tags += program_data.what_works_included ? `<a href="" style="pointer-events: none;" class="btn linkbutton" target="_blank">Included in What Works</a>` : ""
+    headline_tags += program_data.what_works_included ? `<a href="" style="pointer-events: none;" class="btn linkbutton" target="_blank">Included in STEP</a>` : ""
     headline_tags += program_data.peer_reviewed ? `<a href="" style="pointer-events: none;" class="btn linkbutton" target="_blank">Primary Source Peer Reviewed</a>` : ""
-    console.log(program_data)
+    
 
     // Generate Description, Bar Chart divs etc..
     rightHandSideDiv = document.querySelector("#rightsidebarcharts");
@@ -1025,13 +1073,13 @@ function generateSingleProgramHTML(program) {
               data-target="#refdescription">Description</button>
             <div id="refdescription" class="collapse show"><p>${program_data.short_description}</p></div>
 
-            <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#costgraphdiv">Willingness
+            <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#wtpgraphdiv">Willingness
               to Pay:</button>
             <div class="barChartDiv collapse show" id="wtpgraphdiv">
             <canvas id="wtpgraph"></canvas>
             </div>
 
-            <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#wtpgraphdiv">Government Net
+            <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#costgraphdiv">Government Net
               Cost:</button>
             <div class="barChartDiv collapse show" id="costgraphdiv">
             <canvas id="costgraph"></canvas>
@@ -1043,7 +1091,7 @@ function generateSingleProgramHTML(program) {
             </div>
 
             <button type="button" class="btn collapseicon" data-toggle="collapse"
-              data-target="#relliterature">Relevant Literature:</button>
+              data-target="#relliterature">Relevant Literature & Data Sources:</button>
             <div id="relliterature" class="collapse show">
             <ul>
 

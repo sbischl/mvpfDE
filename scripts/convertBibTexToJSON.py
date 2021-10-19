@@ -17,6 +17,9 @@ for entry in collection["records"]:
     # Remove unnecessary keys
     collection_with_bibtex_as_key[entry["id"]].pop("citekey", None)
     collection_with_bibtex_as_key[entry["id"]].pop("collection", None)
+    collection_with_bibtex_as_key[entry["id"]].pop("abstract", None)
+    collection_with_bibtex_as_key[entry["id"]].pop("ENTRYTYPE", None)
+    collection_with_bibtex_as_key[entry["id"]].pop("ID", None)
     collection_with_bibtex_as_key[entry["id"]].pop("id", None)
 
 with open(pathlib.Path(__file__).parents[1] / 'web' / 'data' / 'literature.json', 'w') as f:
