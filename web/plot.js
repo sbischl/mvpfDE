@@ -55,6 +55,87 @@ var unmodified_dataset;
 var category_counter_mvpf = 0;
 var bar_counter = 1;
 
+// HTML Legend plugin for Chart.js (see Chart.js documentation)
+const getOrCreateLegendList = (chart, id) => {
+    const legendContainer = document.getElementById(id);
+    let listContainer = legendContainer.querySelector('ul');
+
+    if (!listContainer) {
+        listContainer = document.createElement('ul');
+        listContainer.style.display = 'flex';
+        listContainer.style.flexDirection = 'row';
+        listContainer.style["flex-wrap"] = "wrap";
+        listContainer.style["justify-content"] = "center";
+        listContainer.style.margin = 0;
+        listContainer.style.padding = 0;
+
+        legendContainer.appendChild(listContainer);
+    }
+
+    return listContainer;
+};
+
+const htmlLegendPlugin = {
+    id: 'htmlLegend',
+    afterUpdate(chart, args, options) {
+        const ul = getOrCreateLegendList(chart, options.containerID);
+
+        // Remove old legend items
+        while (ul.firstChild) {
+            ul.firstChild.remove();
+        }
+
+        // Reuse the built-in legendItems generator
+        const items = chart.options.plugins.legend.labels.generateLabels(chart);
+
+        items.forEach(item => {
+            const li = document.createElement('li');
+            li.style.alignItems = 'center';
+            li.style.cursor = 'pointer';
+            li.style.display = 'flex';
+            li.style.flexDirection = 'row';
+            li.style.marginLeft = '10px';
+
+            li.onclick = () => {
+                return // Disable onlick functionality
+                const { type } = chart.config;
+                if (type === 'pie' || type === 'doughnut') {
+                    // Pie and doughnut charts only have a single dataset and visibility is per item
+                    chart.toggleDataVisibility(item.index);
+                } else {
+                    chart.setDatasetVisibility(item.datasetIndex, !chart.isDatasetVisible(item.datasetIndex));
+                }
+                chart.update();
+            };
+
+            // Color box
+            const boxSpan = document.createElement('span');
+            boxSpan.style.background = item.fillStyle;
+            boxSpan.style.borderColor = item.strokeStyle;
+            boxSpan.style.borderWidth = item.lineWidth + 'px';
+            boxSpan.style.display = 'inline-block';
+            boxSpan.style.height = '15px';
+            boxSpan.style.marginRight = '5px';
+            boxSpan.style["border-radius"] = '4px';
+            boxSpan.style.width = '30px';
+
+            // Text
+            const textContainer = document.createElement('p');
+            textContainer.style.color = item.fontColor;
+            textContainer.style.margin = 0;
+            textContainer.style.padding = 0;
+            textContainer.style.textDecoration = item.hidden ? 'line-through' : '';
+
+            const text = document.createTextNode(item.text);
+            textContainer.appendChild(text);
+
+            li.appendChild(boxSpan);
+            li.appendChild(textContainer);
+            ul.appendChild(li);
+        });
+    }
+};
+
 // Simple helper function which loads a url to a json file into a js object
 async function loadJSON(url) {
     var json;
@@ -747,6 +828,7 @@ function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
             //devicePixelRatio: 4, //Set this to save a high res png. Otherwise leave default
             plugins: {
                 legend: {
+                    display: false,
                     position: 'bottom',
                     usePointStyle: true,
                     onClick: () => {} //This disables the ability to click on the legend and remove effects.
@@ -766,6 +848,9 @@ function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
                             return null;
                         }
                     }
+                },
+                htmlLegend: {
+                    containerID: variable_to_plot + "legend"
                 }
             },
             scales: {
@@ -795,7 +880,8 @@ function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
                     display: false
                 }
             }
-        }
+        },
+        plugins: [htmlLegendPlugin]
     });
     return (barChart);
 }
@@ -1078,17 +1164,20 @@ function generateSingleProgramHTML(program) {
             <div class="barChartDiv collapse show" id="wtpgraphdiv">
             <canvas id="wtpgraph"></canvas>
             </div>
+            <div id="willingness_to_paylegend"></div>
 
             <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#costgraphdiv">Government Net
               Cost:</button>
             <div class="barChartDiv collapse show" id="costgraphdiv">
             <canvas id="costgraph"></canvas>
             </div>
+            <div id="government_net_costslegend"></div>
 
             <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#wtpcostgraphdiv">Government Net Cost & Willingness to Pay:</button>
             <div class="barChartDiv collapse show" id="wtpcostgraphdiv">
             <canvas id="wtpcostgraph"></canvas>
             </div>
+            <div id="mvpflegend"></div>
 
             <button type="button" class="btn collapseicon" data-toggle="collapse"
               data-target="#relliterature">Relevant Literature & Data Sources:</button>
