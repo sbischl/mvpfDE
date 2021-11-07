@@ -97,15 +97,36 @@ const htmlLegendPlugin = {
             li.style.marginLeft = '10px';
 
             li.onclick = () => {
-                return // Disable onlick functionality
                 const { type } = chart.config;
+                if (type === 'bar') {
+                    // Disable functionality for bar charts as removing effects does not make sense yet.
+                    return;
+                }
                 if (type === 'pie' || type === 'doughnut') {
                     // Pie and doughnut charts only have a single dataset and visibility is per item
                     chart.toggleDataVisibility(item.index);
-                } else {
+                } 
+                else {
                     chart.setDatasetVisibility(item.datasetIndex, !chart.isDatasetVisible(item.datasetIndex));
                 }
                 chart.update();
+                /* The ability to disable certain effects and update the MVPF accordingly would go here. Implmentation turned out to be quite difficult because of the dataset update on the MVPF chart. The idea is that we calculate a new mvpf from the bar charts (see below), but when the user clicks on another reform it is not clear what should happen (i.e. should the modified mvpf be retained?, probably yes but this is currently impossible because changinig assumptions always wipes the entire dataset, also clicking on the same reform again would reenable all effects) -> probably little utility high implementation cost feature -> leave out for now
+                if (type === 'bar') {
+                    console.log(governmentCostChart._metasets);
+                    let cost = governmentCostChart._metasets.reduce((total, metaset) => {
+                        if (metaset.hidden === true) {
+                            return total;
+                        }
+                        return total + metaset._dataset.data[0];
+                    },0);
+                    let wtp = wtpC._metasets.reduce((total, metaset) => {
+                        if (metaset.hidden === true) {
+                            return total;
+                        }
+                        return total + metaset._dataset.data[0];
+                    },0);
+                }
+                */
             };
 
             // Color box
@@ -911,6 +932,7 @@ function drawMVPFChart(csv_as_array) {
             scales: getScales("mvpf", "Year", "Marginal Value of Public Funds"),
             plugins: {
                 legend: {
+                    display: false,
                     position: 'bottom',
                     usePointStyle: true,
                     labels: {
@@ -973,12 +995,16 @@ function drawMVPFChart(csv_as_array) {
                             return tooltip;
                         }
                     }
+                },
+                htmlLegend: {
+                    containerID: "mvpfChartLegend"
                 }
             },
             hover: {
                 mode: "point"
             }
-        }
+        },
+        plugins: [htmlLegendPlugin]
     });
     
     mvpfChartElement.onclick = function (evt) {
@@ -1059,6 +1085,7 @@ function generateLeftSideHTMLCharts(program) {
     wtpCostChart = drawBarChart(unmodified_dataset, "mvpf", program, document.querySelector("#wtpcostgraph"));
     
     // Increase size of bar Charts if legend has to many elements:
+    /*
     let chartArray = [wtpChart, governmentCostChart, wtpCostChart];
     let barChartDivArray = [document.querySelector("#wtpgraphdiv"), document.querySelector("#costgraphdiv"), document.querySelector("#wtpcostgraphdiv")]
     let screensize = jQuery(window).width();
@@ -1069,6 +1096,7 @@ function generateLeftSideHTMLCharts(program) {
             barChartDivArray[i].style.height = (160 + (legendItems - 3) * effect_size) + "px" 
         }
     }
+    */
 }
 
 function generateSingleProgramHTML(program) {
@@ -1078,7 +1106,6 @@ function generateSingleProgramHTML(program) {
     let links = program_data.links.split(";");
     let authors = program_data.sources.split(";");
     let bibtexkeys = program_data.bibtexkeys.split(";");
-    console.log(program_data)
     let datasources;
     if (!! program_data.other_data_sources){
         datasources = program_data.other_data_sources.split(";");
@@ -1086,7 +1113,6 @@ function generateSingleProgramHTML(program) {
     let listElements = "";
     for (let i = 0; i < authors.length; i++) {
         let bibtexelement = literature[bibtexkeys[i]];
-        console.log(bibtexelement);
         listElements += `<li>${authors[i]}, "${bibtexelement.title}", <i>${bibtexelement.journal.name}</i> <a href="${links[i]}" class="btn linkbutton" target="_blank">LINK</a></li>`
     }
 
@@ -1119,8 +1145,6 @@ function generateSingleProgramHTML(program) {
                     return formatted_authors[0].last_name + "et al."
                 }
             }
-
-            console.log(bibtexelement);
             listElements += `<li>${parseAuthors(bibtexelement.author, bibtexelement.fullname == "yes")} (${bibtexelement.year}), "${bibtexelement.title}"
             ${bibtexelement.journal ? `<i>${bibtexelement.journal.name}</i>` : ""} 
             ${bibtexelement.url ? `<a href="${bibtexelement.url}" class="btn linkbutton" target="_blank">LINK</a>` : ""}</li>`
@@ -1159,25 +1183,31 @@ function generateSingleProgramHTML(program) {
               data-target="#refdescription">Description</button>
             <div id="refdescription" class="collapse show"><p>${program_data.short_description}</p></div>
 
-            <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#wtpgraphdiv">Willingness
+            <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#wtpgraphcontainer">Willingness
               to Pay:</button>
-            <div class="barChartDiv collapse show" id="wtpgraphdiv">
+            <div id="wtpgraphcontainer" class="graphcontainer collapse show">
+            <div class="barChartDiv" id="wtpgraphdiv">
             <canvas id="wtpgraph"></canvas>
             </div>
             <div id="willingness_to_paylegend"></div>
+            </div>
 
-            <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#costgraphdiv">Government Net
+            <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#costgraphcontainer">Government Net
               Cost:</button>
-            <div class="barChartDiv collapse show" id="costgraphdiv">
+            <div id="costgraphcontainer" class="graphcontainer collapse show">
+            <div class="barChartDiv" id="costgraphdiv">
             <canvas id="costgraph"></canvas>
             </div>
             <div id="government_net_costslegend"></div>
+            </div>
 
-            <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#wtpcostgraphdiv">Government Net Cost & Willingness to Pay:</button>
-            <div class="barChartDiv collapse show" id="wtpcostgraphdiv">
+            <button type="button" class="btn collapseicon" data-toggle="collapse" data-target="#wtpcostgraphcontainer">Government Net Cost & Willingness to Pay:</button>
+            <div id="wtpcostgraphcontainer" class="graphcontainer collapse show">
+            <div class="barChartDiv" id="wtpcostgraphdiv">
             <canvas id="wtpcostgraph"></canvas>
             </div>
             <div id="mvpflegend"></div>
+            </div>
 
             <button type="button" class="btn collapseicon" data-toggle="collapse"
               data-target="#relliterature">Relevant Literature & Data Sources:</button>
