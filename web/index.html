@@ -124,14 +124,16 @@
       <div class="col-lg">
         <div class="row">
           <div class="col-xl-7" id="mvpfChartCol">
-            <div id="mvpfChartDiv">
+            <div style="padding: 20px;">
               <div style="margin-bottom: 20px; margin-left: 45px;">
                 <select class="selectpicker" id="highlightProgram" title="Highlight reform" data-size="6"
                   data-width="300px" data-live-search="true"
                   onchange="highlightProgram(options[this.selectedIndex].value)">
                 </select>
               </div>
-              <canvas id="mvpfChart"></canvas>
+              <div id="mvpfChartDiv">
+                <canvas id="mvpfChart"></canvas>
+              </div>
               <div id="mvpfChartLegend"></div>
             </div>
           </div>

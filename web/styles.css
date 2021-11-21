@@ -42,11 +42,9 @@ body {
  }
 
 #mvpfChartDiv {
-    padding: 20px;
     width: 97%;
-    height: 80vh;
-    max-height: 900px;
-    margin-bottom: 50px;
+    height: 75vh;
+    max-height: 850px;
 }
 
 #rightsidebarcharts {
