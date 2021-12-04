@@ -27,6 +27,9 @@ var programHeadLine
 // String reference to the currently displayed program:
 var currently_displayed_program;
 
+// Object that keeps track of disabled effects
+var disabled_effects = {};
+
 // Bar Chart Div. This one has to be dynamically updated.
 var chartDiv = document.querySelector("#barChartDiv")
 
@@ -48,8 +51,11 @@ var colors;
 // Store additional information about the literature in a json file;
 var literature;
 
-// Store a unmodified, easy to access version of all programs:
+// Store a unmodified, easy to access version of all programs (Object):
 var unmodified_dataset;
+
+// Store unmodified copy of json as array. This is similar to unmodified_dataset but not an array instead of an object:
+var json_as_array_copy;
 
 // This counts the number of categories / or datasets in the chart.js context that have been added so far
 var category_counter_mvpf = 0;
@@ -97,11 +103,10 @@ const htmlLegendPlugin = {
             li.style.marginLeft = '10px';
 
             li.onclick = () => {
-                const { type } = chart.config;
-                if (type === 'bar') {
-                    // Disable functionality for bar charts as removing effects does not make sense yet.
+                if (chart == wtpCostChart) {
                     return;
                 }
+                const { type } = chart.config;
                 if (type === 'pie' || type === 'doughnut') {
                     // Pie and doughnut charts only have a single dataset and visibility is per item
                     chart.toggleDataVisibility(item.index);
@@ -111,22 +116,27 @@ const htmlLegendPlugin = {
                 }
                 chart.update();
                 /* The ability to disable certain effects and update the MVPF accordingly would go here. Implmentation turned out to be quite difficult because of the dataset update on the MVPF chart. The idea is that we calculate a new mvpf from the bar charts (see below), but when the user clicks on another reform it is not clear what should happen (i.e. should the modified mvpf be retained?, probably yes but this is currently impossible because changinig assumptions always wipes the entire dataset, also clicking on the same reform again would reenable all effects) -> probably little utility high implementation cost feature -> leave out for now
-                if (type === 'bar') {
-                    console.log(governmentCostChart._metasets);
-                    let cost = governmentCostChart._metasets.reduce((total, metaset) => {
-                        if (metaset.hidden === true) {
-                            return total;
-                        }
-                        return total + metaset._dataset.data[0];
-                    },0);
-                    let wtp = wtpC._metasets.reduce((total, metaset) => {
-                        if (metaset.hidden === true) {
-                            return total;
-                        }
-                        return total + metaset._dataset.data[0];
-                    },0);
-                }
                 */
+                if (type === 'bar') {
+                    // Determine variable of disabled effect:
+                    let cost_or_wtp = governmentCostChart == chart ? "government_net_costs" : "willingness_to_pay";
+                    let relevant_variable_mapping = getVariableMapping(currently_displayed_program)[cost_or_wtp];
+                    for (let variable of Object.keys(relevant_variable_mapping)) {
+                        if (relevant_variable_mapping[variable] === item.text) {
+                            if (disabled_effects[currently_displayed_program][cost_or_wtp].includes(variable)) {
+                                disabled_effects[currently_displayed_program][cost_or_wtp].splice(disabled_effects[currently_displayed_program][cost_or_wtp].indexOf(variable), 1);
+                            }
+                            else {
+                                disabled_effects[currently_displayed_program][cost_or_wtp].push(variable);
+                            }
+                        }
+                    }
+                    updateGraphDataSet(json_as_array_copy);
+                    updateProgramHeadLine();
+                    setTimeout(function () {
+                        openTooltipCurrentProgram()
+                      }, 500)
+                }
             };
 
             // Color box
@@ -197,18 +207,15 @@ async function readjson(assumption_string) {
         delete json_as_array[i]["program_identifier"];
     }
 
-    unmodified_dataset = JSON.parse(JSON.stringify(json_as_array));
-
-    // sort by category & ensure that categories is defined already
-    if (typeof(categories) != "undefined") {
-        unmodified_dataset.sort(function(a, b){
-            return categories.indexOf(a.category) - categories.indexOf(b.category);
-        });
+    unmodified_dataset = {};
+    for (program of json_as_array) {
+        unmodified_dataset[program["program"]] = JSON.parse(JSON.stringify(program));
     }
     return json_as_array;
 }
 
 // function to readcsv files ... no longer in use
+/*
 async function readcsv(csv_location) {
     let csv_as_array;
 
@@ -220,7 +227,7 @@ async function readcsv(csv_location) {
             xhr.overrideMimeType('text/html; charset=iso-8859-1');
         }
     });
-    */
+    *//*
 
     await jQuery.get(csv_location, function (data) {
         // Calling toObject. Javascript's typeof() function calls the resulting "thing" a object. But to me this looks like an array that contains key-value pairs (= objects??).
@@ -239,6 +246,7 @@ async function readcsv(csv_location) {
     }
     return csv_as_array;
 }
+*/
 
 function generateDatasets(csv_as_array) {
     // This stores the name or in my context the type of program (i.e. something like education policy, tax reform ...) of all the datasets we need to construct
@@ -253,7 +261,17 @@ function generateDatasets(csv_as_array) {
     });
 
     for (i = 0; i < csv_as_array.length; i++) {
-        let current_observation = csv_as_array[i];
+
+        // Generate a copy of the observation to prevent censoring or modification of the original data.
+        let current_observation = JSON.parse(JSON.stringify(csv_as_array[i]));
+
+        // Update values if necessary:
+        let updated_values = applyDisableEffects(current_observation.program);
+        current_observation.mvpf = updated_values.mvpf;
+        current_observation.willingness_to_pay = updated_values.willingness_to_pay;
+        current_observation.government_net_costs = updated_values.government_net_costs;
+        current_observation.willingness_to_pay_per_program_cost = updated_values.willingness_to_pay_per_program_cost;
+        current_observation.government_net_costs_per_program_cost = updated_values.government_net_costs_per_program_cost;
 
         // Check if the dataset already exists. If not add it.
         if (!datasetsLabels.includes(current_observation.category)) {
@@ -348,8 +366,8 @@ async function updateGraphAssumptions() {
 
 function updateProgramHeadLine() {
     // this function manipulates the HTML of the Bar Charts
-    let program_data = getUnmodifiedbyIdentProgram(currently_displayed_program)
-    let mvpf_to_print = program_data["mvpf"] == "Inf" ? "∞" : parseFloat(program_data["mvpf"]).toFixed(2);
+    let program_data = getUnmodifiedProgram(currently_displayed_program)
+    let mvpf_to_print = applyDisableEffects(currently_displayed_program)["mvpf"] == "Inf" ? "∞" : parseFloat(applyDisableEffects(currently_displayed_program)["mvpf"]).toFixed(2);
     document.querySelector("#mvpfDisplay").innerHTML = `MVPF = ${mvpf_to_print}`;
 }
 
@@ -697,22 +715,16 @@ function openTooltip(program) {
     mvpfChart.canvas.dispatchEvent(mouseMoveEvent);
 }
 
-function getUnmodifiedProgram(program_name) {
-    for (let i = 0; i < unmodified_dataset.length; i++) {
-        if (unmodified_dataset[i].program_name == program_name) {
-            return unmodified_dataset[i];
-        }
-    }
-    console.log("There is a problem. Program not found");
+function getUnmodifiedProgram(program) {
+    return(unmodified_dataset[program]);
 }
 
-function getUnmodifiedbyIdentProgram(programIdent) {
-    for (let j = 0; j < unmodified_dataset.length; j++) {
-        if (unmodified_dataset[j].program == programIdent) {
-            return unmodified_dataset[j];
+function getVariableMapping(program) {
+    for (let i = 0; i < variable_mapping.length; i++) {
+        if (variable_mapping[i].program === program) {
+            return(variable_mapping[i])
         }
     }
-    console.log("There is a problem. Program not found");
 }
 
 
@@ -721,7 +733,7 @@ function selectColor(number, background = false) {
     let background_opa = 0.7
     let foreground_opa = 0.9
     if (number > colors.length) {
-        console.log("Color not in range of supplied colors in colors.json");
+        // console.log("Color not in range of supplied colors in colors.json");
         // Reuse last color in this case
         number = colors.length;
     }
@@ -746,22 +758,13 @@ function addAllPositivesSubtractAllNegatives(array) {
 
 function getScalesMinMax(program) {
     // we want the same scale on all of the bar plots. To ensure this we calculate the required min length of the x-axis for each plot and apply the largest to all.
-    let relevant_datapoint = unmodified_dataset.find(function (datapoint) {
-        return (datapoint.program === program);
-    });
+    let relevant_datapoint = getUnmodifiedProgram(program);
 
     let max = addAllPositivesSubtractAllNegatives([
         Math.abs(parseFloat(relevant_datapoint["willingness_to_pay"]),
             -Math.abs(parseFloat(relevant_datapoint["government_net_costs"])))
     ]);
-    let mappingEntry;
-
-    for (let i = 0; i < variable_mapping.length; i++) {
-        if (variable_mapping[i].program === program) {
-            mappingEntry = variable_mapping[i];
-            break;
-        }
-    }
+    let mappingEntry = getVariableMapping(program);
 
     barComponents = mappingEntry["willingness_to_pay"];
     let array = [];
@@ -785,9 +788,7 @@ function getScalesMinMax(program) {
 function generateBarData(csv_as_array, variable_to_plot, program) {
     let datasets = [];
     let barComponents;
-    let relevant_datapoint = unmodified_dataset.find(function (datapoint) {
-        return (datapoint.program === program);
-    });
+    let relevant_datapoint = getUnmodifiedProgram(program);
 
     if (variable_to_plot === "mvpf") {
         datasets.push({
@@ -805,12 +806,7 @@ function generateBarData(csv_as_array, variable_to_plot, program) {
         bar_counter += 2;
         return (datasets);
     }
-    for (let i = 0; i < variable_mapping.length; i++) {
-        if (variable_mapping[i].program === program) {
-            barComponents = variable_mapping[i][variable_to_plot];
-            break;
-        }
-    }
+    barComponents = getVariableMapping(program)[variable_to_plot];
 
     for (component in barComponents) {
         datasets.push({
@@ -904,6 +900,20 @@ function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
         },
         plugins: [htmlLegendPlugin]
     });
+
+    // Disable disabled effects:
+    if (variable_to_plot === "willingness_to_pay" || variable_to_plot ==="government_net_costs") {
+        for (let disabled_effect of disabled_effects[program][variable_to_plot]) {
+            for (let dataset of barChart.data.datasets) {
+                if (getVariableMapping(program)[variable_to_plot][disabled_effect] == dataset.label) {
+                    // hide dataset
+                    dataset.hidden = true
+                    barChart.update();
+                }
+            }
+        }
+    }
+
     return (barChart);
 }
 
@@ -976,7 +986,7 @@ function drawMVPFChart(csv_as_array) {
                         label: function (data) {
                             // Get the name of the program. Since we have censored the data to draw the graph we need to look up the true values:
                             let program_name = data.dataset.data[data.dataIndex]["program_name"];
-                            let unmodified_datapoint = getUnmodifiedProgram(program_name);
+                            let unmodified_datapoint = applyDisableEffects(data.dataset.data[data.dataIndex]["program"]);
                             let tooltip = [];
                             let mvpfIsInfinity = unmodified_datapoint["mvpf"] == "Inf"
     
@@ -1100,7 +1110,7 @@ function generateLeftSideHTMLCharts(program) {
 }
 
 function generateSingleProgramHTML(program) {
-    program_data = getUnmodifiedbyIdentProgram(program);
+    program_data = getUnmodifiedProgram(program);
     
     // Generate author citiations
     let links = program_data.links.split(";");
@@ -1176,7 +1186,7 @@ function generateSingleProgramHTML(program) {
     rightHandSideDiv = document.querySelector("#rightsidebarcharts");
     rightHandSideDiv.innerHTML = `
     <h3>${program_data.program_name}<hr style="margin-bottom: 5px"><small class="text-muted" id="mvpfDisplay" style="font-style: italic;">
-    MVPF = ${program_data["mvpf"] == "Inf" ? "∞" : parseFloat(program_data["mvpf"]).toFixed(2)}</small></h3>
+    MVPF = ${applyDisableEffects(program)["mvpf"] == "Inf" ? "∞" : parseFloat(applyDisableEffects(program)["mvpf"]).toFixed(2)}</small></h3>
     ${headline_tags}
 
             <button type="button" class="btn collapseicon" data-toggle="collapse"
@@ -1222,7 +1232,7 @@ function generateSingleProgramHTML(program) {
 
 /*
 function generateSingleProgramHTML(program) {
-    program_data = getUnmodifiedbyIdentProgram(program);
+    program_data = getUnmodifiedProgram(program);
 
     var singleProgramDiv = document.createElement('div');
     singleProgramDiv.className = "singleProgramDiv";
@@ -1317,13 +1327,13 @@ function generateSingleProgramHTML(program) {
 function populatePrograms() {
     // adds available programs to the programs select box
     let selection = document.querySelector('#highlightProgram');
-    
-    for (let i in unmodified_dataset) {
-        var current_program = getUnmodifiedbyIdentProgram(unmodified_dataset[i].program);
+
+    for (let key in unmodified_dataset) {
+        program = unmodified_dataset[key];
         var option = document.createElement("option");
-        option.value = current_program.program;
-        option.innerHTML = current_program.program_name;
-        option.setAttribute("data-subtext",current_program.category)
+        option.value = program.program;
+        option.innerHTML = program.program_name;
+        option.setAttribute("data-subtext",program.category)
         selection.appendChild(option);
     }
     // The select picker needs to be updated
@@ -1343,6 +1353,63 @@ function populateCategories() {
     }
     // The select picker needs to be updated
     jQuery('#highlightCategory').selectpicker('refresh');
+}
+
+function initDisabledEffects(json_as_array) {
+    for (program of json_as_array) {
+        disabled_effects[program["program"]] = {
+            "government_net_costs" : [],
+            "willingness_to_pay" : []
+        };
+    }
+}
+
+function applyDisableEffects(program) {
+    // Apply effect of disabling certain effects:
+        // First check if something needs to be changed:
+        let effect_disabled = false;
+
+        // Initialize the value that may need updating with their original values.
+        let mvpf = unmodified_dataset[program].mvpf;
+        
+        let government_net_costs_per_program_cost = unmodified_dataset[program].government_net_costs_per_program_cost
+        let willingness_to_pay_per_program_cost = unmodified_dataset[program].willingness_to_pay_per_program_cost
+        let government_net_costs = unmodified_dataset[program].government_net_costs
+        let willingness_to_pay = unmodified_dataset[program].willingness_to_pay
+
+        if (disabled_effects[program]["government_net_costs"].length > 0) {
+            for (disabled_effect of disabled_effects[program]["government_net_costs"]) {
+                government_net_costs -= unmodified_dataset[program][disabled_effect];
+                effect_disabled = true;
+            }
+            government_net_costs_per_program_cost = government_net_costs / unmodified_dataset[program].program_cost;
+        }
+
+        if (disabled_effects[program]["willingness_to_pay"].length > 0) {
+            for (disabled_effect of disabled_effects[program]["willingness_to_pay"]) {
+                willingness_to_pay -= unmodified_dataset[program][disabled_effect];
+                effect_disabled = true;
+            }
+            willingness_to_pay_per_program_cost = willingness_to_pay / unmodified_dataset[program].program_cost;
+        }
+
+        if (effect_disabled) {
+            // Update mvpf if necessary!
+            if (government_net_costs < 0 && willingness_to_pay > 0) {
+                mvpf = "Inf";
+            }
+            else {
+                mvpf = willingness_to_pay / government_net_costs;
+            }
+        }
+
+        return({
+            mvpf: mvpf,
+            government_net_costs: government_net_costs,
+            willingness_to_pay: willingness_to_pay,
+            government_net_costs_per_program_cost: government_net_costs_per_program_cost,
+            willingness_to_pay_per_program_cost: willingness_to_pay_per_program_cost
+        })
 }
 
 function main() {
@@ -1381,6 +1448,8 @@ function main() {
         variable_mapping = return_values[1];
         colors = return_values[2];
         literature = return_values[3];
+        json_as_array_copy = JSON.parse(JSON.stringify(csv));
+        initDisabledEffects(csv);
         drawMVPFChart(csv);
         populatePrograms();
         populateCategories();
