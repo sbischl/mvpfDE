@@ -82,6 +82,8 @@ const getOrCreateLegendList = (chart, id) => {
 };
 
 const htmlLegendPlugin = {
+    // This implements an HTML Legend. Adapted from the HTML reference of the chart.js documentation: https://www.chartjs.org/docs/master/samples/legend/html.html
+    // The major advantage of this approach is that it gives seperate control of the size of the graph (without the legend) and the legend itself. When the chart is drawn on the canvas element as in the chartjs standard case with the legend as part of the canvas, the number of displayed effects causes the width of the bars to vary because the height of the legend varies (More effects to display -> more elements on the legend). This caused parts of the chart and the legend to be outside of the visible area within the canvas and also created visually distracting inconsitencies between charts that should ideally look the same.  
     id: 'htmlLegend',
     afterUpdate(chart, args, options) {
         const ul = getOrCreateLegendList(chart, options.containerID);
@@ -104,6 +106,7 @@ const htmlLegendPlugin = {
 
             li.onclick = () => {
                 if (chart == wtpCostChart) {
+                    // Disable on-click for the combined wtp and cost chart. Disabling cost or wtp does not make sense.
                     return;
                 }
                 const { type } = chart.config;
@@ -114,9 +117,13 @@ const htmlLegendPlugin = {
                 else {
                     chart.setDatasetVisibility(item.datasetIndex, !chart.isDatasetVisible(item.datasetIndex));
                 }
-                chart.update();
-                /* The ability to disable certain effects and update the MVPF accordingly would go here. Implmentation turned out to be quite difficult because of the dataset update on the MVPF chart. The idea is that we calculate a new mvpf from the bar charts (see below), but when the user clicks on another reform it is not clear what should happen (i.e. should the modified mvpf be retained?, probably yes but this is currently impossible because changinig assumptions always wipes the entire dataset, also clicking on the same reform again would reenable all effects) -> probably little utility high implementation cost feature -> leave out for now
-                */
+                if (chart == mvpfChart) {
+                    // If the mvpfChart is clicked on toggling visibility and updating the chart is sufficient.
+                    chart.update();
+                    return;
+                }
+                
+                // The following disables the effect that was clicked on. This persists until the page is reloaded.
                 if (type === 'bar') {
                     // Determine variable of disabled effect:
                     let cost_or_wtp = governmentCostChart == chart ? "government_net_costs" : "willingness_to_pay";
@@ -124,6 +131,7 @@ const htmlLegendPlugin = {
                     for (let variable of Object.keys(relevant_variable_mapping)) {
                         if (relevant_variable_mapping[variable] === item.text) {
                             if (disabled_effects[currently_displayed_program][cost_or_wtp].includes(variable)) {
+                                // Linear search here but small number of disabled effects per reform
                                 disabled_effects[currently_displayed_program][cost_or_wtp].splice(disabled_effects[currently_displayed_program][cost_or_wtp].indexOf(variable), 1);
                             }
                             else {
@@ -131,14 +139,16 @@ const htmlLegendPlugin = {
                             }
                         }
                     }
+                    // Update Graphs to represent the disabled components.
                     updateGraphDataSet(json_as_array_copy);
                     updateProgramHeadLine();
                     setTimeout(function () {
                         openTooltipCurrentProgram()
-                      }, 500)
+                      }, 500);
                 }
             };
 
+            // Styling of the HTML legend goes here:
             // Color box
             const boxSpan = document.createElement('span');
             boxSpan.style.background = item.fillStyle;
@@ -191,14 +201,14 @@ async function readjson(assumption_string) {
     var requests = programs.map(program => {
         // Note: usually one would expect that this code runs the loadJSON and stores the
         // result in requests. This is not what we want, as the http requests should be
-        // run in parallel for better performance. Fortunately, this is not what is happening. loadJSON is a async function. And async functions return promises. which are not automatically resolved.
+        // run in parallel for better performance. Fortunately, this is not what is happening. loadJSON is a async function. And async functions return promises, which are not automatically resolved.
         return loadJSON(document_root + "data/" + program + "/" + assumption_string + ".json");
     });
 
     // Resolve promises in parallel
     await Promise.all(requests).then((result) => json_as_array = result);
 
-    // This loop merges the loaded ddata with the details about each reform (description, sources, age etc..) form programs.json. The resulting array of objects then contains all relevant data.
+    // This loop merges the loaded data with the details about each reform (description, sources, age etc..) form programs.json. The resulting array of objects then contains all relevant data.
 
     for (var i = 0; i < json_as_array.length; i++) {
         Object.assign(json_as_array[i], additional_program_info[i]);
@@ -255,7 +265,7 @@ function generateDatasets(csv_as_array) {
     let datasets = [];
     let i;
 
-    // Sort by category
+    // Sort by category. This allows controlling the order in which the categories are drawn in the legend. And also yields performance benefits because it makes the datasets array that is searched as small as possible.
     csv_as_array.sort(function(a, b) {
         return categories.indexOf(a.category) - categories.indexOf(b.category);
     });
@@ -280,65 +290,66 @@ function generateDatasets(csv_as_array) {
         }
         // Add current observation to the correct dataset:
 
-        // First get the relevant dataset
-        correctDataset = datasets.filter(dataset => {
+        // First get the relevant dataset.
+        correctDataset = datasets.find(dataset => {
             return dataset.label === current_observation.category;
-        })[0];
+        });
 
         // Now add the observation
         correctDataset.data.push(current_observation);
     }
 
-    // Now the csv has been read. Apply the censoring. That means convert infinite values to some number (e.g.) which will act as infinity on the chart.
+    // Now the data has been read. Apply the censoring. That means convert infinite values to some number (e.g.) which will act as infinity on the chart.
     censorValues(datasets);
 
-    // thx @https://stackoverflow.com/questions/13304543/
-    // Again sort by category
-    datasets.sort(function(a, b){
-        return categories.indexOf(a.label) - categories.indexOf(b.label);
-    });
-    datasetsLabels.sort(function(a, b){
-        return categories.indexOf(a) - categories.indexOf(b);
-    });
     return (datasets);
 }
 
 function censorValues(datasets) {
-    let i;
-    let j;
-    let k;
-    for (i = 0; i < datasets.length; i++) {
-        current_dataset = datasets[i].data;
-        for (j = 0; j < current_dataset.length; j++) {
-            for (k in current_dataset[j]) {
-                if (k == "mvpf") {
-                    if (current_dataset[j][k] > infinity_cutoff) {
-                        current_dataset[j][k] = infinity_cutoff;
-                    }
-                    else if (current_dataset[j][k] < lower_cutoff) {
-                        current_dataset[j][k] = lower_cutoff;
-                    }
-                    else if (current_dataset[j][k] == "Inf") {
-                        current_dataset[j][k] = infinity_cutoff + 1;
-                    }
-                }
-                else if (k == "government_net_costs_per_program_cost") {
-                    if (current_dataset[j][k] > cost_upper_cutoff ) {
-                        current_dataset[j][k] = cost_upper_cutoff;
-                    }
-                    else if (current_dataset[j][k] < cost_lower_cutoff ) {
-                        current_dataset[j][k] = cost_lower_cutoff;
-                    }
-                }
-                else if (k == "willingness_to_pay_per_program_cost") {
-                    if (current_dataset[j][k] > wtp_upper_cutoff ) {
-                        current_dataset[j][k] = wtp_upper_cutoff;
-                    }
-                    else if (current_dataset[j][k] < wtp_lower_cutoff ) {
-                        current_dataset[j][k] = wtp_lower_cutoff;
-                    }
-                }
-            }
+    function censorMVPF(mvpf) {
+        if (mvpf > infinity_cutoff) {
+            return infinity_cutoff;
+        }
+        else if (mvpf < lower_cutoff) {
+            return lower_cutoff;
+        }
+        else if (mvpf == "Inf") {
+            return (infinity_cutoff + 1);
+        }
+        else {
+            return mvpf;
+        }
+    }
+
+    function censorCost(cost) {
+        if (cost > cost_upper_cutoff ) {
+            return cost_upper_cutoff;
+        }
+        else if (cost < cost_lower_cutoff ) {
+            return cost_lower_cutoff;
+        }
+        else {
+            return cost;
+        }
+    }
+
+    function censorWTP(wtp) {
+        if (wtp > wtp_upper_cutoff ) {
+           return wtp_upper_cutoff;
+        }
+        else if (wtp < wtp_lower_cutoff ) {
+            return wtp_lower_cutoff;
+        }
+        else {
+            return wtp;
+        }
+    }
+
+    for (let dataset of datasets) {
+        for (let data of dataset.data) {
+            data["mvpf"] = censorMVPF(data["mvpf"]);
+            data["government_net_costs_per_program_cost"] = censorCost(data["government_net_costs_per_program_cost"]);
+            data["willingness_to_pay_per_program_cost"] = censorWTP(data["willingness_to_pay_per_program_cost"]);
         }
     }
 }
@@ -366,7 +377,6 @@ async function updateGraphAssumptions() {
 
 function updateProgramHeadLine() {
     // this function manipulates the HTML of the Bar Charts
-    let program_data = getUnmodifiedProgram(currently_displayed_program)
     let mvpf_to_print = applyDisableEffects(currently_displayed_program)["mvpf"] == "Inf" ? "∞" : parseFloat(applyDisableEffects(currently_displayed_program)["mvpf"]).toFixed(2);
     document.querySelector("#mvpfDisplay").innerHTML = `MVPF = ${mvpf_to_print}`;
 }
@@ -384,9 +394,7 @@ function updateAxis(axis, value, label) {
     mvpfChart.update();
 }
 
-function getScales(variable,
-    xLab = mvpfChart.options.scales.x.scaleLabel.labelString,
-    yLab = mvpfChart.options.scales.y.scaleLabel.labelString) {
+function getScales(variable, xLab = mvpfChart.options.scales.x.scaleLabel.labelString, yLab = mvpfChart.options.scales.y.scaleLabel.labelString) {
     if (variable == "mvpf" | yLab == "Marginal Value of Public Funds") {
         return ({
             y: {
@@ -578,7 +586,7 @@ function updateGraphDataSet(csv_as_array) {
     let range = getScalesMinMax(currently_displayed_program);
 
     if (governmentCostChart) {
-        updatedDatasets = generateBarData(csv_as_array, "government_net_costs", currently_displayed_program);
+        updatedDatasets = generateBarData("government_net_costs", currently_displayed_program);
         for (i = 0; i < updatedDatasets.length; i++) {
             governmentCostChart.data.datasets[i].data = updatedDatasets[i].data;
         }
@@ -587,7 +595,7 @@ function updateGraphDataSet(csv_as_array) {
         governmentCostChart.update();
     }
     if (wtpChart) {
-        updatedDatasets = generateBarData(csv_as_array, "willingness_to_pay", currently_displayed_program);
+        updatedDatasets = generateBarData("willingness_to_pay", currently_displayed_program);
         for (i = 0; i < updatedDatasets.length; i++) {
             wtpChart.data.datasets[i].data = updatedDatasets[i].data;
         }
@@ -596,7 +604,7 @@ function updateGraphDataSet(csv_as_array) {
         wtpChart.update();
     }
     if (wtpCostChart) {
-        updatedDatasets = generateBarData(csv_as_array, "mvpf", currently_displayed_program);
+        updatedDatasets = generateBarData("mvpf", currently_displayed_program);
         for (i = 0; i < updatedDatasets.length; i++) {
             wtpCostChart.data.datasets[i].data = updatedDatasets[i].data;
         }
@@ -606,20 +614,16 @@ function updateGraphDataSet(csv_as_array) {
     }
 }
 
-function getCSVLocation(specifiedAssumptions) {
-    return (document_root + "/csv/" + specifiedAssumptions.join("") + ".csv");
-}
-
 function getGraphAssumptions() {
     // The assumption Select Box Ids have to be in the correct order!!
     // The correct order is given by order of the assumptions in the csv / json file names
     let assumptionSelectBoxesIds = ["discountRateAssumption", "taxRateAssumption", "returnsToSchoolingAssumption", "co2externality", "eti"];
     let specifiedAssumptions = [];
 
-    for (let i = 0; i < assumptionSelectBoxesIds.length; i++) {
-        specifiedAssumptions.push(document.getElementById(assumptionSelectBoxesIds[i]).value);
+    for (let selectbox of assumptionSelectBoxesIds) {
+        specifiedAssumptions.push(document.getElementById(selectbox).value);
     }
-    return (specifiedAssumptions);
+    return specifiedAssumptions;
 }
 
 function highlightProgram(program) {
@@ -640,38 +644,7 @@ function highlightCategory(options) {
         }
     }
     mvpfChart.update();
-    /*
-    console.log(category);
-    for (var i = 0; i < mvpfChart._metasets.length; i++) {
-        var current_metaset = mvpfChart._metasets[i];
-        if (current_metaset._dataset.label == category) {
-            hideMetaSetsExcept(i);
-            return
-        }
-    }
-    console.log("Category to be highlighted not present in graph. Show all");
-    hideMetaSetsExcept(-1);
-    */
 }
-/*
-function hideMetaSetsExcept(number) {
-    // if number is positive, hides all metasets in the graph except number. If negative hides none, but rather makes all visiable
-    for (var i = 0; i < mvpfChart._metasets.length; i++) {
-        var current_metaset = mvpfChart._metasets[i];
-        if (number < 0) {
-            current_metaset.hidden = false;
-            continue;
-        }
-        if (i == number) {
-            current_metaset.hidden = false;
-        }
-        else {
-            current_metaset.hidden = true;
-        }
-    }
-    mvpfChart.update();
-}
-*/
 
 function openTooltipCurrentProgram() {
     if (currently_displayed_program) {
@@ -682,24 +655,15 @@ function openTooltipCurrentProgram() {
 function openTooltip(program) {
     // Find coordinates of point:
     let coordinates;
-    let i = 0
-    while (true) {
-        // Use infinite loop and try catch here because I could not find an easy way of determining the number of DatasetMetas. The current code looks at the next meta until an exception is thrown.
-        try {
-            let currentDataSetMeta = mvpfChart.getDatasetMeta(i);
-            // Check if program is in this Meta:
-            let j
-            let current_data = Object.values(currentDataSetMeta._dataset.data)
-            for (j = 0; j < current_data.length; j++) {
-                if (current_data[j].program === program) {
-                    coordinates = currentDataSetMeta.data[j].getCenterPoint();
-                }
-            }
-            i++;
-        }
-        catch (e) {
-            i++;
-            break;
+
+    // Assume that the metaset number is given by the position of the programs category in the categories array. By the way the data that is fed to chartJS is generated this should be guaranteed and saves a potentially inefficient linear search.
+    let metaset_number = categories.indexOf(unmodified_dataset[program].category);
+    let relevant_metaset = mvpfChart.getDatasetMeta(metaset_number);
+
+    for (let j = 0; j < relevant_metaset._dataset.data.length; j++) {
+        if (relevant_metaset._dataset.data[j].program === program) {
+            // Here we are assuming that the position in _dataset.data matches the position of in data. This seems to be the case!
+            coordinates = relevant_metaset.data[j].getCenterPoint();
         }
     }
 
@@ -720,13 +684,10 @@ function getUnmodifiedProgram(program) {
 }
 
 function getVariableMapping(program) {
-    for (let i = 0; i < variable_mapping.length; i++) {
-        if (variable_mapping[i].program === program) {
-            return(variable_mapping[i])
-        }
-    }
+    return variable_mapping.find((current_program) => {
+        return current_program.program === program;
+    });
 }
-
 
 function selectColor(number, background = false) {
     // returns a string in the format rgba(123,123,123,0.6)
@@ -744,8 +705,8 @@ function selectColor(number, background = false) {
 function addAllPositivesSubtractAllNegatives(array) {
     let negative = 0;
     let positive = 0;
-    let i;
-    for (i = 0; i < array.length; i++) {
+
+    for (let i = 0; i < array.length; i++) {
         if (array[i] > 0) {
             positive += array[i];
         }
@@ -768,8 +729,7 @@ function getScalesMinMax(program) {
 
     barComponents = mappingEntry["willingness_to_pay"];
     let array = [];
-    let component;
-    for (component in barComponents) {
+    for (let component in barComponents) {
         array.push(parseFloat(relevant_datapoint[component]));
     }
     max = Math.max(addAllPositivesSubtractAllNegatives(array), max);
@@ -777,7 +737,7 @@ function getScalesMinMax(program) {
 
     barComponents = mappingEntry["government_net_costs"];
     array = [];
-    for (component in barComponents) {
+    for (let component in barComponents) {
         array.push(parseFloat(relevant_datapoint[component]));
     }
     max = Math.max(addAllPositivesSubtractAllNegatives(array), max);
@@ -785,7 +745,7 @@ function getScalesMinMax(program) {
     return (max);
 }
 
-function generateBarData(csv_as_array, variable_to_plot, program) {
+function generateBarData(variable_to_plot, program) {
     let datasets = [];
     let barComponents;
     let relevant_datapoint = getUnmodifiedProgram(program);
@@ -808,7 +768,7 @@ function generateBarData(csv_as_array, variable_to_plot, program) {
     }
     barComponents = getVariableMapping(program)[variable_to_plot];
 
-    for (component in barComponents) {
+    for (let component in barComponents) {
         datasets.push({
             label: barComponents[component],
             data: [relevant_datapoint[component]],
@@ -820,7 +780,7 @@ function generateBarData(csv_as_array, variable_to_plot, program) {
     return (datasets);
 }
 
-function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
+function drawBarChart(variable_to_plot, program, chartElement) {
     currently_displayed_program = program;
     // Set Font size
     Chart.defaults.font.size = 15.5;
@@ -835,7 +795,7 @@ function drawBarChart(csv_as_array, variable_to_plot, program, chartElement) {
         type: 'bar',
         data: {
             labels: '.', // In ChartJS Beta 3.0 this could be left empty. If we leave it empty in 3.3, there is no graph drawn anymore. (And the tooltip is now shared for all areas of the chart in 3.3). 
-            datasets: generateBarData(csv_as_array, variable_to_plot, program)
+            datasets: generateBarData(variable_to_plot, program)
         },
         options: {
             indexAxis: 'y',
@@ -1078,21 +1038,20 @@ function generateProgramsHTML() {
         singleHTML = generateSingleProgramHTML(current_program);
         allProgramsDiv.appendChild(singleHTML.singleProgramDiv);
         bar_counter = 1;
-        drawBarChart(unmodified_dataset, "government_net_costs", current_program, singleHTML.chartElements[0]);
-        drawBarChart(unmodified_dataset, "willingness_to_pay", current_program, singleHTML.chartElements[1]);
-        drawBarChart(unmodified_dataset, "mvpf", current_program, singleHTML.chartElements[2]);
+        drawBarChart("government_net_costs", current_program, singleHTML.chartElements[0]);
+        drawBarChart("willingness_to_pay", current_program, singleHTML.chartElements[1]);
+        drawBarChart("mvpf", current_program, singleHTML.chartElements[2]);
         allBarCharts.push(singleHTML.chartElements);
     }
-
 }
 
 function generateLeftSideHTMLCharts(program) {
     generateSingleProgramHTML(program)
 
     bar_counter = 1;
-    governmentCostChart = drawBarChart(unmodified_dataset, "government_net_costs", program, document.querySelector("#costgraph"));
-    wtpChart = drawBarChart(unmodified_dataset, "willingness_to_pay", program, document.querySelector("#wtpgraph"));
-    wtpCostChart = drawBarChart(unmodified_dataset, "mvpf", program, document.querySelector("#wtpcostgraph"));
+    governmentCostChart = drawBarChart("government_net_costs", program, document.querySelector("#costgraph"));
+    wtpChart = drawBarChart("willingness_to_pay", program, document.querySelector("#wtpgraph"));
+    wtpCostChart = drawBarChart("mvpf", program, document.querySelector("#wtpcostgraph"));
     
     // Increase size of bar Charts if legend has to many elements:
     /*
@@ -1144,11 +1103,11 @@ function generateSingleProgramHTML(program) {
                         last_name: last_name
                     };
                 });
-                if (formatted_authors.length == 1) {
+                if (formatted_authors.length === 1) {
                     if (full_name) return formatted_authors[0].first_name + " " + formatted_authors[0].last_name
                     return formatted_authors[0].last_name;
                 }
-                else if (formatted_authors.length == 2) {
+                else if (formatted_authors.length === 2) {
                     return formatted_authors[0].last_name + " & " + formatted_authors[1].last_name
                 } 
                 else {
@@ -1344,10 +1303,10 @@ function populateCategories() {
     // adds available categories to the categories select box
     let selection = document.querySelector('#highlightCategory');
 
-    for (let i in categories) {
+    for (let category of categories) {
         var option = document.createElement("option");
-        option.value = categories[i];
-        option.innerHTML = categories[i];
+        option.value = category;
+        option.innerHTML = category;
         option.setAttribute("selected","")
         selection.appendChild(option);
     }
@@ -1422,7 +1381,7 @@ function main() {
     }
 
 
-    /* Load the required data mostly asyncronously.
+    /* Load the required data mostly asychronously.
     First load programs, and categories. readjson depends on these being already loaded.
     Then (simultaneously):
     1. readjson("default") -> load the default spec of each program
