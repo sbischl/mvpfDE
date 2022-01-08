@@ -389,12 +389,12 @@ function updateAxis(axis, value, label) {
     else if (axis === "y") {
         mvpfChart.options.parsing.yAxisKey = value;
         // If we update the y axis, we need to update the scales
-        mvpfChart.options.scales = getScales(variable = value, xLab = mvpfChart.options.scales.x.scaleLabel.labelString, ylab = label);
+        mvpfChart.options.scales = getScales(variable = value, xLab = mvpfChart.options.scales.x.title.text, ylab = label);
     }
     mvpfChart.update();
 }
 
-function getScales(variable, xLab = mvpfChart.options.scales.x.scaleLabel.labelString, yLab = mvpfChart.options.scales.y.scaleLabel.labelString) {
+function getScales(variable, xLab = mvpfChart.options.scales.x.title.text, yLab = mvpfChart.options.scales.y.title.text) {
     if (variable == "mvpf" | yLab == "Marginal Value of Public Funds") {
         return ({
             y: {
@@ -410,9 +410,9 @@ function getScales(variable, xLab = mvpfChart.options.scales.x.scaleLabel.labelS
                     }
                     */
                 },
-                scaleLabel: {
+                title: {
                     display: true,
-                    labelString: yLab
+                    text: yLab
                 },
                 suggestedMin: lower_cutoff,
                 suggestedMax: infinity_cutoff + 1,
@@ -441,9 +441,9 @@ function getScales(variable, xLab = mvpfChart.options.scales.x.scaleLabel.labelS
                 grid: {
                     display: false
                 },
-                scaleLabel: {
+                title: {
                     display: true,
-                    labelString: xLab
+                    text: xLab
                 },
                 ticks: {
                     maxTicksLimit: 6,
@@ -458,9 +458,9 @@ function getScales(variable, xLab = mvpfChart.options.scales.x.scaleLabel.labelS
         return ({
             y: {
                 display: true,
-                scaleLabel: {
+                title: {
                     display: true,
-                    labelString: yLab
+                    text: yLab
                 },
                 suggestedMin: wtp_lower_cutoff,
                 suggestedMax: wtp_upper_cutoff,
@@ -486,9 +486,9 @@ function getScales(variable, xLab = mvpfChart.options.scales.x.scaleLabel.labelS
                 grid: {
                     display: false
                 },
-                scaleLabel: {
+                title: {
                     display: true,
-                    labelString: xLab
+                    text: xLab
                 },
                 ticks: {
                     maxTicksLimit: 6,
@@ -503,9 +503,9 @@ function getScales(variable, xLab = mvpfChart.options.scales.x.scaleLabel.labelS
         return ({
             y: {
                 display: true,
-                scaleLabel: {
+                title: {
                     display: true,
-                    labelString: yLab
+                    text: yLab
                 },
                 suggestedMin: cost_lower_cutoff,
                 suggestedMax: cost_upper_cutoff,
@@ -531,9 +531,9 @@ function getScales(variable, xLab = mvpfChart.options.scales.x.scaleLabel.labelS
                 grid: {
                     display: false
                 },
-                scaleLabel: {
+                title: {
                     display: true,
-                    labelString: xLab
+                    text: xLab
                 },
                 ticks: {
                     maxTicksLimit: 6,
@@ -548,9 +548,9 @@ function getScales(variable, xLab = mvpfChart.options.scales.x.scaleLabel.labelS
         return ({
             y: {
                 display: true,
-                scaleLabel: {
+                title: {
                     display: true,
-                    labelString: yLab
+                    text: yLab
                 }
             },
             x: {
@@ -558,9 +558,9 @@ function getScales(variable, xLab = mvpfChart.options.scales.x.scaleLabel.labelS
                 grid: {
                     display: false
                 },
-                scaleLabel: {
+                title: {
                     display: true,
-                    labelString: xLab
+                    text: xLab
                 },
                 ticks: {
                     maxTicksLimit: 6,
