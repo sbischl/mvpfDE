@@ -47,6 +47,12 @@ getEstimates <- function(program, bootstrap_replication) {
     colnames(point_estimates) <- estimates$estimate
     return(point_estimates)
   }
+
+  # Throws error if bootstrapped_estimates has not been generated yet in the global environment with
+  # bootstrapped_estimates <- drawBootstrappedEstimates(programs). It's possible to check for the existence of
+  # bootstrapped_estimates and draw the bootstrap if it does not exist. But since this function is called a lot (at
+  # every single replication of the bootstrap) always checking for existance of bootstrapped_estimates could make
+  # the bootstrap estimation slower.
   return(as.data.frame(bootstrapped_estimates[[program]][bootstrap_replication, , drop = FALSE]))
 }
 
@@ -103,7 +109,7 @@ getPointEstimates <- function(programs, disable_deflating = F) {
 }
 
 # Run Programs without printing messages
-quietelyRunPrograms <- function(programs, bootstrap = FALSE) {
+quietlyRunPrograms <- function(programs, bootstrap = FALSE) {
   results <- suppressMessages(getPointEstimates(programs))
   if (bootstrap) {
     results <- suppressMessages(addBootstrappedConfidenceIntervalls(results))
@@ -273,12 +279,14 @@ addBootstrappedConfidenceIntervalls <- function(mvpf_results) {
 
   # Bootstrap
   for (i in 1:length(programs)) {
-    message(paste("Running", bootstrap_replications, "bootstrap replications for", programs[i] ))
+    message(paste("Running bootstrap with", bootstrap_replications, "replications for", programs[i] ))
 
     # This function generates a single row of a dataframe that contains one bootstrap replication
     single_bootstrap_replication <- function(j) {
       return_values <- do.call(programs[i], list(bootstrap_replication = j))
-      return_values <- deflateReturnValues(return_values, results_prices)
+      if (!programs[i] %in% excluded_from_deflating) {
+        return_values <- deflateReturnValues(return_values, results_prices)
+      }
       replication_row <- data.frame(replication = j)
       replication_row[, names(return_values)] <- unlist(return_values)
       replication_row$mvpf <- calculateMVPF(replication_row$willingness_to_pay, replication_row$government_net_costs)
@@ -362,6 +370,16 @@ calculateMVPFCI <- function(willingness_to_pay_pe,
     return(list(mvpf_95ci_lower = quantile(bootstrapped_mvpf[replication_defined], lower_percentile_95ci),
                 mvpf_95ci_upper = quantile(bootstrapped_mvpf[replication_defined], upper_percentile_95ci)))
   }
+}
+
+drawBootstrappedEstimates <- function(programs) {
+  # Boostrap all estimates and store them in a list, which contains a dataframe of bootstrapped estimates per program
+  # with bootstrap_replications rows as specified in assumptions.R
+  bootstrapped_estimates <- list()
+  for (program in programs) {
+    bootstrapped_estimates[[program]] <- drawBootstrap(paste0("./estimates/", program, ".xlsx"), bootstrap_replications)
+  }
+  return(bootstrapped_estimates)
 }
 
 # Converts a correlation matrix to a covarinace matrix
@@ -2070,7 +2088,7 @@ robustnessCheck <- function(programs,
     robustnesscheck_assumptions(specification)
     applyAssumptions()
 
-    # Pont Estimates
+    # Point Estimates
     mvpf_results <- getPointEstimates(programs)
 
     # Bootstrap
@@ -2351,17 +2369,19 @@ getVariableMapping <- function(program) {
 # file for each specification
 exportPlotJSON <- function(programs = getCompletePrograms(),
                            assumption_list = getWhatWorksMetaAssumptions(),
-                           bootstrap  = FALSE,
+                           bootstrap_all  = FALSE,
+                           bootstrap_default_specification = FALSE,
                            meta_assumptions = TRUE,
                            only_default_specification = FALSE) {
 
 
   # Run with default assumption
   source("assumptions.R")
-  results <- getPlotData(quietelyRunPrograms(programs, bootstrap))
+  bootstrap_default <- bootstrap_all | bootstrap_default_specification
+  results <- getPlotData(quietlyRunPrograms(programs, bootstrap_default))
 
 
-  # Check if ./csv_export/ directory exists. If not create it.
+  # Check if ./json_export/ directory exists. If not create it.
   dir.create(file.path(getwd(), "json_export"), showWarnings = FALSE)
 
   # Read variable_mapping.json
@@ -2384,7 +2404,7 @@ exportPlotJSON <- function(programs = getCompletePrograms(),
                                      "government_net_costs_per_program_cost")
       # Remove unnecesarry
       if ((!length(relevant_variables[[current_program]]) == 1) || relevant_variables[[current_program]] == "") {
-        current_program_results <- current_program_results %>% select(all_of(relevant_variables_vector))
+        current_program_results <- current_program_results %>% select(contains(relevant_variables_vector))
       }
       json_current_program <- rjson::toJSON(as.list(current_program_results), indent = 1)
       writeLines(json_current_program, paste0("./json_export/", current_program, "/", filename, ".json"))
@@ -2453,7 +2473,7 @@ exportPlotJSON <- function(programs = getCompletePrograms(),
     }
 
     # Now that the assumptions have been set, we can run the estimation
-    results <- getPlotData(quietelyRunPrograms(programs, bootstrap))
+    results <- getPlotData(quietlyRunPrograms(programs, bootstrap_all))
 
     # Store the results in JSON with the appropriate filename
     store_relevant_results_in_JSON(results, assumptions_string)
@@ -2477,7 +2497,7 @@ exportPlotCSV <- function(programs, assumption_list = getWhatWorksMetaAssumption
 
   # Run with default assumption and save the csv file:
   source("assumptions.R")
-  results <- quietelyRunPrograms(programs, bootstrap)
+  results <- quietlyRunPrograms(programs, bootstrap)
 
   # Check if ./csv_export/ directory exists. If not create it.
   dir.create(file.path(getwd(), "csv_export"), showWarnings = FALSE)
@@ -2524,7 +2544,7 @@ exportPlotCSV <- function(programs, assumption_list = getWhatWorksMetaAssumption
     }
 
     # Now that the assumptions have been set, we can run the estimation
-    results <- quietelyRunPrograms(programs, bootstrap)
+    results <- quietlyRunPrograms(programs, bootstrap)
     # load the additional data
     plot_data <- getPlotData(results)
     # remove columns not needed for visualization

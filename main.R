@@ -73,17 +73,14 @@ source("assumptions.R")
 # List all files in the estimates folder to prepare bootstrap
 estimate_files <- list.files("./estimates", pattern = "^[^~$].*.xlsx")
 
-# Boostrap all estimates and store them in a list, which contains a dataframe of bootstrapped estimates per program
-bootstrapped_estimates <- list()
-for (i in 1:length(estimate_files)) {
-  bootstrapped_estimates[[sub(".xlsx", "", estimate_files[i])]] <- drawBootstrap(paste0("./estimates/", estimate_files[i]), bootstrap_replications)
-}
-
 # Get all programs that are complete in the sense that a correctly named .R file, function and estimates file exists
 programs <- getCompletePrograms()
 
 # Run each program with default settings to get the point estimates
 mvpf_results <- getPointEstimates(programs)
+
+# Boostrap all estimates and store them in a list, which contains a dataframe of bootstrapped estimates per program
+bootstrapped_estimates <- drawBootstrappedEstimates(programs)
 
 # Calculate Bootstrap and add bootstrapped CIs to the results
 mvpf_results <- addBootstrappedConfidenceIntervalls(mvpf_results)
