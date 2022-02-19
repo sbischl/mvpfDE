@@ -2371,13 +2371,14 @@ exportPlotJSON <- function(programs = getCompletePrograms(),
                            assumption_list = getWhatWorksMetaAssumptions(),
                            bootstrap_all  = FALSE,
                            bootstrap_default_specification = FALSE,
+                           overwrite_bootstrap_replications = bootstrap_replications,
                            meta_assumptions = TRUE,
                            only_default_specification = FALSE) {
 
 
   # Run with default assumption
   source("assumptions.R")
-  bootstrap_default <- bootstrap_all | bootstrap_default_specification
+  bootstrap_default <- bootstrap_all || bootstrap_default_specification
   results <- getPlotData(quietlyRunPrograms(programs, bootstrap_default))
 
 
@@ -2391,7 +2392,7 @@ exportPlotJSON <- function(programs = getCompletePrograms(),
   relevant_variables <- list()
 
   # Store relevant results
-  store_relevant_results_in_JSON <- function(estimation_results, filename) {
+  store_relevant_results_in_JSON <- function(estimation_results, filename, bootstrap) {
     for (j in 1:nrow(estimation_results)) {
       current_program <- estimation_results[j, "program"]
       current_program_results <- estimation_results[j,]
@@ -2402,10 +2403,23 @@ exportPlotJSON <- function(programs = getCompletePrograms(),
                                      "willingness_to_pay",
                                      "government_net_costs",
                                      "government_net_costs_per_program_cost")
+      if (bootstrap) {
+        relevant_variables_vector <- c(relevant_variables_vector,
+                                       paste0(relevant_variables_vector, "_95ci_lower"),
+                                       paste0(relevant_variables_vector, "_95ci_upper"))
+      }
+
       # Remove unnecesarry
       if ((!length(relevant_variables[[current_program]]) == 1) || relevant_variables[[current_program]] == "") {
-        current_program_results <- current_program_results %>% select(contains(relevant_variables_vector))
+        current_program_results <- current_program_results %>% select(all_of(relevant_variables_vector))
       }
+      if (bootstrap) {
+        current_program_results$bootstrap <- bootstrap_replications
+      }
+      else {
+        current_program_results$bootstrap <- 0
+      }
+
       json_current_program <- rjson::toJSON(as.list(current_program_results), indent = 1)
       writeLines(json_current_program, paste0("./json_export/", current_program, "/", filename, ".json"))
     }
@@ -2433,14 +2447,13 @@ exportPlotJSON <- function(programs = getCompletePrograms(),
   }
 
   # Store the results from the default assumptions run
-  store_relevant_results_in_JSON(results, "default")
+  store_relevant_results_in_JSON(results, "default", bootstrap_default)
 
   if (only_default_specification) {
     return(0)
   }
 
   # Now work on all the possible combinations of the assumptions
-
   possible_assumption_combinations <- expand.grid(assumption_list)
 
   message("Running and Exporting the results of ", nrow(possible_assumption_combinations),
@@ -2448,13 +2461,12 @@ exportPlotJSON <- function(programs = getCompletePrograms(),
 
   start_time <- Sys.time()
 
-  foreach(i = 1:nrow(possible_assumption_combinations),
-          .export =  ls(globalenv())[!ls(globalenv()) %in% c("programs")], #this gets rid of some warnings
-          .packages = c("dplyr", "readxl")) %do% {
+  for (i in 1:nrow(possible_assumption_combinations)) {
     # Iterate over all possible assumption combinations
 
-    # First reset all assumptions back to default:
+    # First reset all assumptions back to default & overwrite bootstrap replications if required:
     source("assumptions.R")
+    bootstrap_replications <<- overwrite_bootstrap_replications
 
     #Generate a string that summarizes the assumptions:
     assumptions_string <- ""
@@ -2476,7 +2488,7 @@ exportPlotJSON <- function(programs = getCompletePrograms(),
     results <- getPlotData(quietlyRunPrograms(programs, bootstrap_all))
 
     # Store the results in JSON with the appropriate filename
-    store_relevant_results_in_JSON(results, assumptions_string)
+    store_relevant_results_in_JSON(results, assumptions_string, bootstrap_all)
   }
   # Reset the assumptions.
   source("assumptions.R")
