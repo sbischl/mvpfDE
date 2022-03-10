@@ -1,16 +1,7 @@
- // This should contain all of the required js code
-
-
-
 // Settings (some of these have to be in line with what the R code does that exports the csv files):
-const document_root = '';
-const infinity_cutoff = 6;
-const lower_cutoff = -1;
-
-const cost_lower_cutoff = -1
-const cost_upper_cutoff = 3 
-const wtp_lower_cutoff = -1
-const wtp_upper_cutoff = 3
+// Set Font size
+Chart.defaults.font.size = 15.5;
+Chart.defaults.font.family = 'Open Sans';
 
 // Headline Fonts and Font size
 const headline_font = "Source Sans Pro";
@@ -18,17 +9,17 @@ const headline_fontsize = 20;
 
 // Generate global variables pointing to each of the chart objects to later modify those
 var mvpfChart;
+var mvpfCIChart;
 var governmentCostChart;
 var wtpChart;
 var wtpCostChart;
 
-// Store programHeadline in global so that we can update the MVPF
-var programHeadLine
+// Store programHeadline in global var so that we can update the MVPF
+var programHeadLine;
 // String reference to the currently displayed program:
 var currently_displayed_program;
-
-// Object that keeps track of disabled effects
-var disabled_effects = {};
+// Reference to the currently displayed Chart
+var currently_displayed_chart;
 
 // Bar Chart Div. This one has to be dynamically updated.
 var chartDiv = document.querySelector("#barChartDiv")
@@ -36,29 +27,12 @@ var chartDiv = document.querySelector("#barChartDiv")
 // Count Tooltip calls  (required to deal with multiple programs located at the exact same location)
 var tooltip_counter = 1;
 
-// Categories (in order that they are displayed in the legend). These are loaded from data/categories.json:
-var categories;
-
-// Store the additional paramters of each policy. These are loaded from data/programs.json:
-var additional_program_info
-
-// Store the mapping of willingness to pay and government net cost in a JSON object. (loaded from data/variable_mapping)
-var variable_mapping;
-
-// Store the colors used for the Graph (loaded from data/colors.json);
-var colors;
-
-// Store additional information about the literature in a json file;
-var literature;
-
-// Store a unmodified, easy to access version of all programs (Object):
-var unmodified_dataset;
-
-// Store unmodified copy of json as array. This is similar to unmodified_dataset but not an array instead of an object:
-var json_as_array_copy;
+// Contains a reference to a color index which is passed around and incremented when another color is used in the bar charts.
+colorholder = {
+    color: 1
+}
 
 // This counts the number of categories / or datasets in the chart.js context that have been added so far
-var category_counter_mvpf = 0;
 var bar_counter = 1;
 
 // HTML Legend plugin for Chart.js (see Chart.js documentation)
@@ -83,7 +57,7 @@ const getOrCreateLegendList = (chart, id) => {
 
 const htmlLegendPlugin = {
     // This implements an HTML Legend. Adapted from the HTML reference of the chart.js documentation: https://www.chartjs.org/docs/master/samples/legend/html.html
-    // The major advantage of this approach is that it gives seperate control of the size of the graph (without the legend) and the legend itself. When the chart is drawn on the canvas element as in the chartjs standard case with the legend as part of the canvas, the number of displayed effects causes the width of the bars to vary because the height of the legend varies (More effects to display -> more elements on the legend). This caused parts of the chart and the legend to be outside of the visible area within the canvas and also created visually distracting inconsitencies between charts that should ideally look the same.  
+    // The major advantage of this approach is that it gives separate control of the size of the graph (without the legend) and the legend itself. When the chart is drawn on the canvas element as in the chartjs standard case with the legend as part of the canvas, the number of displayed effects causes the width of the bars to vary because the height of the legend varies (More effects to display -> more elements on the legend). This caused parts of the chart and the legend to be outside of the visible area within the canvas and also created visually distracting inconsistencies between charts that should ideally look the same.  
     id: 'htmlLegend',
     afterUpdate(chart, args, options) {
         const ul = getOrCreateLegendList(chart, options.containerID);
@@ -96,7 +70,18 @@ const htmlLegendPlugin = {
         // Reuse the built-in legendItems generator
         const items = chart.options.plugins.legend.labels.generateLabels(chart);
 
+        //Legend entries:
+        let entries = {};
+
         items.forEach(item => {
+            // With the CI Chart, the same entries show up twice if we do not prevent it.
+            if (item.text in entries) {
+                return
+            }
+            else {
+                entries[item.text] = 1
+            }
+
             const li = document.createElement('li');
             li.style.alignItems = 'center';
             li.style.cursor = 'pointer';
@@ -177,53 +162,6 @@ const htmlLegendPlugin = {
     }
 };
 
-// Simple helper function which loads a url to a json file into a js object
-async function loadJSON(url) {
-    var json;
-    await fetch(url).then(response => {
-        json = response.json();
-    });
-    return json;
-}
-
-async function readjson(assumption_string) {
-    // depends on additional_program_info being loaded as we need some way of determining which government policies exist before this function can be called
-
-    // This will be the array carrying the data. It should be compatible to the array returned from readcsv with the only difference that the json format omits all the keys with NA values.
-    var json_as_array;
-
-    // First we need to get a list of all programs. Where the entries are strings
-    var programs = additional_program_info.map(program => {
-        return program.program_identifier;
-    });
-
-    // Individual json requests to all of the programs
-    var requests = programs.map(program => {
-        // Note: usually one would expect that this code runs the loadJSON and stores the
-        // result in requests. This is not what we want, as the http requests should be
-        // run in parallel for better performance. Fortunately, this is not what is happening. loadJSON is a async function. And async functions return promises, which are not automatically resolved.
-        return loadJSON(document_root + "data/" + program + "/" + assumption_string + ".json");
-    });
-
-    // Resolve promises in parallel
-    await Promise.all(requests).then((result) => json_as_array = result);
-
-    // This loop merges the loaded data with the details about each reform (description, sources, age etc..) form programs.json. The resulting array of objects then contains all relevant data.
-
-    for (var i = 0; i < json_as_array.length; i++) {
-        Object.assign(json_as_array[i], additional_program_info[i]);
-        // Rename program identifier to program. (For compatibility with the old solution)   
-        json_as_array[i]["program"] = json_as_array[i]["program_identifier"];
-        delete json_as_array[i]["program_identifier"];
-    }
-
-    unmodified_dataset = {};
-    for (program of json_as_array) {
-        unmodified_dataset[program["program"]] = JSON.parse(JSON.stringify(program));
-    }
-    return json_as_array;
-}
-
 // function to readcsv files ... no longer in use
 /*
 async function readcsv(csv_location) {
@@ -258,127 +196,56 @@ async function readcsv(csv_location) {
 }
 */
 
-function generateDatasets(csv_as_array) {
-    // This stores the name or in my context the type of program (i.e. something like education policy, tax reform ...) of all the datasets we need to construct
-    let datasetsLabels = [];
-    // The actual dataSets that will eventually be returned
-    let datasets = [];
-    let i;
-
-    // Sort by category. This allows controlling the order in which the categories are drawn in the legend. And also yields performance benefits because it makes the datasets array that is searched as small as possible.
-    csv_as_array.sort(function(a, b) {
-        return categories.indexOf(a.category) - categories.indexOf(b.category);
-    });
-
-    for (i = 0; i < csv_as_array.length; i++) {
-
-        // Generate a copy of the observation to prevent censoring or modification of the original data.
-        let current_observation = JSON.parse(JSON.stringify(csv_as_array[i]));
-
-        // Update values if necessary:
-        let updated_values = applyDisableEffects(current_observation.program);
-        current_observation.mvpf = updated_values.mvpf;
-        current_observation.willingness_to_pay = updated_values.willingness_to_pay;
-        current_observation.government_net_costs = updated_values.government_net_costs;
-        current_observation.willingness_to_pay_per_program_cost = updated_values.willingness_to_pay_per_program_cost;
-        current_observation.government_net_costs_per_program_cost = updated_values.government_net_costs_per_program_cost;
-
-        // Check if the dataset already exists. If not add it.
-        if (!datasetsLabels.includes(current_observation.category)) {
-            datasetsLabels.push(current_observation.category);
-            datasets.push(generateEmptyDataset(current_observation.category));
-        }
-        // Add current observation to the correct dataset:
-
-        // First get the relevant dataset.
-        correctDataset = datasets.find(dataset => {
-            return dataset.label === current_observation.category;
-        });
-
-        // Now add the observation
-        correctDataset.data.push(current_observation);
-    }
-
-    // Now the data has been read. Apply the censoring. That means convert infinite values to some number (e.g.) which will act as infinity on the chart.
-    censorValues(datasets);
-
-    return (datasets);
-}
-
-function censorValues(datasets) {
-    function censorMVPF(mvpf) {
-        if (mvpf > infinity_cutoff) {
-            return infinity_cutoff;
-        }
-        else if (mvpf < lower_cutoff) {
-            return lower_cutoff;
-        }
-        else if (mvpf == "Inf") {
-            return (infinity_cutoff + 1);
-        }
-        else {
-            return mvpf;
-        }
-    }
-
-    function censorCost(cost) {
-        if (cost > cost_upper_cutoff ) {
-            return cost_upper_cutoff;
-        }
-        else if (cost < cost_lower_cutoff ) {
-            return cost_lower_cutoff;
-        }
-        else {
-            return cost;
-        }
-    }
-
-    function censorWTP(wtp) {
-        if (wtp > wtp_upper_cutoff ) {
-           return wtp_upper_cutoff;
-        }
-        else if (wtp < wtp_lower_cutoff ) {
-            return wtp_lower_cutoff;
-        }
-        else {
-            return wtp;
-        }
-    }
-
-    for (let dataset of datasets) {
-        for (let data of dataset.data) {
-            data["mvpf"] = censorMVPF(data["mvpf"]);
-            data["government_net_costs_per_program_cost"] = censorCost(data["government_net_costs_per_program_cost"]);
-            data["willingness_to_pay_per_program_cost"] = censorWTP(data["willingness_to_pay_per_program_cost"]);
-        }
-    }
-}
-
-function generateEmptyDataset(datasetLabel) {
-    category_counter_mvpf++;
-    return ({
-        label: datasetLabel,
-        data: [],
-        backgroundColor: selectColor(category_counter_mvpf, true),
-        borderColor: selectColor(category_counter_mvpf),
-        pointHoverRadius: 7,
-        pointRadius: 5
-    });
-}
-
 async function updateGraphAssumptions() {
-    readjson(getGraphAssumptions().join("")).then(function (csv) {
-        updateGraphDataSet(csv);
+    readjson(getGraphAssumptions().join("")).then(function (json_as_array) {
+        updateGraphDataSet(json_as_array);
         openTooltipCurrentProgram();
         // We also have to update the MVPF on the right side
         updateProgramHeadLine();
     });
 }
 
+function activeScatter() {
+    let button = document.getElementById('select_scatter_chart');
+    if (button.classList.contains("active")) {
+        // Scatter Chart already active no need to do andything
+        return;
+    }
+    document.getElementById('select_list_chart').classList.remove("active");
+    button.classList.add("active");
+    // Reset height to default:
+    let mvpfChartDiv = document.getElementById('mvpfChartDiv');
+    mvpfChartDiv.style.height = `75vh`
+
+    document.querySelector("#chartOptions").classList.add("show");
+    mvpfCIChart.destroy();
+    drawMVPFChart(json_as_array_copy);
+}
+
+function activeLine() {
+    let button = document.getElementById('select_list_chart');
+    if (button.classList.contains("active")) {
+        // Scatter Chart already active no need to do andything
+        return;
+    }
+    document.getElementById('select_scatter_chart').classList.remove("active");
+    button.classList.add("active");
+
+    document.querySelector("#chartOptions").classList.remove("show");
+    mvpfChart.destroy();
+    drawListCIChart(json_as_array_copy);
+}
+
 function updateProgramHeadLine() {
     // this function manipulates the HTML of the Bar Charts
-    let mvpf_to_print = applyDisableEffects(currently_displayed_program)["mvpf"] == "Inf" ? "∞" : parseFloat(applyDisableEffects(currently_displayed_program)["mvpf"]).toFixed(2);
-    document.querySelector("#mvpfDisplay").innerHTML = `MVPF = ${mvpf_to_print}`;
+    let updated_mvpf_related_values = applyDisableEffects(currently_displayed_program)
+    // We cannot display the confidence interval if some of the effects were disabled.
+    let confidence_intervall = "";
+    if (unmodified_dataset[currently_displayed_program]["mvpf_95ci_lower"]) {
+        confidence_intervall = updated_mvpf_related_values.effect_disabled ? "" : `, 95% CI [${mvpfToString(unmodified_dataset[currently_displayed_program]["mvpf_95ci_lower"])}, ${mvpfToString(unmodified_dataset[currently_displayed_program]["mvpf_95ci_upper"])}]`;
+    }
+    let mvpf_to_print = mvpfToString(updated_mvpf_related_values.mvpf);
+    document.querySelector("#mvpfDisplay").innerHTML = `MVPF = ${mvpf_to_print}${confidence_intervall}`;
 }
 
 function updateAxis(axis, value, label) {
@@ -394,21 +261,33 @@ function updateAxis(axis, value, label) {
     mvpfChart.update();
 }
 
+function MVPFtickCallback (value, index, values) {
+    if (value == infinity_cutoff + 1) {
+        return "∞";
+    }
+    else if (value == infinity_cutoff) {
+        return "≥" + infinity_cutoff;
+    }
+    else if (value == lower_cutoff) {
+        return "≤" + lower_cutoff;
+    }
+    else {
+        return value;
+    }
+}
+
 function getScales(variable, xLab = mvpfChart.options.scales.x.title.text, yLab = mvpfChart.options.scales.y.title.text) {
     if (variable == "mvpf" | yLab == "Marginal Value of Public Funds") {
         return ({
             y: {
                 display: true,
                 grid: {
-                    /* Use this to make infinity line black. Commented out because the other axis draws over the infinity line causing a grey overlap
                     color: (context) => {
-                        console.log("huii");
                         if (context.tick.value === infinity_cutoff + 1) {
                             return '#000000';
                         }
                         return "rgba(0, 0, 0, 0.1)";
                     }
-                    */
                 },
                 title: {
                     display: true,
@@ -420,20 +299,7 @@ function getScales(variable, xLab = mvpfChart.options.scales.x.title.text, yLab 
                     min: lower_cutoff,
                     max: infinity_cutoff,
                     stepSize: 1,
-                    callback: function (value, index, values) {
-                        if (value == infinity_cutoff + 1) {
-                            return "∞";
-                        }
-                        else if (value == infinity_cutoff) {
-                            return "≥" + infinity_cutoff;
-                        }
-                        else if (value == lower_cutoff) {
-                            return "≤" + lower_cutoff;
-                        }
-                        else {
-                            return value;
-                        }
-                    }
+                    callback: MVPFtickCallback
                 }
             },
             x: {
@@ -575,18 +441,30 @@ function getScales(variable, xLab = mvpfChart.options.scales.x.title.text, yLab 
 
 function updateGraphDataSet(csv_as_array) {
     // Update the main Chart by updating the data of each dataset
-    let updatedDatasets = generateDatasets(csv_as_array);
-    
-    for (let i = 0; i < updatedDatasets.length; i++) {
-        mvpfChart.data.datasets[i].data = updatedDatasets[i].data;
+    let updatedDatasets
+    if (currently_displayed_chart == mvpfCIChart) {
+        updatedDatasets = [...generateAllProgramsDatasets(json_as_array, "listci_pe"), ...generateAllProgramsDatasets(json_as_array, "listci_ci")];
+        for (let i = 0; i < updatedDatasets.length; i++) {
+            currently_displayed_chart.data.datasets[i].data = updatedDatasets[i].data;
+        }
+        currently_displayed_chart.update();
     }
-    mvpfChart.update();
 
+    if (currently_displayed_chart == mvpfChart) {
+        updatedDatasets = generateAllProgramsDatasets(csv_as_array, dataset_type = "scatter");
+        for (let i = 0; i < updatedDatasets.length; i++) {
+            currently_displayed_chart.data.datasets[i].data = updatedDatasets[i].data;
+        }
+        currently_displayed_chart.update();
+    }
+    
     // Update Bar Charts
     let range = getScalesMinMax(currently_displayed_program);
+    // Reset Colors because all Datasets are generated again.
+    colorholder.color = 1;
 
     if (governmentCostChart) {
-        updatedDatasets = generateBarData("government_net_costs", currently_displayed_program);
+        updatedDatasets = generateBarChartProgramData("government_net_costs", currently_displayed_program, colorholder);
         for (i = 0; i < updatedDatasets.length; i++) {
             governmentCostChart.data.datasets[i].data = updatedDatasets[i].data;
         }
@@ -595,7 +473,7 @@ function updateGraphDataSet(csv_as_array) {
         governmentCostChart.update();
     }
     if (wtpChart) {
-        updatedDatasets = generateBarData("willingness_to_pay", currently_displayed_program);
+        updatedDatasets = generateBarChartProgramData("willingness_to_pay", currently_displayed_program,colorholder);
         for (i = 0; i < updatedDatasets.length; i++) {
             wtpChart.data.datasets[i].data = updatedDatasets[i].data;
         }
@@ -604,7 +482,7 @@ function updateGraphDataSet(csv_as_array) {
         wtpChart.update();
     }
     if (wtpCostChart) {
-        updatedDatasets = generateBarData("mvpf", currently_displayed_program);
+        updatedDatasets = generateBarChartProgramData("mvpf", currently_displayed_program, colorholder);
         for (i = 0; i < updatedDatasets.length; i++) {
             wtpCostChart.data.datasets[i].data = updatedDatasets[i].data;
         }
@@ -658,7 +536,7 @@ function openTooltip(program) {
 
     // Assume that the metaset number is given by the position of the programs category in the categories array. By the way the data that is fed to chartJS is generated this should be guaranteed and saves a potentially inefficient linear search.
     let metaset_number = categories.indexOf(unmodified_dataset[program].category);
-    let relevant_metaset = mvpfChart.getDatasetMeta(metaset_number);
+    let relevant_metaset = currently_displayed_chart.getDatasetMeta(metaset_number);
 
     for (let j = 0; j < relevant_metaset._dataset.data.length; j++) {
         if (relevant_metaset._dataset.data[j].program === program) {
@@ -670,36 +548,13 @@ function openTooltip(program) {
     // Thx; @jwerre https://stackoverflow.com/questions/39283177/programmatically-open-and-close-chart-js-tooltip
     // Open Tooltip by simulating a mouse press
     let mouseMoveEvent, rectangle;
-    rectangle = mvpfChart.canvas.getBoundingClientRect();
+    rectangle = currently_displayed_chart.canvas.getBoundingClientRect();
 
     mouseMoveEvent = new MouseEvent('mousemove', {
         clientX: rectangle.left + coordinates.x,
         clientY: rectangle.top + coordinates.y
     });
-    mvpfChart.canvas.dispatchEvent(mouseMoveEvent);
-}
-
-function getUnmodifiedProgram(program) {
-    return(unmodified_dataset[program]);
-}
-
-function getVariableMapping(program) {
-    return variable_mapping.find((current_program) => {
-        return current_program.program === program;
-    });
-}
-
-function selectColor(number, background = false) {
-    // returns a string in the format rgba(123,123,123,0.6)
-    let background_opa = 0.7
-    let foreground_opa = 0.9
-    if (number > colors.length) {
-        // console.log("Color not in range of supplied colors in colors.json");
-        // Reuse last color in this case
-        number = colors.length;
-    }
-    color_triple = colors[number - 1];
-    return `rgba(${color_triple[0]},${color_triple[1]},${color_triple[2]},${background ? background_opa : foreground_opa})`;
+    currently_displayed_chart.canvas.dispatchEvent(mouseMoveEvent);
 }
 
 function addAllPositivesSubtractAllNegatives(array) {
@@ -745,41 +600,6 @@ function getScalesMinMax(program) {
     return (max);
 }
 
-function generateBarData(variable_to_plot, program) {
-    let datasets = [];
-    let barComponents;
-    let relevant_datapoint = getUnmodifiedProgram(program);
-
-    if (variable_to_plot === "mvpf") {
-        datasets.push({
-            label: "Government Net Cost",
-            data: [parseFloat(relevant_datapoint["government_net_costs"])],
-            backgroundColor: selectColor(bar_counter, true),
-            borderColor: selectColor(bar_counter),
-        });
-        datasets.push({
-            label: "Willingness to Pay",
-            data: [relevant_datapoint["willingness_to_pay"]],
-            backgroundColor: selectColor(bar_counter + 1, true),
-            borderColor: selectColor(bar_counter + 1),
-        });
-        bar_counter += 2;
-        return (datasets);
-    }
-    barComponents = getVariableMapping(program)[variable_to_plot];
-
-    for (let component in barComponents) {
-        datasets.push({
-            label: barComponents[component],
-            data: [relevant_datapoint[component]],
-            backgroundColor: selectColor(bar_counter, true),
-            borderColor: selectColor(bar_counter)
-        });
-        bar_counter++;
-    }
-    return (datasets);
-}
-
 function drawBarChart(variable_to_plot, program, chartElement) {
     currently_displayed_program = program;
     // Set Font size
@@ -788,14 +608,14 @@ function drawBarChart(variable_to_plot, program, chartElement) {
 
     // Get Plotting range
     let range = getScalesMinMax(program);
-
+    
     // Check if the screen size is small
     let smallscreen = jQuery(window).width() < 1450 ? true : false
     barChart = new Chart(chartElement, {
         type: 'bar',
         data: {
             labels: '.', // In ChartJS Beta 3.0 this could be left empty. If we leave it empty in 3.3, there is no graph drawn anymore. (And the tooltip is now shared for all areas of the chart in 3.3). 
-            datasets: generateBarData(variable_to_plot, program)
+            datasets: generateBarChartProgramData(variable_to_plot, program, colorholder)
         },
         options: {
             indexAxis: 'y',
@@ -823,6 +643,14 @@ function drawBarChart(variable_to_plot, program, chartElement) {
                     callbacks: {
                         title: function (data) {
                             return null;
+                        },
+                        label: function (data) {
+                            let confidence_intervall = ""
+                            if (unmodified_dataset[currently_displayed_program][data.dataset["effect_key"] + "_95ci_lower"]) {
+                                confidence_intervall = `\n95% CI: [${parseFloat(unmodified_dataset[currently_displayed_program][data.dataset["effect_key"] + "_95ci_lower"]).toFixed(2)}€, ${parseFloat(unmodified_dataset[currently_displayed_program][data.dataset["effect_key"] + "_95ci_upper"]).toFixed(2)}€]`
+                                return [`${data.dataset.label}: ${data.formattedValue}€`, confidence_intervall]
+                            }
+                            return [`${data.dataset.label}: ${data.formattedValue}€`];
                         }
                     }
                 },
@@ -878,10 +706,6 @@ function drawBarChart(variable_to_plot, program, chartElement) {
 }
 
 function drawMVPFChart(csv_as_array) {
-    // Set Font size
-    Chart.defaults.font.size = 15.5;
-    Chart.defaults.font.family = 'Open Sans';
-
     // Number Of Programs at Tooltip.
     let tooltip_number = 1;
 
@@ -889,7 +713,7 @@ function drawMVPFChart(csv_as_array) {
     mvpfChart = new Chart(mvpfChartElement, {
         type: 'scatter',
         data: {
-            datasets: generateDatasets(csv_as_array)
+            datasets: generateAllProgramsDatasets(csv_as_array, "scatter")
         },
         options: {
             responsive: true,
@@ -946,17 +770,24 @@ function drawMVPFChart(csv_as_array) {
                         label: function (data) {
                             // Get the name of the program. Since we have censored the data to draw the graph we need to look up the true values:
                             let program_name = data.dataset.data[data.dataIndex]["program_name"];
-                            let unmodified_datapoint = applyDisableEffects(data.dataset.data[data.dataIndex]["program"]);
+                            let program_identifier = data.dataset.data[data.dataIndex]["program"];
+                            let unmodified_datapoint = applyDisableEffects(program_identifier);
                             let tooltip = [];
                             let mvpfIsInfinity = unmodified_datapoint["mvpf"] == "Inf"
     
                             if (tooltip_number > 1) {
                                 tooltip.push(program_name + ":");
                             }
+
+                            let confidence_intervall = "";
+                            // The second check is to ensure that no effect was disabled
+                            if (unmodified_dataset[program_identifier]["mvpf_95ci_lower"] && unmodified_datapoint["mvpf"] == unmodified_dataset[program_identifier]["mvpf"]) {
+                                confidence_intervall = `, 95% CI [${mvpfToString(unmodified_dataset[program_identifier]["mvpf_95ci_lower"])}, ${mvpfToString(unmodified_dataset[program_identifier]["mvpf_95ci_upper"])}]`
+                            }
     
                             tooltip.push("Willingness to Pay: " + +parseFloat(unmodified_datapoint["willingness_to_pay"]).toFixed(2) + "€");
                             tooltip.push("Government Net Cost: " + +parseFloat(unmodified_datapoint["government_net_costs"]).toFixed(2) + "€");
-                            tooltip.push("MVPF: " + (mvpfIsInfinity ? "∞" : +parseFloat(unmodified_datapoint["mvpf"]).toFixed(2)));
+                            tooltip.push("MVPF: " + (mvpfIsInfinity ? "∞" : +parseFloat(unmodified_datapoint["mvpf"]).toFixed(2)) + confidence_intervall);
     
                             if (tooltip_number > 1 & tooltip_counter < tooltip_number) {
                                 tooltip.push("");
@@ -977,8 +808,10 @@ function drawMVPFChart(csv_as_array) {
         plugins: [htmlLegendPlugin]
     });
     
+    currently_displayed_chart = mvpfChart;
+    
     mvpfChartElement.onclick = function (evt) {
-        //This is totally weird, see https://github.com/chartjs/Chart.js/issues/2292
+        //This is totally weird, see https://github.com/chartjs/Chart.js/issues/2292 
         //But it works now!!!!!
         let activePoints = mvpfChart.getElementsAtEventForMode(evt, 'point', mvpfChart.options);
         let firstPoint = activePoints[0];
@@ -986,6 +819,183 @@ function drawMVPFChart(csv_as_array) {
         // the code from being executed if nothing is clicked.
         if (activePoints[0]) {
             let clicked_program = mvpfChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index].program;
+            changeBarChartProgram(clicked_program);
+        }
+    };
+}
+
+function drawListCIChart(json_as_array) {
+    let mvpfChartElement = document.getElementById('mvpfChart');
+    // In this chart type the height needs to scale with the number of elements. Otherwise there will be ugly overlap:
+    let list_chart_datasets =  generateAllProgramsDatasets(json_as_array, "listci_pe");
+    let number_of_elements = list_chart_datasets.reduce((sum, current_dataset) => {
+        return sum + current_dataset.data.length;
+    }, 0)
+    // Now add the confidence interval datasets:
+    list_chart_datasets = [...list_chart_datasets, ...generateAllProgramsDatasets(json_as_array, "listci_ci")];
+
+    let mvpfChartDiv = document.getElementById('mvpfChartDiv');
+    mvpfChartDiv.style.height = `${number_of_elements * 45}px`
+
+    // We may want two identical x-axis (one on top one on the bottom).
+    const x_axis = {
+        stacked: true,
+        suggestedMin: lower_cutoff,
+        suggestedMax: infinity_cutoff + 1,
+        position: "top",
+        grid: {
+            color: (context) => {
+                if (context.tick.value === infinity_cutoff + 1) {
+                    return 'rgba(0, 0, 0, 1)';
+                }
+                return "rgba(0, 0, 0, 0.1)";
+            },
+            display: true,
+            drawBorder: false
+        },
+        ticks: {
+            min: lower_cutoff,
+            autoSkip: false,
+            max: infinity_cutoff,
+            stepSize: 1,
+            callback: MVPFtickCallback
+        }
+    }
+
+    const x_axis2 = {
+        stacked: true,
+        suggestedMin: lower_cutoff,
+        suggestedMax: infinity_cutoff + 1,
+        position: "bottom",
+        grid: {
+            display: false,
+            drawBorder: false
+        },
+        ticks: {
+            min: lower_cutoff,
+            autoSkip: false,
+            max: infinity_cutoff,
+            stepSize: 1,
+            callback: MVPFtickCallback
+        }
+    }
+
+    mvpfCIChart = new Chart(mvpfChartElement, {
+        type: 'line',
+        data: {
+            datasets: list_chart_datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            radius: 10,
+            hoverRadius: 12,
+            indexAxis: "y",
+            scales: {
+                x: x_axis,
+                x2: x_axis2,
+                y: {
+                    stacked: true,
+                    ticks: {
+                        autoSkip: false,
+                        callback: function (value, index, values) {
+                            let label= this.getLabelForValue(value);
+                            // The labels can get a bit too long. Split if longer than 20 characters
+                            if (label.length >= 15) {
+                                // Find space that is closest to the middle of the string
+                                let middle = Math.floor(label.length / 2);
+                                let offset = 0;
+                                while(middle - offset > 0) {
+                                    if (label[middle - offset] === " ") {
+                                        return [label.substring(0, middle - offset), label.substring(middle - offset, label.length)]
+                                    }
+                                    if (label[middle + offset] === " ") {
+                                        return [label.substring(0, middle + offset), label.substring(middle + offset, label.length)]
+                                    }
+                                    offset++;
+                                }
+                            }
+                            return label
+                        }
+                    },
+                    grid: {
+                        display: false,
+                        drawBorder: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                tooltip: {
+                    enabled: true,
+                    displayColors: false,
+                    bodyColor: "black",
+                    titleColor: "black",
+                    backgroundColor: "white",
+                    borderWidth: 2,
+                    cornerRadius: 8,
+                    bodyFont: { weight: 500 },
+                    borderColor: getComputedStyle(document.body).getPropertyValue('--primary-color'),
+                    mode: 'point',
+                    callbacks: {
+                        title: function (data) {
+                            if (data.length > 1) {
+                                tooltip_number = data.length;
+                                tooltip_counter = 1;
+                                let title = data[0].dataset.data[data[0].dataIndex]["program_name"];
+                                return title;
+                            }
+                            tooltip_number = 1;
+                            tooltip_counter = 1;
+                            return data[0].dataset.data[data[0].dataIndex]["program_name"];
+                        },
+                        label: function (data) {
+                            // Get the name of the program. Since we have censored the data to draw the graph we need to look up the true values:
+                            let program = data.dataset.data[data.dataIndex]["program"];
+                            let unmodified_datapoint = applyDisableEffects(program);
+                            let tooltip = [];
+                            let mvpfIsInfinity = unmodified_datapoint["mvpf"] == "Inf"
+
+                            let confidence_intervall = "";
+                            // The second check is to ensure that no effect was disabled
+                            if (unmodified_dataset[program]["mvpf_95ci_lower"] && unmodified_datapoint["mvpf"] == unmodified_dataset[program]["mvpf"]) {
+                                confidence_intervall = `, 95% CI [${mvpfToString(unmodified_dataset[program]["mvpf_95ci_lower"])}, ${mvpfToString(unmodified_dataset[program]["mvpf_95ci_upper"])}]`
+                            }
+
+                            if (tooltip_counter == 1) {
+                                tooltip.push("Willingness to Pay: " + +parseFloat(unmodified_datapoint["willingness_to_pay"]).toFixed(2) + "€");
+                                tooltip.push("Government Net Cost: " + +parseFloat(unmodified_datapoint["government_net_costs"]).toFixed(2) + "€");
+                                tooltip.push("MVPF: " + (mvpfIsInfinity ? "∞" : +parseFloat(unmodified_datapoint["mvpf"]).toFixed(2)) + confidence_intervall);
+                            }
+                            tooltip_counter++;
+                            return tooltip;
+                        }
+                    }
+                },
+                htmlLegend: {
+                    containerID: "mvpfChartLegend"
+                }
+            },
+            hover: {
+                mode: "point"
+            }
+        },
+        plugins: [htmlLegendPlugin]
+    });
+
+    currently_displayed_chart = mvpfCIChart;
+
+    mvpfChartElement.onclick = function (evt) {
+        //This is totally weird, see https://github.com/chartjs/Chart.js/issues/2292 
+        //But it works now!!!!!
+        let activePoints = mvpfCIChart.getElementsAtEventForMode(evt, 'point', mvpfCIChart.options);
+        let firstPoint = activePoints[0];
+        // activePoints is undefined in case no point is pressed. if(undefined) is false, this condition prevents
+        // the code from being executed if nothing is clicked.
+        if (activePoints[0]) {
+            let clicked_program = mvpfCIChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index].program;
             changeBarChartProgram(clicked_program);
         }
     };
@@ -1037,9 +1047,9 @@ function generateProgramsHTML() {
         var current_program = variable_mapping[i].program;
         singleHTML = generateSingleProgramHTML(current_program);
         allProgramsDiv.appendChild(singleHTML.singleProgramDiv);
-        bar_counter = 1;
-        drawBarChart("government_net_costs", current_program, singleHTML.chartElements[0]);
+        colorholder.color = 1;
         drawBarChart("willingness_to_pay", current_program, singleHTML.chartElements[1]);
+        drawBarChart("government_net_costs", current_program, singleHTML.chartElements[0]);
         drawBarChart("mvpf", current_program, singleHTML.chartElements[2]);
         allBarCharts.push(singleHTML.chartElements);
     }
@@ -1048,9 +1058,9 @@ function generateProgramsHTML() {
 function generateLeftSideHTMLCharts(program) {
     generateSingleProgramHTML(program)
 
-    bar_counter = 1;
-    governmentCostChart = drawBarChart("government_net_costs", program, document.querySelector("#costgraph"));
+    colorholder.color = 1;
     wtpChart = drawBarChart("willingness_to_pay", program, document.querySelector("#wtpgraph"));
+    governmentCostChart = drawBarChart("government_net_costs", program, document.querySelector("#costgraph"));
     wtpCostChart = drawBarChart("mvpf", program, document.querySelector("#wtpcostgraph"));
     
     // Increase size of bar Charts if legend has to many elements:
@@ -1143,9 +1153,14 @@ function generateSingleProgramHTML(program) {
 
     // Generate Description, Bar Chart divs etc..
     rightHandSideDiv = document.querySelector("#rightsidebarcharts");
+    let updated_mvpf_related_values = applyDisableEffects(currently_displayed_program)
+    let confidence_intervall = "";
+    if (unmodified_dataset[currently_displayed_program]["mvpf_95ci_lower"]) {
+        confidence_intervall = updated_mvpf_related_values.effect_disabled ? "" : `, 95% CI [${mvpfToString(unmodified_dataset[currently_displayed_program]["mvpf_95ci_lower"])}, ${mvpfToString(unmodified_dataset[currently_displayed_program]["mvpf_95ci_upper"])}]`;
+    }
     rightHandSideDiv.innerHTML = `
     <h3>${program_data.program_name}<hr style="margin-bottom: 5px"><small class="text-muted" id="mvpfDisplay" style="font-style: italic;">
-    MVPF = ${applyDisableEffects(program)["mvpf"] == "Inf" ? "∞" : parseFloat(applyDisableEffects(program)["mvpf"]).toFixed(2)}</small></h3>
+    MVPF = ${updated_mvpf_related_values["mvpf"] == "Inf" ? "∞" : updated_mvpf_related_values["mvpf"].toFixed(2)}${confidence_intervall}</small></h3>
     ${headline_tags}
 
             <button type="button" class="btn collapseicon" data-toggle="collapse"
@@ -1314,62 +1329,7 @@ function populateCategories() {
     jQuery('#highlightCategory').selectpicker('refresh');
 }
 
-function initDisabledEffects(json_as_array) {
-    for (program of json_as_array) {
-        disabled_effects[program["program"]] = {
-            "government_net_costs" : [],
-            "willingness_to_pay" : []
-        };
-    }
-}
 
-function applyDisableEffects(program) {
-    // Apply effect of disabling certain effects:
-        // First check if something needs to be changed:
-        let effect_disabled = false;
-
-        // Initialize the value that may need updating with their original values.
-        let mvpf = unmodified_dataset[program].mvpf;
-        
-        let government_net_costs_per_program_cost = unmodified_dataset[program].government_net_costs_per_program_cost
-        let willingness_to_pay_per_program_cost = unmodified_dataset[program].willingness_to_pay_per_program_cost
-        let government_net_costs = unmodified_dataset[program].government_net_costs
-        let willingness_to_pay = unmodified_dataset[program].willingness_to_pay
-
-        if (disabled_effects[program]["government_net_costs"].length > 0) {
-            for (disabled_effect of disabled_effects[program]["government_net_costs"]) {
-                government_net_costs -= unmodified_dataset[program][disabled_effect];
-                effect_disabled = true;
-            }
-            government_net_costs_per_program_cost = government_net_costs / unmodified_dataset[program].program_cost;
-        }
-
-        if (disabled_effects[program]["willingness_to_pay"].length > 0) {
-            for (disabled_effect of disabled_effects[program]["willingness_to_pay"]) {
-                willingness_to_pay -= unmodified_dataset[program][disabled_effect];
-                effect_disabled = true;
-            }
-            willingness_to_pay_per_program_cost = willingness_to_pay / unmodified_dataset[program].program_cost;
-        }
-
-        if (effect_disabled) {
-            // Update mvpf if necessary!
-            if (government_net_costs < 0 && willingness_to_pay > 0) {
-                mvpf = "Inf";
-            }
-            else {
-                mvpf = willingness_to_pay / government_net_costs;
-            }
-        }
-
-        return({
-            mvpf: mvpf,
-            government_net_costs: government_net_costs,
-            willingness_to_pay: willingness_to_pay,
-            government_net_costs_per_program_cost: government_net_costs_per_program_cost,
-            willingness_to_pay_per_program_cost: willingness_to_pay_per_program_cost
-        })
-}
 
 function main() {
     // Show collapse if screen size large enough:
@@ -1379,40 +1339,8 @@ function main() {
         let assumptions = document.querySelector("#assumptions");
         assumptions.classList.add("show");
     }
-
-
-    /* Load the required data mostly asychronously.
-    First load programs, and categories. readjson depends on these being already loaded.
-    Then (simultaneously):
-    1. readjson("default") -> load the default spec of each program
-    2. the variable mapping -> loads the composition of the net cost and wtp
-    3. the colors -> loads the colors used in the plot
-    4. the categories -> loads the categories. The nth category is displayed in the nth color.
-    */
-
-    Promise.all([
-        loadJSON(document_root + "data/programs.json"),
-        loadJSON(document_root + "data/categories.json")
-    ]).then(return_values => {
-        additional_program_info = return_values[0];
-        categories = return_values[1];
-        return Promise.all([
-            readjson("default"),
-            loadJSON(document_root + "data/variable_mapping.json"),
-            loadJSON(document_root + "data/colors.json"),
-            loadJSON(document_root + "data/literature.json")
-        ]);
-    }).then((return_values) => {
-        csv = return_values[0];
-        variable_mapping = return_values[1];
-        colors = return_values[2];
-        literature = return_values[3];
-        json_as_array_copy = JSON.parse(JSON.stringify(csv));
-        initDisabledEffects(csv);
-        drawMVPFChart(csv);
-        populatePrograms();
-        populateCategories();
-    });
+    drawMVPFChart(json_as_array);
+    //drawListCIChart(json_as_array);
+    populatePrograms();
+    populateCategories();
 }
-
-main();

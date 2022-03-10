@@ -4,6 +4,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <!-- disable cache, should be removed once finalized -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <!-- /disable cache, should be removed once finalized -->
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css">
   <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.18/css/bootstrap-select.min.css">
@@ -27,7 +33,7 @@
 <body>
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.3.0/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js "></script>
@@ -124,12 +130,16 @@
       <div class="col-lg">
         <div class="row">
           <div class="col-xl-7" id="mvpfChartCol">
-            <div style="padding: 20px;">
-              <div style="margin-bottom: 20px; margin-left: 45px;">
+            <div style="padding: 0px; margin-top: 20px;">
+              <div style="margin-bottom: 20px; margin-left: 25px;">
                 <select class="selectpicker" id="highlightProgram" title="Highlight reform" data-size="6"
                   data-width="300px" data-live-search="true"
                   onchange="highlightProgram(options[this.selectedIndex].value)">
                 </select>
+                <div class="btn-group btn-group-toggle" id="charttogglediv">
+                  <label class="btn btn-secondary chatselect active" onclick="activeScatter()" id="select_scatter_chart">Scatter</label>
+                  <label class="btn btn-secondary chatselect" onclick="activeLine()" id="select_list_chart" >List</label>
+                </div>
               </div>
               <div id="mvpfChartDiv">
                 <canvas id="mvpfChart"></canvas>
@@ -149,7 +159,9 @@
       </div>
     </div>
   </div>
-  <script src="plot.js?v=123"></script>
+  <script src="dataloader.js"></script>
+  <script src="plot.js"></script>
+  <script>loadData().then(() => main());</script>
 </body>
 
 </html>
