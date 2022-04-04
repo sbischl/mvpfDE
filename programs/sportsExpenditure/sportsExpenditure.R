@@ -4,6 +4,7 @@
 
 # Relevant Literature:
 # Pawlowski et al. (2019)
+# published version Pawlowski et al. (2021) in Labor Economics
 
 sportsExpenditure <- function (bootstrap_replication = 0) {
   program_name <- toString(match.call()[1])
@@ -34,7 +35,7 @@ sportsExpenditure <- function (bootstrap_replication = 0) {
 
   # Effect of relocation Assistance on log wage 24 months after transition to employment:
   # This effect is crazy high. Spending about 50 € more on sports per capita per year increases gross earnings of men by
-  # 260€ per month. No significant effect for women. This seems pretty ridicilous, but this is the effect that is suggested by the paper.
+  # 260€ per month. No significant effect for women. This seems pretty unreasonably high, but this is the effect that is suggested by the paper.
   # And yes this is the monthly effect not yearly.
   gross_wage_effect_men <- estimates$earnings_effect_high_vs_low
   gross_wage_effect_women <- 0
@@ -47,9 +48,10 @@ sportsExpenditure <- function (bootstrap_replication = 0) {
   # Effect of Earnings Change on WTP and Government Cost
   #--------------------------------------------------------------------------------------------------------------------#
 
-  # The sports expenditure and the benefits occurs every year. When looking at Figure 2 it appears that there is delay
-  # of about 2 years of the expenditure to show its effect. -> Have to discount by (1 + discount_factor)^-2
-  # -> which is equivalent to assuming 0 effect for two years
+  # The sports expenditure and the benefits occurs every year. When looking at Figure 2 (Figure 5 in pusblished verison)
+  # it appears that there is delay of about 2 years of the expenditure to show its effect.
+  # -> Have to discount by (1 + discount_factor)^-2, which is equivalent to assuming 0 effect for two years
+
   reform_impact <- project_medium_run_impact(absolute_impact_magnitude = c(0,0, gross_wage_effect * 12),
                                              yearly_control_income = average_income_control * 12,
                                              number_of_periods = 3,
