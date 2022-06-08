@@ -2317,6 +2317,7 @@ exportReformJSON <- function(programs = getCompletePrograms()) {
       filter(program_identifier == current_program) %>%
       select(program_identifier,
              program_name,
+             program_name_de,
              category,
              year,
              average_age_beneficiary,
@@ -2329,7 +2330,8 @@ exportReformJSON <- function(programs = getCompletePrograms()) {
              identification,
              maryland_scale,
              peer_reviewed,
-             short_description)
+             short_description,
+             short_description_de)
 
     df_to_json[i, names(df_row)] <- df_row
   }
