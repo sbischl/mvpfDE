@@ -1,0 +1,52 @@
+# Arbeitslosenversicherung
+
+```{r echo=FALSE, include=FALSE}
+# Run the code necessary to get a list named res to access all the results. (Returned from listifyResults(.)) Probably it makes sense to load from disk, because caluclating every time is really slow.
+res <- readRDS(file="results.RData")
+number_of_js_plots <- 0
+
+makePlot <- function(program, type, heading = "", js = T) {
+  reformname <- program
+  caption <- heading
+  wtp_or_cost <- switch(type, "wtp" = "willingness_to_pay", "cost" = "government_net_costs")
+  result <- sprintf(r"(<div class="barChartCaption">%s</div><div class="figure" style="text-align: center">
+  <div id="%s-chart-%s"></div>
+  <script>
+    DataLoadedIn.then(() => {
+      drawBarChart("%s", "%s", "%s-chart-%s", "%s-assumptions");
+      document.querySelector("#content > h3").innerHTML = "Literatur";
+    });
+  </script>
+  </div>)", caption, reformname, wtp_or_cost, wtp_or_cost, reformname, reformname, wtp_or_cost, reformname)
+  return(htmltools::HTML(result))
+}
+
+format <- function(result, flipsign = FALSE) {
+  if (flipsign) {
+    result = - result
+  }
+  prettyNum(round(result,2), big.mark = ".", decimal.mark = ",")
+}
+```
+
+## Institutionelle Rahmenbedingungen
+Die Arbeitslosenversicherung bieten einen Schutz gegen die negativen finanziellen Auswirkungen von Arbeitslosigkeit. Im Fall eines unerwarteten Jobsverlusts helfen die Arbeitslosengeldzahlungen Einkommensverluste abzufedern. Die Arbeitslosenversicherung hilft also die Unsicherheit in Bezug auf das persönliche Einkommen zu reduzieren. Durch diese Versicherungswirkung entsteht durch das Arbeitslosengeld ein Wert, der den nominalen Wert des gezahlten Arbeitslosengeldes übersteigt. Auf der anderen Seite reduziert der Erhalt von Arbeitslosengeld die Notwendigkeit eine neue Beschäftigung aufzunehmen. Es entstehen so fiskalische Kosten durch einen länger anhaltenden Bezug von Arbeitslosengeld und durch entgangene Einkommenssteuerzahlungen. Aus diesem Grund ist die maximale Bezugsdauer des Arbeitslosengeldes I begrenzt. Im deutschen Arbeitslosenversicherungssystem hängt die maximale Bezugsdauer von Arbeitslosengeld I von dem Alter des Versicherten ab. Das System ist so ausgestaltet, dass es Altersgrenzen gibt, an denen die maximale Bezugsdauer sprunghaft ansteigt. Diese Sprungstellen können ausgenutzt werden, um den Zusammenhang zwischen der Bezugsdauer des Arbeitslosengeldes und der Dauer der Arbeitslosigkeit zu bestimmen.
+
+## Methodik
+ Um den MVPF zu berechnen, muss der Nutzen der Risikoreduktion den fiskalischen Kosten der Bereitstellung gegenübergestellt werden. Zur Vereinfachung der Berechnung wird eine Ausweitung der Arbeitslosenversicherung um einen Euro betrachtet. Die Berechnung des MVPF folgt der von Hendren & Sprung-Keyser (2020) verwendeten Methodik zur Berechnung des MVPFs von Arbeitslosenunterstützung. Der MVPF einer Arbeitslosengeldausweitung kann dargestellt werden als: $$\textrm{MVPF} = \frac{1 + \textrm{Wert Risikoreduktion}}{1 + \textrm{FE}}$$. Der Zähler besteht aus der Arbeitslosengeldzahlung in Höhe von einem Euro plus der Wertschätzung für die Risikoreduktion. Der Wert der Risikoreduktion kann als das Produkt der relativen Risikoaversion und dem Konsumrückgang bei Arbeitslosigkeit ausgedrückt werden. Schmieder & von Wachter (2016)[@schmieder2016] liefern einen Überblick über Studien, die den Konsumrückgang bei Arbeitslosigkeit untersuchen. Die Schätzungen liegen im Bereich von fünf bis 25 Prozent. Es gibt keine auf Deutschland bezogenen Studie. Es wird ein Konsumrückgang am unteren Ende der Schätzungen in Höhe von acht Prozent angenommen. Der Koeffizient der relative Risikoaversion wird auf zwei festgelegt. Diese Annahmen entsprechen den Annahmen von Hendren & Sprung-Keyser (2020). Die Zahlungsbereitschaft für die Ausweitung der Arbeitslosenversicherung beträgt damit immer 1 + 0,08 ✕ 2 = 1,16. Der Nenner der oben dargestellten MVPF-Formel besteht aus der auf einen Euro normierten Zahlung des Arbeitslosengeldes plus der fiskalischen Externalität. Die fiskalische Externalität umfasst die Mehrkosten die aufgrund der reduzierten Beschäftigungsanreize bei einer Arbeitslosengeldausweitung entstehen. Die Berechnung der fiskalische Externalität ist komplex und umfasst einige Parameter, darunter die Lohnersatzrate, der Steuersatz, die maximale Bezugsdauer und der Effekt einer Verlängerung der Bezugsdauer auf die Dauer der Arbeitslosigkeit. Die genaue Formel und deren Herleitung kann in Schmieder & von Wachter (2016) S.560-562 nachgeschlagen werden.
+
+## Ergebnisse
+  Der wichtigste Parameter in der Berechnung des MVPFs ist der Effekt der Bezugsdauer auf die Dauer der Arbeitslosigkeit. Sollte es keinen negativen Anreizeffekt bei der Ausweitung von Bezugszeiten geben, wäre die fiskalische Externalität gleich null und der MVPF der Arbeitslosenversicherung gleich 1,16. Ein höherer MVPF wäre nur möglich, wenn die Zahlung von Arbeitslosengeld die Jobsuche beschleunigen würde. Die Auswirkung der Länge des Arbeitslosengeldbezugszeitraums auf die Dauer der Arbeitslosigkeit ist Gegenstand wirtschaftswissenschaftlicher Forschung. Schmieder et al. (2012)[@schmieder2012] nutzen die bereits erwähnten Sprungstellen in der deutschen Arbeitslosenversicherung, an denen sich die Anspruchsdauer ändert, um ein Regression Discontinuity Design zu implementieren. Unter Verwendung eines großen administrativen Datensatzes, der die Jahre 1987 bis 1999 abdeckt, zeigen die Autoren, dass die Verlängerung der Anspruchsdauer von 42-Jährigen um einen Monat die Dauer der Arbeitslosigkeit um 0,13 Monate verlängert. Daraus ergibt sich eine fiskalische Externalität von 0,29. Der MVPF beträgt 1,16 / 1,29 = 0,90. Bei der Verwendung anderer Sprungstellen im Alter von 44 und 49 bleiben die Resultate praktisch unverändert. Eine ähnliche Studie von Caliendo et al. (2013)[@caliendo2013], bei der eine Sprungstelle im Alter von 45 Jahren verwendet wird, legt einen etwas niedrigeren MVPF von 0,62 nahe.
+
+Im Jahr 2006 wurde die Bezugsdauer des Arbeitslosengeldes im Rahmen der Hartz-Reformen gekürzt. Petrunyk & Pfeifer (2018)[@petrunyk2018] evaluieren die Auswirkung der Reform auf Personen mit gesundheitlichen Beeinträchtigungen. Im Gegensatz zu den anderen beiden Studien basiert die Identifikation nicht auf Diskontinuitäten im Leistungssystem, sondern auf der Tatsache, dass nicht alle Altersgruppen von der Hartz-Reform betroffen waren. Lediglich für Personen, die zum Zeitpunkt des Verlusts der Arbeitsstelle älter als 45 waren, wurde die Bezugsdauer gekürzt. Die Resultate von Petrunyk & Pfeifer (2018) suggerieren einen kleineren Anreizeffekt von im Durchschnitt 0.048 Monate kürzerer Arbeitslosigkeit bei Kürzung des Bezugszeitraums um einen Monat. Es resultiert ein MVPF von 1.08.
+
+Die folgende Tabelle liefert eine Übersicht über alle MVPF Schätzungen:
+
+ Jahr |  MVPF  | FE | Alter | Studie
+ ---- | ----| ---- | ---- | ----
+ 1993 |  `r format(res$unemploymentBenefits42$mvpf)`| `r format(res$unemploymentBenefits42$fiscal_externality)` | 42 | Schmieder et al. (2012)
+ 1993 |  `r format(res$unemploymentBenefits44$mvpf)` | `r format(res$unemploymentBenefits44$fiscal_externality)` | 44 | Schmieder et al. (2012)
+ 1993 |  `r format(res$unemploymentBenefits49$mvpf)`  | `r format(res$unemploymentBenefits49$fiscal_externality)` | 49 | Schmieder et al. (2012)
+ 2002 |  `r format(res$unemploymentBenefits2002$mvpf)`| `r format(res$unemploymentBenefits2002$fiscal_externality)` | 45 | Caliendo et al. (2013)
+ 2006 |  `r format(res$unemploymentBenefits2006$mvpf)`| `r format(res$unemploymentBenefits2006$fiscal_externality, T)` | >45 | Petrunyk & Pfeifer (2018)
+

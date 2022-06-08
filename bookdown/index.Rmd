@@ -1,0 +1,22 @@
+--- 
+title: "Der Wert von Staatsausgaben in Deutschland"
+author: "Simeon Bischl"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+documentclass: book
+bibliography: [book.bib, packages.bib]
+# url: your book url like https://bookdown.org/yihui/bookdown
+# cover-image: path to the social sharing image like images/cover.jpg
+description: |
+  Gibt einen Überblick und evaluiert 40+ Reformen und Regierungsprogramme hinsichtlich ihrer Effektivität.
+biblio-style: apalike
+link-citations: yes
+csl: chicago-fullnote-bibliography.csl
+---
+# Große Überschrift
+```{r include=FALSE}
+# automatically create a bib database for R packages
+knitr::write_bib(c(
+  .packages(), 'bookdown', 'knitr', 'rmarkdown'
+), 'packages.bib')
+```

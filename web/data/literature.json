@@ -1,0 +1,1803 @@
+{
+ "SampleDataBase": {
+  "type": "misc",
+  "note": "data retrieved from stats.oecd.org, \nr\u0306lhttp://stats.oecd.org//Index.aspx?DataSetCode=TABLE_II1",
+  "year": "2016",
+  "title": "Tax Database: Table II.1. Corporate income tax rate",
+  "author": [
+   {
+    "name": "Database, World Inequality"
+   }
+  ]
+ },
+ "SampleBookKey": {
+  "type": "book",
+  "publisher": {
+   "name": "MEIN VERLAG, MEINORT 1654"
+  },
+  "year": "1654",
+  "author": [
+   {
+    "name": "Nachname, Vorname Nachname"
+   },
+   {
+    "name": "Nachname, Vorname"
+   },
+   {
+    "name": "Nachname, Vorname"
+   }
+  ],
+  "title": "Das ist der Titel des Buchs"
+ },
+ "SampleArtKey": {
+  "type": "article",
+  "pages": "1--24",
+  "number": "1",
+  "volume": "48",
+  "year": "2004",
+  "journal": {
+   "name": "European Economic Review",
+   "volume": "48",
+   "number": "1",
+   "pages": "1--24"
+  },
+  "title": "Agglomeration, integration and tax harmonisation",
+  "author": [
+   {
+    "name": "Baldwin, Richard E."
+   },
+   {
+    "name": "Krugman, Paul"
+   }
+  ]
+ },
+ "wid2020": {
+  "type": "misc",
+  "fullname": "yes",
+  "url": "https://wid.world/",
+  "note": "Relevant variables: average income and beta coefficient by percentile of pre-tax national income. Accessed through R package wid-r-tool r\u0306lhttps://github.com/WIDworld/wid-r-tool [last accessed on: 2020-11-03]",
+  "year": "2020",
+  "title": "World Inequality Database Full Dataset",
+  "author": [
+   {
+    "name": "Database, World Inequality"
+   }
+  ]
+ },
+ "bmwi2020": {
+  "type": "misc",
+  "url": "https://www.erneuerbare-energien.de/EE/Redaktion/DE/Downloads/eeg-in-zahlen-pdf.pdf",
+  "note": "Available at: r\u0306lhttps://www.erneuerbare-energien.de/EE/Redaktion/DE/Downloads/eeg-in-zahlen-pdf.pdf [last accessed on: 2020-11-03]",
+  "year": "2020",
+  "title": "EEG in Zahlen: Verg\u00fctungen, Differenzkosten und EEG-Umlage 2000 bis 2020",
+  "author": [
+   {
+    "name": "[BMWi], Bundesministerium f\u00fcr Wirtschaft und Energie"
+   }
+  ]
+ },
+ "iab2013": {
+  "type": "misc",
+  "url": "https://fdz.iab.de/187/section.aspx/Publikation/k130513302",
+  "note": "Frequency Tables available online at: r\u0306lhttps://fdz.iab.de/187/section.aspx/Publikation/k130513302 [last accessed on: 2020-11-03]",
+  "year": "2013",
+  "title": "Sample of Integrated Labour Market Biographies (SIAB) 1975-2010",
+  "author": [
+   {
+    "name": "[IAB], Institute for Employment Research"
+   }
+  ]
+ },
+ "destatis2019a": {
+  "type": "misc",
+  "url": "https://www.statistischebibliothek.de/mir/receive/DESerie_mods_00000117",
+  "note": "Data for years 1996 to 2017 available online at: \\newline r\u0306lhttps://www.statistischebibliothek.de/mir/receive/DESerie_mods_00000117 [last accessed on: 2020-08-06]",
+  "year": "2019",
+  "title": "Statistisches Bundesamt: Fachserie 11/4/3/2 Monet\u00e4re hochschulstatistische Kennzahlen",
+  "author": [
+   {
+    "name": "Destatis, "
+   }
+  ]
+ },
+ "destatis2020": {
+  "type": "misc",
+  "url": "https://www.destatis.de/DE/Themen/Arbeit/Verdienste/Verdienste-Verdienstunterschiede/Tabellen/liste-bruttomonatsverdienste.html",
+  "note": "Available online at: r\u0306lhttps://www.destatis.de/DE/Themen/Arbeit/Verdienste/Verdienste-Verdienstunterschiede/Tabellen/liste-bruttomonatsverdienste.html [last accessed on: 2020-11-03]",
+  "year": "2020",
+  "title": "Durchschnittliche Bruttomonatsverdienste, Zeitreihe",
+  "author": [
+   {
+    "name": "Destatis, "
+   }
+  ]
+ },
+ "destatiscpi": {
+  "type": "misc",
+  "url": "https://www.destatis.de/DE/Themen/Wirtschaft/Preise/Verbraucherpreisindex/Publikationen/Downloads-Verbraucherpreise/verbraucherpreisindex-lange-reihen-pdf-5611103.html",
+  "note": "Available online at: r\u0306lhttps://www.destatis.de/DE/Themen/Wirtschaft/Preise/Verbraucherpreisindex/Publikationen/Downloads-Verbraucherpreise/verbraucherpreisindex-lange-reihen-pdf-5611103.html [last accessed on: 2020-11-04]",
+  "year": "2020",
+  "title": "Verbraucherpreisindex f\u00fcr Deutschland - Lange Reihen ab 1948 - September 2020",
+  "author": [
+   {
+    "name": "Destatis, "
+   }
+  ]
+ },
+ "destatisTax2004": {
+  "type": "misc",
+  "url": "https://www.statistischebibliothek.de/mir/receive/DESerie_mods_00000142",
+  "note": "Available online at: r\u0306lhttps://www.statistischebibliothek.de/mir/receive/DESerie_mods_00000142 [last accessed on: 2020-11-04]",
+  "year": "2009",
+  "title": "Statistisches Bundesamt: Fachserie 11/7/1 Finanzen und Steuern Lohn- und Einkommensteuer 2004",
+  "author": [
+   {
+    "name": "Destatis, "
+   }
+  ]
+ },
+ "destatisTax2001": {
+  "type": "misc",
+  "url": "https://www.statistischebibliothek.de/mir/receive/DESerie_mods_00000142",
+  "note": "Available online at: r\u0306lhttps://www.statistischebibliothek.de/mir/receive/DESerie_mods_00000142 [last accessed on: 2020-11-04]",
+  "year": "2006",
+  "title": "Statistisches Bundesamt: Fachserie 11/7/1 Finanzen und Steuern Lohn- und Einkommensteuer 2001",
+  "author": [
+   {
+    "name": "Destatis, "
+   }
+  ]
+ },
+ "destatisTax1995": {
+  "type": "misc",
+  "url": "https://www.statistischebibliothek.de/mir/receive/DESerie_mods_00000142",
+  "note": "Available online at: r\u0306lhttps://www.statistischebibliothek.de/mir/receive/DESerie_mods_00000142 [last accessed on: 2020-11-04]",
+  "year": "1999",
+  "title": "Statistisches Bundesamt: Fachserie 11/7/1 Finanzen und Steuern Lohn- und Einkommensteuer 1995",
+  "author": [
+   {
+    "name": "Destatis, "
+   }
+  ]
+ },
+ "destatisMothersAge": {
+  "type": "misc",
+  "url": "https://www-genesis.destatis.de/genesis/online?operation=statistic&code=12612",
+  "note": "Available online at: r\u0306lhttps://www-genesis.destatis.de/genesis/online?operation=statistic&code=12612 [last accessed on: 2020-11-04]",
+  "year": "2020",
+  "title": "Destatis Online Database Table 12612-0015: Durchschnittliches Alter der Mutter bei der Geburt ihrer lebend geborenen Kinder: Deutschland, Jahre, Familienstand der Eltern",
+  "author": [
+   {
+    "name": "Destatis, "
+   }
+  ]
+ },
+ "destatisAgePopulation": {
+  "type": "misc",
+  "url": "https://www-genesis.destatis.de/genesis/online?operation=statistic&code=12411",
+  "note": "Available online at: r\u0306lhttps://www-genesis.destatis.de/genesis/online?operation=statistic&code=12411 [last accessed on: 2020-11-04]",
+  "year": "2020",
+  "title": "Destatis Online Database Table 12411-0005: Bev\u00f6lkerung: Deutschland, Stichtag, Altersjahre",
+  "author": [
+   {
+    "name": "Destatis, "
+   }
+  ]
+ },
+ "ruhm2000": {
+  "type": "article",
+  "pages": "931--960",
+  "number": "6",
+  "volume": "19",
+  "year": "2000",
+  "journal": {
+   "name": "Journal of Health Economics",
+   "volume": "19",
+   "number": "6",
+   "pages": "931--960"
+  },
+  "title": "Parental leave and child health",
+  "author": [
+   {
+    "name": "Ruhm, Christopher J."
+   }
+  ]
+ },
+ "lorenz2020": {
+  "type": "article",
+  "month": "October",
+  "pages": "646--665",
+  "number": "4",
+  "volume": "118",
+  "year": "2016",
+  "journal": {
+   "name": "Scandinavian Journal of Economics",
+   "volume": "118",
+   "number": "4",
+   "pages": "646--665",
+   "month": "October"
+  },
+  "title": "Identifying Laffer Bounds: A Sufficient-Statistics Approach with an Application to Germany",
+  "author": [
+   {
+    "name": "Lorenz, Normann"
+   },
+   {
+    "name": "Sachs, Dominik"
+   }
+  ]
+ },
+ "destatis1991": {
+  "type": "misc",
+  "url": "https://www.statistischebibliothek.de/mir/receive/DEHeft_mods_00131352",
+  "note": "Available online at: r\u0306lhttps://www.statistischebibliothek.de/mir/receive/DEHeft_mods_00131352 [last accessed on: 2020-10-20]",
+  "year": "1991",
+  "title": "Statistisches Bundesamt: Fachserie 11/7 Ausbildungsf\u00f6rderung nach dem\nBundesausbildungsf\u00f6rderungsgesetz",
+  "author": [
+   {
+    "name": "Destatis, "
+   }
+  ]
+ },
+ "destatis2004": {
+  "type": "misc",
+  "url": "https://www.statistischebibliothek.de/mir/receive/DEHeft_mods_00005470",
+  "note": "Available online at: r\u0306lhttps://www.statistischebibliothek.de/mir/receive/DEHeft_mods_00005470 [last accessed on: 2020-10-20]",
+  "year": "2004",
+  "title": "Statistisches Bundesamt: Fachserie 11/7 Ausbildungsf\u00f6rderung nach dem\nBundesausbildungsf\u00f6rderungsgesetz",
+  "author": [
+   {
+    "name": "Destatis, "
+   }
+  ]
+ },
+ "destatis2015": {
+  "type": "misc",
+  "url": "https://www.statistischebibliothek.de/mir/receive/DEHeft_mods_00031231",
+  "note": "Available online at: r\u0306lhttps://www.statistischebibliothek.de/mir/receive/DEHeft_mods_00031231 [last accessed on: 2020-10-20]",
+  "year": "2015",
+  "title": "Statistisches Bundesamt: Fachserie 11/7 Ausbildungsf\u00f6rderung nach dem\nBundesausbildungsf\u00f6rderungsgesetz",
+  "author": [
+   {
+    "name": "Destatis, "
+   }
+  ]
+ },
+ "destatis2019b": {
+  "type": "misc",
+  "url": "https://www.statistischebibliothek.de/mir/receive/DESerie_mods_00002310",
+  "note": "Data for years 2011 to 2016 available online at: \\newline r\u0306lhttps://www.statistischebibliothek.de/mir/receive/DESerie_mods_00002310 [last accessed on: 2020-08-07]. Data for years 2007 to 2010 at: \\l\u0306https://www.statistischebibliothek.de/mir/receive/DESerie_mods_00000826 [last accessed on: 2020-08-07]",
+  "year": "2019",
+  "title": "Statistisches Bundesamt: Bildungsausgaben / Ausgaben je Sch\u00fclerin und Sch\u00fcler",
+  "author": [
+   {
+    "name": "Destatis, "
+   }
+  ]
+ },
+ "bmf2020": {
+  "type": "misc",
+  "url": "https://www.bmf-steuerrechner.de/ekst/eingabeformekst.xhtml",
+  "note": "Available at: r\u0306lhttps://www.bmf-steuerrechner.de/ekst/eingabeformekst.xhtml [last accessed on: 2020-10-17]",
+  "year": "2020",
+  "title": "Lohn- und Einkommenssteuerrechner: Steuerberechnung f\u00fcr Einkommensteuerpflichtige f\u00fcr die Jahre 1958 bis 2020",
+  "author": [
+   {
+    "name": "Finanzen [BMF], Bundesministerium der"
+   }
+  ]
+ },
+ "oecd2020": {
+  "type": "misc",
+  "url": "https://data.oecd.org/socialexp/public-spending-on-labour-markets.htm",
+  "note": "Available at: r\u0306lhttps://data.oecd.org/socialexp/public-spending-on-labour-markets.htm [last accessed on: 2020-10-21]",
+  "year": "2020",
+  "title": "Public spending on labour markets (indicator)",
+  "author": [
+   {
+    "name": "OECD, "
+   }
+  ]
+ },
+ "lorenz2016": {
+  "type": "article",
+  "publisher": "Wiley Online Library",
+  "year": "2016",
+  "pages": "646--665",
+  "number": "4",
+  "volume": "118",
+  "journal": {
+   "name": "The Scandinavian Journal of Economics",
+   "volume": "118",
+   "number": "4",
+   "pages": "646--665"
+  },
+  "author": [
+   {
+    "name": "Lorenz, Normann"
+   },
+   {
+    "name": "Sachs, Dominik"
+   }
+  ],
+  "title": "Identifying laffer bounds: a sufficient-statistics approach with an application to Germany"
+ },
+ "saez2009": {
+  "type": "article",
+  "number": "15012",
+  "journal": {
+   "name": "NBER Working Papers",
+   "number": "15012"
+  },
+  "year": "2009",
+  "title": "The Elasticity of Taxable Income with Respect to Marginal Tax Rates: A Critical Review",
+  "author": [
+   {
+    "name": "Saez, Emmanuel"
+   },
+   {
+    "name": "Slemrod, Joel B."
+   },
+   {
+    "name": "Giertz, Seth H."
+   }
+  ]
+ },
+ "kluve2010": {
+  "type": "article",
+  "month": "December",
+  "pages": "904--918",
+  "number": "6",
+  "volume": "17",
+  "year": "2010",
+  "journal": {
+   "name": "Labour Economics",
+   "volume": "17",
+   "number": "6",
+   "pages": "904--918",
+   "month": "December"
+  },
+  "title": "The effectiveness of European active labor market programs",
+  "author": [
+   {
+    "name": "Kluve, Jochen"
+   }
+  ]
+ },
+ "gottfried2004": {
+  "type": "article",
+  "number": "15",
+  "url": "https://ideas.repec.org/p/iaw/iawdip/15.html",
+  "journal": {
+   "name": "IAW Discussion Papers",
+   "number": "15"
+  },
+  "institution": "Institut f\u00fcr Angewandte Wirtschaftsforschung (IAW)",
+  "year": "2004",
+  "title": "Empirical Evidence on the Effects of Marginal Tax Rates on Income \u2013 The German Case",
+  "author": [
+   {
+    "name": "Gottfried, Peter"
+   },
+   {
+    "name": "Schellhorn, Hannes"
+   }
+  ]
+ },
+ "doerrenberg2017": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/eee/pubeco/v151y2017icp41-55.html",
+  "doi": "10.1016/j.jpubeco.2015.10",
+  "keywords": "Elasticity of taxable income; Deductions; Tax expenditures; Sufficient statistic; Administrative dat",
+  "month": "",
+  "pages": "41--55",
+  "volume": "151",
+  "year": "2017",
+  "journal": {
+   "name": "Journal of Public Economics",
+   "volume": "151",
+   "pages": "41--55",
+   "month": ""
+  },
+  "title": "The elasticity of taxable income in the presence of deduction possibilities",
+  "author": [
+   {
+    "name": "Doerrenberg, Philipp"
+   },
+   {
+    "name": "Peichl, Andreas"
+   },
+   {
+    "name": "Siegloch, Sebastian"
+   }
+  ]
+ },
+ "doerrenberg2015": {
+  "type": "article",
+  "number": "5369",
+  "journal": {
+   "name": "CESifo Working Paper Series",
+   "number": "5369"
+  },
+  "year": "2015",
+  "title": "The Elasticity of Taxable Income in the Presence of Deduction Possibilities",
+  "author": [
+   {
+    "name": "Doerrenberg, Philipp"
+   },
+   {
+    "name": "Peichl, Andreas"
+   },
+   {
+    "name": "Siegloch, Sebastian"
+   }
+  ]
+ },
+ "clementi2005": {
+  "type": "inbook",
+  "url": "https://ideas.repec.org/p/arx/papers/physics-0504217.html",
+  "pages": "3--14",
+  "address": "Milano",
+  "publisher": {
+   "name": "Springer Milan",
+   "address": "Milano"
+  },
+  "year": "2005",
+  "booktitle": "Econophysics of Wealth Distributions",
+  "title": "Pareto's Law of Income Distribution: Evidence for Germany, the United Kingdom, and the United States",
+  "author": [
+   {
+    "name": "Clementi, Fabio"
+   },
+   {
+    "name": "Gallegati, Mauro"
+   }
+  ]
+ },
+ "peter2021": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/eee/jeborg/v190y2021icp524-549.html",
+  "pages": "524--549",
+  "number": "C",
+  "volume": "190",
+  "year": "2021",
+  "journal": {
+   "name": "Journal of Economic Behavior & Organization",
+   "volume": "190",
+   "number": "C",
+   "pages": "524--549"
+  },
+  "title": "Informing students about college: Increasing enrollment using a behavioral intervention?",
+  "author": [
+   {
+    "name": "Peter, Frauke"
+   },
+   {
+    "name": "Spiess, C. Katharina"
+   },
+   {
+    "name": "Zambre, Vaishali"
+   }
+  ]
+ },
+ "falk2020": {
+  "type": "article",
+  "number": "8382",
+  "journal": {
+   "name": "CESifo Working Paper Series",
+   "number": "8382"
+  },
+  "year": "2020",
+  "title": "Mentoring and Schooling Decisions: Causal Evidence",
+  "author": [
+   {
+    "name": "Falk, Armin"
+   },
+   {
+    "name": "Kosse, Fabian"
+   },
+   {
+    "name": "Pinger, Pia"
+   }
+  ]
+ },
+ "marcus2019": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/uwp/jhriss/v54y2019i2p468-502.html",
+  "doi": "",
+  "keywords": "",
+  "pages": "468--502",
+  "number": "2",
+  "volume": "54",
+  "year": "2019",
+  "journal": {
+   "name": "Journal of Human Resources",
+   "volume": "54",
+   "number": "2",
+   "pages": "468--502"
+  },
+  "title": "The Effect of Increasing Education Efficiency on University Enrollment: Evidence from Administrative Data and an Unusual Schooling Reform in Germany",
+  "author": [
+   {
+    "name": "Marcus, Jan"
+   },
+   {
+    "name": "Zambre, Vaishali"
+   }
+  ]
+ },
+ "gorgen2019": {
+  "type": "Papers",
+  "note": "Available online at: r\u0306lhttps://arxiv.org/abs/1909.08299v1 [last accessed on: 2020-11-03]",
+  "number": "1909.08299",
+  "url": "https://ideas.repec.org/p/arx/papers/1909.08299.html",
+  "journal": {
+   "name": "arXiv.org",
+   "number": "1909.08299"
+  },
+  "year": "2019",
+  "title": "Evaluating Effects of Tuition Fees: Lasso for the Case of Germany",
+  "author": [
+   {
+    "name": "G\u00f6rgen, Konstantin"
+   },
+   {
+    "name": "Schienle, Melanie"
+   }
+  ]
+ },
+ "bruckmeier2014": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/eee/ecoedu/v41y2014icp14-23.html",
+  "doi": "10.1016/j.econedurev.2014",
+  "keywords": "Tuition fees; Enrollment rates; Treatment effect",
+  "month": "",
+  "pages": "14--23",
+  "volume": "41",
+  "year": "2014",
+  "journal": {
+   "name": "Economics of Education Review",
+   "volume": "41",
+   "pages": "14--23",
+   "month": ""
+  },
+  "title": "The effects of tuition fees on transition from high school to university in Germany",
+  "author": [
+   {
+    "name": "Bruckmeier, Kerstin"
+   },
+   {
+    "name": "Wigger, Berthold U."
+   }
+  ]
+ },
+ "lechner2011": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/bla/jeurec/v9y2011i4p742-784.html",
+  "doi": "j.1542-4774.2011.01029.x",
+  "keywords": "",
+  "month": "August",
+  "pages": "742--784",
+  "number": "4",
+  "volume": "9",
+  "year": "2011",
+  "journal": {
+   "name": "Journal of the European Economic Association",
+   "volume": "9",
+   "number": "4",
+   "pages": "742--784",
+   "month": "August"
+  },
+  "title": "Long\u2010Run Effects Of Public Sector Sponsored Training In West Germany",
+  "author": [
+   {
+    "name": "Lechner, Michael"
+   },
+   {
+    "name": "Miquel, Ruth"
+   },
+   {
+    "name": "Wunsch, Conny"
+   }
+  ]
+ },
+ "biewen2014": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/ucp/jlabec/doi10.1086-677233.html",
+  "doi": "10.1086/677233",
+  "keywords": "",
+  "month": "",
+  "pages": "837--897",
+  "number": "4",
+  "volume": "32",
+  "year": "2014",
+  "journal": {
+   "name": "Journal of Labor Economics",
+   "volume": "32",
+   "number": "4",
+   "pages": "837--897",
+   "month": ""
+  },
+  "title": "The Effectiveness of Public-Sponsored Training Revisited: The Importance of Data and Methodological Choices",
+  "author": [
+   {
+    "name": "Biewen, Martin"
+   },
+   {
+    "name": "Fitzenberger, Bernd"
+   },
+   {
+    "name": "Osikominu, Aderonke"
+   },
+   {
+    "name": "Paul, Marie"
+   }
+  ]
+ },
+ "caliendo2011a": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/eee/pubeco/v95y2011i3p311-331.html",
+  "doi": "10.1016/j.jpubeco.2010.11",
+  "keywords": "Start-up subsidies; Self-employment; Evaluation; Long-term effects; Effect heterogeneity",
+  "month": "",
+  "pages": "311--331",
+  "number": "3",
+  "volume": "95",
+  "year": "2011",
+  "journal": {
+   "name": "Journal of Public Economics",
+   "volume": "95",
+   "number": "3",
+   "pages": "311--331",
+   "month": ""
+  },
+  "title": "Start-up subsidies for the unemployed: Long-term evidence and effect heterogeneity",
+  "author": [
+   {
+    "name": "Caliendo, Marco"
+   },
+   {
+    "name": "K\u00fcnn, Steffen"
+   }
+  ]
+ },
+ "caliendo2016": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/eee/eecrev/v86y2016icp87-108.html",
+  "doi": "10.1016/j.euroecorev.2015",
+  "keywords": "Start-up subsidies; Evaluation; Self-employment; Personality; Treatment effects",
+  "month": "",
+  "pages": "87--108",
+  "volume": "86",
+  "year": "2016",
+  "journal": {
+   "name": "European Economic Review",
+   "volume": "86",
+   "pages": "87--108",
+   "month": ""
+  },
+  "title": "Personality traits and the evaluation of start-up subsidies",
+  "author": [
+   {
+    "name": "Caliendo, Marco"
+   },
+   {
+    "name": "K\u00fcnn, Steffen"
+   },
+   {
+    "name": "Wei\u00dfenberger, Martin"
+   }
+  ]
+ },
+ "boockmann2014": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/bpj/pewipo/v15y2014i4p307-323n3.html",
+  "doi": "",
+  "keywords": "",
+  "month": "December",
+  "pages": "307--323",
+  "number": "4",
+  "volume": "15",
+  "year": "2014",
+  "journal": {
+   "name": "Perspektiven der Wirtschaftspolitik",
+   "volume": "15",
+   "number": "4",
+   "pages": "307--323",
+   "month": "December"
+  },
+  "title": "Evidenzbasierte Wirtschaftspolitik in Deutschland: Defizite und Potentiale",
+  "author": [
+   {
+    "name": "Boockmann, Bernhard"
+   },
+   {
+    "name": "Buch, Claudia M."
+   },
+   {
+    "name": "Schnitzer, Monika"
+   }
+  ]
+ },
+ "doerr2014": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/sae/ilrrev/v70y2017i3p767-812.html",
+  "doi": "",
+  "keywords": "active labor market policies; training vouchers; treatment effects",
+  "month": "May",
+  "pages": "767--812",
+  "number": "3",
+  "volume": "70",
+  "year": "2017",
+  "journal": {
+   "name": "ILR Review",
+   "volume": "70",
+   "number": "3",
+   "pages": "767--812",
+   "month": "May"
+  },
+  "title": "Employment and Earnings Effects of Awarding Training Vouchers in Germany",
+  "author": [
+   {
+    "name": "Doerr, Annabelle"
+   },
+   {
+    "name": "Fitzenberger, Bernd"
+   },
+   {
+    "name": "Kruppe, Thomas"
+   },
+   {
+    "name": "Paul, Marie"
+   },
+   {
+    "name": "Strittmatter, Anthony"
+   }
+  ]
+ },
+ "huber2015": {
+  "type": "article",
+  "number": "9138",
+  "journal": {
+   "name": "IZA Discussion Papers",
+   "number": "9138"
+  },
+  "institution": "Institute of Labor Economics (IZA)",
+  "year": "2015",
+  "title": "Direct and Indirect Effects of Training Vouchers for the Unemployed",
+  "author": [
+   {
+    "name": "Huber, Martin"
+   },
+   {
+    "name": "Lechner, Michael"
+   },
+   {
+    "name": "Strittmatter, Anthony"
+   }
+  ]
+ },
+ "thiedig2018": {
+  "type": "article",
+  "number": "17",
+  "year": "2018",
+  "journal": {
+   "name": "Free University Berlin Discussion Papers",
+   "number": "17"
+  },
+  "title": "An economic cost-benefit analysis of a general speed limit on German highways",
+  "author": [
+   {
+    "name": "Thiedig, Johannes"
+   }
+  ]
+ },
+ "hohmeyer2010": {
+  "type": "article",
+  "number": "201021",
+  "url": "https://ideas.repec.org/p/iab/iabdpa/201021.html",
+  "journal": {
+   "name": "IAB Discussion Paper",
+   "number": "201021"
+  },
+  "year": "2010",
+  "title": "Direct job creation in Germany revisited: Is it effective for welfare recipients and does it matter whether participants receive a wage?",
+  "author": [
+   {
+    "name": "Hohmeyer, Katrin"
+   },
+   {
+    "name": "Wolff, Joachim"
+   }
+  ]
+ },
+ "elvik2011": {
+  "type": "article",
+  "year": "2011",
+  "pages": "1245--1251",
+  "number": "3",
+  "volume": "43",
+  "journal": {
+   "name": "Accident Analysis & Prevention",
+   "volume": "43",
+   "number": "3",
+   "pages": "1245--1251"
+  },
+  "author": [
+   {
+    "name": "Elvik, Rune"
+   }
+  ],
+  "title": "Publication bias and time-trend bias in meta-analysis of bicycle helmet efficacy: A re-analysis of Attewell, Glase and McFadden, 2001"
+ },
+ "sieg2014": {
+  "type": "article",
+  "number": "21",
+  "url": "https://ideas.repec.org/p/mut/wpaper/21.html",
+  "journal": {
+   "name": "Working Papers of Institute of Transport Economics M\u00fcnster",
+   "number": "21"
+  },
+  "institution": "Institute of Transport Economics, University of Muenster",
+  "year": "2014",
+  "title": "Costs and benefits of a bicycle helmet law for Germany",
+  "author": [
+   {
+    "name": "Sieg, Gernot"
+   }
+  ]
+ },
+ "hendren2020a": {
+  "type": "article",
+  "publisher": "Oxford University Press",
+  "year": "2020",
+  "pages": "1209--1318",
+  "number": "3",
+  "volume": "135",
+  "journal": {
+   "name": "The Quarterly Journal of Economics",
+   "volume": "135",
+   "number": "3",
+   "pages": "1209--1318"
+  },
+  "author": [
+   {
+    "name": "Hendren, Nathaniel"
+   },
+   {
+    "name": "Sprung-Keyser, Ben"
+   }
+  ],
+  "title": "A unified welfare analysis of government policies"
+ },
+ "hendren2016": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/ucp/tpolec/doi10.1086-685593.html",
+  "doi": "10.1086/685593",
+  "keywords": "",
+  "month": "",
+  "pages": "51--89",
+  "number": "1",
+  "volume": "30",
+  "year": "2016",
+  "journal": {
+   "name": "Tax Policy and the Economy",
+   "volume": "30",
+   "number": "1",
+   "pages": "51--89",
+   "month": ""
+  },
+  "title": "The Policy Elasticity",
+  "author": [
+   {
+    "name": "Hendren, Nathaniel"
+   }
+  ]
+ },
+ "hendren2020b": {
+  "type": "Working Paper",
+  "url": "http://www.nber.org/papers/w20351",
+  "doi": "10.3386/w20351",
+  "month": "July",
+  "year": "2014",
+  "number": "20351",
+  "series": "Working Paper Series",
+  "institution": "National Bureau of Economic Research",
+  "author": [
+   {
+    "name": "Hendren, Nathaniel"
+   }
+  ],
+  "title": "Measuring Economic Efficiency Using Inverse-Optimum Weights"
+ },
+ "mirrlees1971": {
+  "type": "article",
+  "publisher": "JSTOR",
+  "year": "1971",
+  "pages": "175--208",
+  "number": "2",
+  "volume": "38",
+  "journal": {
+   "name": "The review of economic studies",
+   "volume": "38",
+   "number": "2",
+   "pages": "175--208"
+  },
+  "author": [
+   {
+    "name": "Mirrlees, James A"
+   }
+  ],
+  "title": "An exploration in the theory of optimum income taxation"
+ },
+ "kleven2020": {
+  "type": "article",
+  "year": "2020",
+  "journal": {
+   "name": "NBER Working Papers",
+   "number": "27242"
+  },
+  "number": "27242",
+  "author": [
+   {
+    "name": "Kleven, Henrik"
+   }
+  ],
+  "title": "Sufficient Statistics Revisited"
+ },
+ "finkelstein2020workingpaper": {
+  "type": "article",
+  "journal": {
+   "name": "NBER Working Papers",
+   "number": "27640"
+  },
+  "year": "2020",
+  "number": "27640",
+  "author": [
+   {
+    "name": "Finkelstein, Amy"
+   },
+   {
+    "name": "Hendren, Nathaniel"
+   }
+  ],
+  "title": "Welfare Analysis Meets Causal Inference"
+ },
+ "finkelstein2020": {
+  "type": "article",
+  "pages": "146--167",
+  "number": "4",
+  "volume": "34",
+  "year": "2020",
+  "journal": {
+   "name": "Journal of Economic Perspectives",
+   "volume": "34",
+   "number": "4",
+   "pages": "146--167"
+  },
+  "title": "Welfare Analysis Meets Causal Inference",
+  "author": [
+   {
+    "name": "Finkelstein, Amy"
+   },
+   {
+    "name": "Hendren, Nathaniel"
+   }
+  ]
+ },
+ "abrell2019": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/eee/pubeco/v169y2019icp172-202.html",
+  "doi": "10.1016/j.jpubeco.2018.11",
+  "keywords": "Decarbonization; Renewable energy policies; Wind; Solar; Electricity; Program cost; Distributional i",
+  "month": "",
+  "pages": "172--202",
+  "volume": "169",
+  "year": "2019",
+  "journal": {
+   "name": "Journal of Public Economics",
+   "volume": "169",
+   "pages": "172--202",
+   "month": ""
+  },
+  "title": "Carbon abatement with renewables: Evaluating wind and solar subsidies in Germany and Spain",
+  "author": [
+   {
+    "name": "Abrell, Jan"
+   },
+   {
+    "name": "Kosch, Mirjam"
+   },
+   {
+    "name": "Rausch, Sebastian"
+   }
+  ]
+ },
+ "dolls2019": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/eee/pubeco/v171y2019icp105-116.html",
+  "doi": "10.1016/j.jpubeco.2019.03",
+  "keywords": "Pensions; Savings; Information letters; Earnings",
+  "month": "",
+  "pages": "105--116",
+  "volume": "171",
+  "year": "2019",
+  "journal": {
+   "name": "Journal of Public Economics",
+   "volume": "171",
+   "pages": "105--116",
+   "month": ""
+  },
+  "title": "Reprint of: Do retirement savings increase in response to information about retirement and expected pensions?",
+  "author": [
+   {
+    "name": "Dolls, Mathias"
+   },
+   {
+    "name": "Doerrenberg, Philipp"
+   },
+   {
+    "name": "Peichl, Andreas"
+   },
+   {
+    "name": "Stichnoth, Holger"
+   }
+  ]
+ },
+ "dustmann2012": {
+  "type": "article",
+  "year": "2012",
+  "notes": "Sourced from Microsoft Academic - https://academic.microsoft.com/paper/2075105139",
+  "pages": "190--224",
+  "number": "3",
+  "volume": "4",
+  "journal": {
+   "name": "American Economic Journal: Applied Economics",
+   "volume": "4",
+   "number": "3",
+   "pages": "190--224"
+  },
+  "author": [
+   {
+    "name": "Dustmann, Christian"
+   },
+   {
+    "name": "Sch\u00f6nberg, Uta"
+   }
+  ],
+  "title": "Expansions in Maternity Leave Coverage and Children's Long-Term Outcomes"
+ },
+ "rinne2011": {
+  "type": "article",
+  "year": "2011",
+  "pages": "3465--3494",
+  "number": "25",
+  "volume": "43",
+  "journal": {
+   "name": "Applied Economics",
+   "volume": "43",
+   "number": "25",
+   "pages": "3465--3494"
+  },
+  "author": [
+   {
+    "name": "Rinne, Ulf"
+   },
+   {
+    "name": "Schneider, Marc"
+   },
+   {
+    "name": "Uhlendorff, Arne"
+   }
+  ],
+  "title": "Do the skilled and prime-aged unemployed benefit more from training? Effect heterogeneity of public training programmes in Germany"
+ },
+ "collischon2020": {
+  "type": "article",
+  "number": "13271",
+  "url": "https://ideas.repec.org/p/iza/izadps/dp13271.html",
+  "journal": {
+   "name": "IZA Discussion Papers",
+   "number": "13271"
+  },
+  "year": "2020",
+  "title": "Cash-For-Care, or Caring for Cash? The Effects of a Home Care Subsidy on Maternal Employment, Childcare Choices, and Children's Development",
+  "author": [
+   {
+    "name": "Collischon, Matthias"
+   },
+   {
+    "name": "K\u00fchnle, Daniel"
+   },
+   {
+    "name": "Oberfichtner, Michael"
+   }
+  ]
+ },
+ "kluve2013": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/spr/jopoec/v26y2013i3p983-1005.html",
+  "doi": "10.1007/s00148-012-0404-1",
+  "keywords": "Parental leave; Natural experiment; Female labor market participation; H31; J13; J18",
+  "month": "July",
+  "pages": "983--1005",
+  "number": "3",
+  "volume": "26",
+  "year": "2013",
+  "journal": {
+   "name": "Journal of Population Economics",
+   "volume": "26",
+   "number": "3",
+   "pages": "983--1005",
+   "month": "July"
+  },
+  "title": "Parental leave regulations, mothers\u2019 labor force attachment and fathers\u2019 childcare involvement: evidence from a natural experiment",
+  "author": [
+   {
+    "name": "Kluve, Jochen"
+   },
+   {
+    "name": "Tamm, Marcus"
+   }
+  ]
+ },
+ "frodermann2020": {
+  "type": "article",
+  "number": "12935",
+  "url": "https://ideas.repec.org/p/iza/izadps/dp12935.html",
+  "journal": {
+   "name": "IZA Discussion Papers",
+   "number": "12935"
+  },
+  "year": "2020",
+  "title": "Parental Leave Reform and Long-Run Earnings of Mothers",
+  "author": [
+   {
+    "name": "Frodermann, Corinna"
+   },
+   {
+    "name": "Wrohlich, Katharina"
+   },
+   {
+    "name": "Zucco, Aline"
+   }
+  ]
+ },
+ "flaxman2020": {
+  "type": "article",
+  "year": "2020",
+  "notes": "Sourced from Microsoft Academic - https://academic.microsoft.com/paper/3032971139",
+  "pages": "257--261",
+  "number": "7820",
+  "volume": "584",
+  "journal": {
+   "name": "Nature",
+   "volume": "584",
+   "number": "7820",
+   "pages": "257--261"
+  },
+  "author": [
+   {
+    "name": "Flaxman, Seth"
+   },
+   {
+    "name": "Mishra, Swapnil"
+   },
+   {
+    "name": "Gandy, Axel"
+   },
+   {
+    "name": "Unwin, H. Juliette T."
+   },
+   {
+    "name": "Mellan, Thomas A."
+   },
+   {
+    "name": "Coupland, Helen"
+   },
+   {
+    "name": "Whittaker, Charles"
+   },
+   {
+    "name": "Zhu, Harrison"
+   },
+   {
+    "name": "Berah, Tresnia"
+   },
+   {
+    "name": "Eaton, Jeffrey W."
+   },
+   {
+    "name": "Monod, M\u00e9lodie"
+   },
+   {
+    "name": "Ghani, Azra C."
+   },
+   {
+    "name": "Donnelly, Christl A."
+   },
+   {
+    "name": "Riley, Steven M."
+   },
+   {
+    "name": "Vollmer, Michaela A. C."
+   },
+   {
+    "name": "Ferguson, Neil M."
+   },
+   {
+    "name": "Okell, Lucy C."
+   },
+   {
+    "name": "Bhatt, Samir"
+   }
+  ],
+  "title": "Estimating the effects of non-pharmaceutical interventions on COVID-19 in Europe."
+ },
+ "baumgartner2004": {
+  "type": "article",
+  "number": "444",
+  "journal": {
+   "name": "Discussion Papers of DIW Berlin",
+   "number": "444"
+  },
+  "year": "2004",
+  "title": "Enrolment into Higher Education and Changes in Repayment Obligations of Student Aid: Microeconometric Evidence for Germany",
+  "author": [
+   {
+    "name": "Baumgartner, Hans J."
+   },
+   {
+    "name": "Steiner, Viktor"
+   }
+  ]
+ },
+ "baumgartner2006": {
+  "type": "article",
+  "number": "2034",
+  "journal": {
+   "name": "IZA Discussion Papers",
+   "number": "2034"
+  },
+  "year": "2006",
+  "title": "Does More Generous Student Aid Increase Enrolment Rates into Higher Education? Evaluating the German Student Aid Reform of 2001",
+  "author": [
+   {
+    "name": "Baumgartner, Hans J."
+   },
+   {
+    "name": "Steiner, Viktor"
+   }
+  ]
+ },
+ "schmieder2012": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/oup/qjecon/v127y2012i2p701-752.html",
+  "doi": "",
+  "keywords": "",
+  "month": "",
+  "pages": "701--752",
+  "number": "2",
+  "volume": "127",
+  "year": "2012",
+  "journal": {
+   "name": "The Quarterly Journal of Economics",
+   "volume": "127",
+   "number": "2",
+   "pages": "701--752",
+   "month": ""
+  },
+  "title": "The Effects of Extended Unemployment Insurance Over the Business Cycle: Evidence from Regression Discontinuity Estimates Over 20 Years",
+  "author": [
+   {
+    "name": "Schmieder, Johannes F."
+   },
+   {
+    "name": "Wachter, Till von"
+   },
+   {
+    "name": "Bender, Stefan"
+   }
+  ]
+ },
+ "caliendo2013": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/wly/japmet/v28y2013i4p604-627.html",
+  "doi": "",
+  "keywords": "",
+  "month": "June",
+  "pages": "604--627",
+  "number": "4",
+  "volume": "28",
+  "year": "2013",
+  "journal": {
+   "name": "Journal of Applied Econometrics",
+   "volume": "28",
+   "number": "4",
+   "pages": "604--627",
+   "month": "June"
+  },
+  "title": "Benefit Duration, Unemployment Duration And Job Match Quality: A Regression\u2010Discontinuity Approach",
+  "author": [
+   {
+    "name": "Caliendo, Marco"
+   },
+   {
+    "name": "Tatsiramos, Konstantinos"
+   },
+   {
+    "name": "Uhlendorff, Arne"
+   }
+  ]
+ },
+ "petrunyk2018": {
+  "type": "article",
+  "number": "11300",
+  "journal": {
+   "name": "IZA Discussion Papers",
+   "number": "11300"
+  },
+  "year": "2018",
+  "title": "Shortening the Potential Duration of Unemployment Benefits and Labor Market Outcomes: Evidence from a Natural Experiment in Germany",
+  "author": [
+   {
+    "name": "Petrunyk, Inna"
+   },
+   {
+    "name": "Pfeifer, Christian"
+   }
+  ]
+ },
+ "caliendo2011b": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/eee/pubeco/v148y2017icp136-151.html",
+  "doi": "10.1016/j.jpubeco.2017.02",
+  "keywords": "Evaluation; Active labor market policy; Labor market mobility; Instrumental variable approach",
+  "month": "",
+  "pages": "136--151",
+  "volume": "148",
+  "year": "2017",
+  "journal": {
+   "name": "Journal of Public Economics",
+   "volume": "148",
+   "pages": "136--151",
+   "month": ""
+  },
+  "title": "The return to labor market mobility: An evaluation of relocation assistance for the unemployed",
+  "author": [
+   {
+    "name": "Caliendo, Marco"
+   },
+   {
+    "name": "K\u00fcnn, Steffen"
+   },
+   {
+    "name": "Mahlstedt, Robert"
+   }
+  ]
+ },
+ "spermann2006": {
+  "type": "article",
+  "number": "2067",
+  "url": "https://ideas.repec.org/p/iza/izadps/dp2067.html",
+  "journal": {
+   "name": "IZA Discussion Papers",
+   "number": "2067"
+  },
+  "year": "2006",
+  "title": "The Targeted Negative Income Tax (TNIT) in Germany: Evidence from a Quasi Experiment",
+  "author": [
+   {
+    "name": "Spermann, Alexander"
+   },
+   {
+    "name": "Strotmann, Harald"
+   }
+  ]
+ },
+ "krug2016": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/sae/ilrrev/v69y2016i2p471-500.html",
+  "month": "March",
+  "pages": "471--500",
+  "number": "2",
+  "volume": "69",
+  "year": "2016",
+  "journal": {
+   "name": "ILR Review",
+   "volume": "69",
+   "number": "2",
+   "pages": "471--500",
+   "month": "March"
+  },
+  "title": "Private and Public Placement Services for Hard-to-Place Unemployed",
+  "author": [
+   {
+    "name": "Krug, Gerhard"
+   },
+   {
+    "name": "Stephan, Gesine"
+   }
+  ]
+ },
+ "mergele2020": {
+  "type": "article",
+  "number": "104113",
+  "volume": "182",
+  "year": "2020",
+  "journal": {
+   "name": "Journal of Public Economics",
+   "volume": "182",
+   "number": "104113"
+  },
+  "title": "Public employment services under decentralization: Evidence from a natural experiment",
+  "author": [
+   {
+    "name": "Mergele, Lukas"
+   },
+   {
+    "name": "Weber, Michael"
+   }
+  ]
+ },
+ "pawlowski2021": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/eee/labeco/v70y2021ics0927537121000312.html",
+  "number": "C",
+  "volume": "70",
+  "year": "2021",
+  "journal": {
+   "name": "Labour Economics",
+   "volume": "70",
+   "number": "C"
+  },
+  "title": "Individual labor market effects of local public expenditures on sports",
+  "author": [
+   {
+    "name": "Pawlowski, Tim"
+   },
+   {
+    "name": "Steckenleiter, Carina"
+   },
+   {
+    "name": "Wallrafen, Tim"
+   },
+   {
+    "name": "Lechner, Michael"
+   }
+  ]
+ },
+ "altmann2018": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/eee/pubeco/v164y2018icp33-49.html",
+  "doi": "10.1016/j.jpubeco.2018.05",
+  "keywords": "",
+  "month": "",
+  "pages": "33--49",
+  "volume": "164",
+  "year": "2018",
+  "journal": {
+   "name": "Journal of Public Economics",
+   "volume": "164",
+   "pages": "33--49",
+   "month": ""
+  },
+  "title": "Learning about job search: A field experiment with job seekers in Germany",
+  "author": [
+   {
+    "name": "Altmann, Steffen"
+   },
+   {
+    "name": "Falk, Armin"
+   },
+   {
+    "name": "J\u00e4ger, Simon"
+   },
+   {
+    "name": "Zimmermann, Florian"
+   }
+  ]
+ },
+ "schmieder2016": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/anr/reveco/v8y2016p547-581.html",
+  "doi": "",
+  "keywords": "unemployment insurance; welfare analysis",
+  "month": "October",
+  "pages": "547--581",
+  "number": "1",
+  "volume": "8",
+  "year": "2016",
+  "journal": {
+   "name": "Annual Review of Economics",
+   "volume": "8",
+   "number": "1",
+   "pages": "547--581",
+   "month": "October"
+  },
+  "title": "The Effects of Unemployment Insurance Benefits: New Evidence and Interpretation",
+  "author": [
+   {
+    "name": "Schmieder, Johannes F."
+   },
+   {
+    "name": "Wachter, Till von"
+   }
+  ]
+ },
+ "dorn2020": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/ces/ifosdd/06.html",
+  "doi": "",
+  "keywords": "",
+  "month": "May",
+  "pages": "",
+  "number": "6",
+  "year": "2020",
+  "journal": {
+   "name": "ifo Schnelldienst",
+   "number": "6",
+   "pages": "",
+   "month": "May"
+  },
+  "title": "Das gemeinsame Interesse von Gesundheit und Wirtschaft: Eine Szenarienrechnung zur Eind\u00e4mmung der Corona- Pandemie",
+  "author": [
+   {
+    "name": "Dorn, Florian"
+   },
+   {
+    "name": "Khailaie, Sahamoddin"
+   },
+   {
+    "name": "St\u00f6ckli, Marc"
+   },
+   {
+    "name": "Binder, Sebastian"
+   },
+   {
+    "name": "Lange, Berit"
+   },
+   {
+    "name": "Vanella, Patrizio"
+   },
+   {
+    "name": "Wollmersh\u00e4user, Timo"
+   },
+   {
+    "name": "Peichl, Andreas"
+   },
+   {
+    "name": "Fuest, Clemens"
+   },
+   {
+    "name": "Meyer-Hermann, Michael"
+   }
+  ]
+ },
+ "card1999": {
+  "type": "incollection",
+  "publisher": {
+   "name": "Elsevier"
+  },
+  "year": "1999",
+  "pages": "1801--1863",
+  "volume": "3",
+  "booktitle": "Handbook of labor economics",
+  "author": [
+   {
+    "name": "Card, David"
+   }
+  ],
+  "title": "The causal effect of education on earnings"
+ },
+ "schmillen2014": {
+  "type": "article",
+  "journal": {
+   "name": "IAB-Kurzbericht"
+  },
+  "year": "2014",
+  "author": [
+   {
+    "name": "Schmillen, Achim"
+   },
+   {
+    "name": "St\u00fcber, Heiko"
+   }
+  ],
+  "title": "Lebensverdienste nach Qualifikation: Bildung lohnt sich ein Leben lang"
+ },
+ "zimmerman2014": {
+  "type": "article",
+  "url": "https://ideas.repec.org/a/ucp/jlabec/doi10.1086-676661.html",
+  "doi": "10.1086/676661",
+  "keywords": "",
+  "month": "",
+  "pages": "711--754",
+  "number": "4",
+  "volume": "32",
+  "year": "2014",
+  "journal": {
+   "name": "Journal of Labor Economics",
+   "volume": "32",
+   "number": "4",
+   "pages": "711--754",
+   "month": ""
+  },
+  "title": "The Returns to College Admission for Academically Marginal Students",
+  "author": [
+   {
+    "name": "Zimmerman, Seth D."
+   }
+  ]
+ },
+ "piopiunik2017": {
+  "type": "article",
+  "year": "2017",
+  "pages": "19--30",
+  "number": "7",
+  "volume": "70",
+  "journal": {
+   "name": "ifo Schnelldienst",
+   "volume": "70",
+   "number": "7",
+   "pages": "19--30"
+  },
+  "author": [
+   {
+    "name": "Piopiunik, Marc"
+   },
+   {
+    "name": "Kugler, Franziska"
+   },
+   {
+    "name": "W\u00f6\u00dfmann, Ludger"
+   }
+  ],
+  "title": "Einkommensertr\u00e4ge von Bildungsabschl\u00fcssen im Lebensverlauf: Aktuelle Berechnungen f\u00fcr Deutschland"
+ },
+ "atkinson2010": {
+  "type": "book",
+  "publisher": {
+   "name": "Oxford University Press"
+  },
+  "year": "2010",
+  "author": [
+   {
+    "name": "Atkinson, Anthony Barnes"
+   },
+   {
+    "name": "Piketty, Thomas"
+   }
+  ],
+  "title": "Top incomes: A global perspective"
+ },
+ "sartor2014": {
+  "type": "article",
+  "publisher": "Taylor & Francis",
+  "year": "2014",
+  "pages": "507--524",
+  "number": "4",
+  "volume": "14",
+  "journal": {
+   "name": "Climate policy",
+   "volume": "14",
+   "number": "4",
+   "pages": "507--524"
+  },
+  "author": [
+   {
+    "name": "Sartor, Oliver"
+   },
+   {
+    "name": "Palli\u00e8re, Clement"
+   },
+   {
+    "name": "Lecourt, Stephen"
+   }
+  ],
+  "title": "Benchmark-based allocations in EU ETS Phase 3: an early assessment"
+ },
+ "piopiunik2014a": {
+  "type": "article",
+  "pages": "878--907",
+  "number": "3",
+  "volume": "116",
+  "year": "2014",
+  "journal": {
+   "name": "Scandinavian Journal of Economics",
+   "volume": "116",
+   "number": "3",
+   "pages": "878--907"
+  },
+  "title": "Intergenerational Transmission of Education and Mediating Channels: Evidence from a Compulsory Schooling Reform in Germany",
+  "author": [
+   {
+    "name": "Piopiunik, Marc"
+   }
+  ]
+ },
+ "piopiunik2014b": {
+  "type": "article",
+  "pages": "12--33",
+  "number": "C",
+  "volume": "42",
+  "year": "2014",
+  "journal": {
+   "name": "Economics of Education Review",
+   "volume": "42",
+   "number": "C",
+   "pages": "12--33"
+  },
+  "title": "The effects of early tracking on student performance: Evidence from a school reform in Bavaria",
+  "author": [
+   {
+    "name": "Piopiunik, Marc"
+   }
+  ]
+ },
+ "riphan2012": {
+  "type": "article",
+  "pages": "148--176",
+  "number": "1",
+  "volume": "114",
+  "year": "2012",
+  "journal": {
+   "name": "Scandinavian Journal of Economics",
+   "volume": "114",
+   "number": "1",
+   "pages": "148--176"
+  },
+  "title": "Effect of Secondary School Fees on Educational Attainment",
+  "author": [
+   {
+    "name": "Riphahn, Regina T."
+   }
+  ]
+ },
+ "resnjanskij2021": {
+  "type": "article",
+  "number": "8870",
+  "journal": {
+   "name": "CESifo Working Paper Series",
+   "number": "8870"
+  },
+  "year": "2021",
+  "title": "Can Mentoring Alleviate Family Disadvantage in Adolscence? A Field Experiment to Improve Labor-Market Prospects",
+  "author": [
+   {
+    "name": "Resnjanskij, Sven"
+   },
+   {
+    "name": "Ruhose, Jens"
+   },
+   {
+    "name": "Wiederhold, Simon"
+   },
+   {
+    "name": "Woessmann, Ludger"
+   }
+  ]
+ },
+ "obergruber2020": {
+  "type": "article",
+  "pages": "",
+  "number": "C",
+  "volume": "75",
+  "year": "2020",
+  "journal": {
+   "name": "Economics of Education Review",
+   "volume": "75",
+   "number": "C",
+   "pages": ""
+  },
+  "title": "Students\u2019 behavioural responses to a fallback option - Evidence from introducing interim degrees in german schools",
+  "author": [
+   {
+    "name": "Obergruber, Natalie"
+   },
+   {
+    "name": "Zierow, Larissa"
+   }
+  ]
+ }
+}
