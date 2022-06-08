@@ -38,3 +38,13 @@ UnifiedWelfareGer.iml
 
 #All RData Files:
 *.RData
+
+# Rds r files because bookdown produces such files when translating
+*.rds
+
+#R history
+*.Rhistory
+
+/bookdown/_book/*
+/bookdown/_bookdown_files/*
+/bookdown/sample/*
