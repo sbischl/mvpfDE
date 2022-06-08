@@ -20,3 +20,81 @@ knitr::write_bib(c(
   .packages(), 'bookdown', 'knitr', 'rmarkdown'
 ), 'packages.bib')
 ```
+
+## Mittelgroße
+Im Folgenden sind alle enthaltenen Reformen und Regierungsprogramme übersichtlich dargestellt. Es kann rechts zwischen einer Listenansicht und einem Scatterplot umgeschaltet werden. Die Zusammensetzungen der Zahlungsbereitschaft und der fiskalischen Kosten, als auch eine kurze Beschreibung der Reform, werden unterhalb der Grafik angezeigt. Um eine Reform auszuwählen muss diese direkt in der Grafik angeklickt werden, oder über das "Reform hervorheben" Feld gesucht werden.
+
+Die Annahmen können <a href="" data-toggle="modal" data-target="#master_assumption">hier</a> eingesehen und geändert werden. Die Grafiken aktualisieren sich dann automatisch. Zur besseren Vergleichbarkeit ist das Preisniveau für alle Reformen und Regierungsprogramme auf das Jahr 2010 festgelegt.
+
+## Überblick über alle Reformen
+```{=html}
+<hr id="hrline">
+<div class="textbelowheading">
+  <select class="selectpicker assumptionbutton" id="highlightProgram" title="Reform hervorheben" data-size="6" data-width="300px"
+  data-live-search="true" onchange="highlightProgram(options[this.selectedIndex].value)"> </select>
+
+  <div class="btn-group btn-group-toggle" id="charttogglediv">
+    <label class="btn btn-secondary chartselect active" onclick="activeScatter()" id="select_scatter_chart">Scatter</label>
+    <label class="btn btn-secondary chartselect" onclick="activeLine()" id="select_list_chart">Liste</label>
+  </div>
+</div>
+<script>DataLoadedIn.then(() => {
+   drawMVPFChart(json_as_array);
+})
+</script>
+<div onmouseenter="openTooltipCurrentProgram()" onmouseleave="openTooltipCurrentProgram()" id="mvpfChartDiv">
+  <canvas id="mvpfChart"></canvas>
+</div>
+<div id="mvpfChartLegend"></div>
+
+<h2>Ausgewählte Reform: <span id="reformname"></span></h2>
+<hr id="hrline">
+<div class="textbelowheading">
+  <span class="text-muted" id="mvpfDisplay"></span>
+  <button type="button" class="btn btn-primary assumptionbutton" onclick="jumpInDocument('top')">Zurück nach Oben</button>
+</div>
+
+
+
+
+
+<div id="description"></div>
+<div id="wtptext"></div>
+<script>DataLoadedIn.then(() => {
+  populatePrograms();
+  loadDescription("bafoeg2001");
+  loadReformName("bafoeg2001");
+  updateProgramHeadLine("bafoeg2001");
+  loadMVPFText("bafoeg2001");
+  loadWTPText("bafoeg2001");
+  loadCostText("bafoeg2001");
+  jQuery('#bs-select-1 ul li').hover( function(event){
+    let myindex =  jQuery(this).index();
+    openTooltip(document.getElementById("highlightProgram").options[myindex+1].value);
+   });
+});
+</script>
+
+
+<!-- Button trigger modal -->
+
+
+```
+<div class="barChartCaptionTitle">Zahlungsbereitschaft</div><div class="figure" style="text-align: center">
+<div id="barChart"></div>
+<script>DataLoadedIn.then(() => {
+  drawBarChart("willingness_to_pay", "bafoeg2001","barChart", "master_assumption");
+  })</script>
+</div>
+
+
+<div id="costtext"></div>
+<div class="barChartCaptionTitle">Fiskalische Kosten</div><div class="figure" style="text-align: center">
+<div id="barChart2"></div>
+<script>DataLoadedIn.then(() => {
+  drawBarChart("government_net_costs", "bafoeg2001","barChart2", "master_assumption");
+})</script>
+</div>
+<div id="mvpftext"></div>
+<script>
+</script>

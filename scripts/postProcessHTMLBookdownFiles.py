@@ -17,9 +17,9 @@ for file in directory.glob('*.html'):
     # <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
     content = re.sub("(?<=placeholder=\")Search", "Suchen", content)
     content = re.sub(r"(?<=<h2>)Table of contents", "Inhaltsverzeichnis", content)
-    content = re.sub("View book source (?=<i class=\"fab fa-github\">)", "Projekt-Quellcode", content)
-    content = re.sub(r"(?<=<h2>)On this page", "Auf dieser Seite", content)
-    content = re.sub("View source (?=<i class=\"fab fa-github\">)", "Seiten-Quellcode", content)
+    content = re.sub("View book source (?=<i class=\"fab fa-github\">)", "Projekt-Quelltext ", content)
+    content = re.sub(r"(?<=<h2>)On this page", "Auf dieser Seite ", content)
+    content = re.sub("View source (?=<i class=\"fab fa-github\">)", "Seiten-Quelltext ", content)
     content = re.sub("href=\"https://github.com/sbischl/mvpfde/blob/master/", "href=\"https://github.com/sbischl/mvpfDE/tree/master/bookdown/", content)
     content = re.sub("<li><a id=\"book-edit\" href=\".*\">Edit this page <i class=\"fab fa-github\"></i></a></li>", "", content)
     content = re.sub(r"<footer ((.|\n)*)</footer>", "", content)
