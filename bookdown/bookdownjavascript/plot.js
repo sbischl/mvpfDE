@@ -34,6 +34,57 @@ colorholder = {
     color: 1
 }
 
+var links = {
+    "taxReform1990": "absenkungen-des-spitzensteuersatzes.html#absenkungen-des-spitzensteuersatzes",
+    "taxReform2001": "absenkungen-des-spitzensteuersatzes.html#absenkungen-des-spitzensteuersatzes",
+    "taxReform2004": "absenkungen-des-spitzensteuersatzes.html#absenkungen-des-spitzensteuersatzes",
+    "taxReform2005": "absenkungen-des-spitzensteuersatzes.html#absenkungen-des-spitzensteuersatzes",
+    "qykgbtycul": "andere-arbeitsmarktinterventionen.html#andere-arbeitsmarktinterventionen",
+    "jobSearchInformation": "andere-arbeitsmarktinterventionen.html#informationsbrosch%C3%BCre-%C3%BCber-chancen-am-arbeitsmarkt",
+    "expectedPensionLetter": "andere-arbeitsmarktinterventionen.html#informationsschreiben-%C3%BCber-zu-erwartende-rentenanspr%C3%BCche",
+    "relocationAssistance": "andere-arbeitsmarktinterventionen.html#umzugskosten%C3%BCbernahme",
+    "decentralizedEmploymentServices": "andere-arbeitsmarktinterventionen.html#dezentralisierung-von-jobcenter",
+    "placementService": "andere-arbeitsmarktinterventionen.html#inhouse-stellenvermittlung",
+    "unemploymentBenefits2006": "arbeitslosenversicherung.html#arbeitslosenversicherung",
+    "unemploymentBenefits2002": "arbeitslosenversicherung.html#arbeitslosenversicherung",
+    "unemploymentBenefits42": "arbeitslosenversicherung.html#arbeitslosenversicherung",
+    "unemploymentBenefits44": "arbeitslosenversicherung.html#arbeitslosenversicherung",
+    "unemploymentBenefits49": "arbeitslosenversicherung.html#arbeitslosenversicherung",
+    "jobCreationSchemes": "bezuschusste-tätigkeiten.html#arbeitsbeschaffungsma%C3%9Fnahmen",
+    "oneEuroJobs": "bezuschusste-tätigkeiten.html#ein-euro-jobs",
+    "subsidizedJobOpportunities": "bezuschusste-tätigkeiten.html#arbeitsgelegenheiten",
+    "negativeIncomeTax": "bezuschusste-tätigkeiten.html#lohnzuschuss",
+    "bafoegRepayment": "bildungsreformen.html#baf%C3%B6g-reform-1990",
+    "bafoeg2001": "bildungsreformen.html#baf%C3%B6g-reform-2001",
+    "interimDegrees": "bildungsreformen.html#realschulabschluss-mit-beendigung-der-10.-klasse-des-gymnasiums",
+    "compulsarySchooling": "bildungsreformen.html#verl%C3%A4ngerung-der-hauptschulemittelschule-um-1-jahr",
+    "tuitionFees": "bildungsreformen.html#studiengeb%C3%BChren",
+    "schoolFees": "bildungsreformen.html#abschaffung-von-schulgeb%C3%BChren",
+    "BestUpInformationWorkshop": "bildungsreformen.html#informations-workshop-zum-thema-studium",
+    "rockYourLife": "bildungsreformen.html#mentoringprogramm-rock-your-life",
+    "mentoringBalu": "bildungsreformen.html#mentoringprogramm-balu-und-du",
+    "G8": "bildungsreformen.html#g8-reform",
+    "trackingBavaria": "bildungsreformen.html#aufteilung-realschulehauptschule-ab-4.-klasse",
+    "bnaiisghtt": "#elternzeitreformen",
+    "parentalLeave2007": "elternzeitreformen.html#elterngeld",
+    "homeCareSubsidy": "elternzeitreformen.html#betreuungsgeld",
+    "maternityLeave79": "elternzeitreformen.html#mutterschaftsurlaubsgeld-1979",
+    "maternityLeave86": "elternzeitreformen.html#erziehungsgeld-1986",
+    "maternityLeave92": "elternzeitreformen.html#k%C3%BCndigungsschutzausweitung-f%C3%BCr-m%C3%BCtter-1992",
+    "eegSolar": "erneuerbare-energien-gesetz.html#f%C3%B6rderung-von-erneuerbaren-energien-im-rahmen-des-erneuerbare-energien-gesetzes",
+    "eegWind": "erneuerbare-energien-gesetz.html#f%C3%B6rderung-von-erneuerbaren-energien-im-rahmen-des-erneuerbare-energien-gesetzes",
+    "bridgingAllowance": "startup-subventionen.html#%C3%BCberbr%C3%BCckungsgeld",
+    "startupSubsidy": "startup-subventionen.html#existenzgr%C3%BCndungszuschuss",
+    "startupGrant": "startup-subventionen.html#gr%C3%BCndungszuschuss",
+    "trainingMeasures": "weiterbildungs--und-trainingsprogramme.html#trainingsma%C3%9Fnahmen",
+    "classRoomTraining": "weiterbildungs--und-trainingsprogramme.html#berufliche-weiterbildung",
+    "trainingVoucher": "weiterbildungs--und-trainingsprogramme.html#bildungsgutscheine",
+    "shortTraining": "weiterbildungs--und-trainingsprogramme.html#kurze-trainingsprogramme",
+    "longTraining": "weiterbildungs--und-trainingsprogramme.html#lange-trainingsprogramme",
+    "retraining": "weiterbildungs--und-trainingsprogramme.html#berufliche-neuausrichtung",
+    "practiceFirm": "weiterbildungs--und-trainingsprogramme.html#%C3%BCbungsfirma"
+}
+
 // Updater to keep track of which charts to update when data changes
 class barChartUpdater {
     constructor() {
@@ -675,7 +726,7 @@ function getScalesMinMax(program, adjust_prices = false) {
     }
     max = Math.max(addAllPositivesSubtractAllNegatives(array), max);
     if (adjust_prices) max *= changePriceLevel(from = 2010, to = relevant_datapoint["prices_year"]);
-    return (max);
+    return (+max.toFixed(2));
 }
 
 function drawBarChart(variable_to_plot, program, chartDiv, shared_assumption_key) {
@@ -1659,7 +1710,7 @@ function read_assumptions(assumption_id) {
 }
 
 function loadDescription(program) {
-    document.getElementById("description").innerHTML = getUnmodifiedProgram(program)["short_description"];
+    document.getElementById("description").innerHTML = getUnmodifiedProgram(program)["short_description"] + ` Weitere Details zu diesem Regierungsprogramm als auch eine detaillierte Beschreibung der Berechnung des MVPFs sind <a href=${links[program]}>hier</a> zu finden.`;
 }
 
 function loadReformName(program) {

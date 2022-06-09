@@ -2,9 +2,13 @@
 
 import pathlib
 import re
+import random
+import string
+import json
 
 # Path to where the bookdown translator creataes the html files. When calling serve_book it goes to the _book subfolder of the bookdown folder
 directory = (pathlib.Path(__file__).parents[1] / 'bookdown' / '_book')
+linksammlung = {}
 #.read_text(encoding="utf-8")
 #print(literature_bib_string)
 for file in directory.glob('*.html'):
@@ -22,7 +26,13 @@ for file in directory.glob('*.html'):
     content = re.sub("View source (?=<i class=\"fab fa-github\">)", "Seiten-Quelltext ", content)
     content = re.sub("href=\"https://github.com/sbischl/mvpfde/blob/master/", "href=\"https://github.com/sbischl/mvpfDE/tree/master/bookdown/", content)
     content = re.sub("<li><a id=\"book-edit\" href=\".*\">Edit this page <i class=\"fab fa-github\"></i></a></li>", "", content)
-    content = re.sub(r"<footer ((.|\n)*)</footer>", "", content)
-    #print(file)
+    content = re.sub(r"<footer ((.|\n)*)</footer>", "", content) 
+
+    # Get all links this is useful for fitting links into the descriptions:
+    # all_links = re.findall("(?<=<li><a class=\"nav-link\" href=\")[^\"]*", content)
+    # for link in all_links:
+    #     linksammlung[''.join(random.choice(string.ascii_lowercase) for i in range(10))] = link
+    
     file.write_text(content, encoding="utf-8")
-    # Regex Delete
+
+# print(json.dumps(linksammlung))
