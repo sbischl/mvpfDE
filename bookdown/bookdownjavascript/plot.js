@@ -203,6 +203,7 @@ const htmlLegendPlugin = {
 
                 // The following disables the effect that was clicked on. This persists until the page is reloaded.
                 if (type === 'bar') {
+                    return
                     // Determine variable of disabled effect:
                     let cost_or_wtp = governmentCostChart == chart ? "government_net_costs" : "willingness_to_pay";
                     let relevant_variable_mapping = getVariableMapping(currently_displayed_program)[cost_or_wtp];
@@ -1320,7 +1321,7 @@ function drawListCIChart(json_as_array) {
         // the code from being executed if nothing is clicked.
         if (activePoints[0]) {
             let clicked_program = mvpfCIChart.data.datasets[firstPoint.datasetIndex].data[firstPoint.index].program;
-            changeBarChartProgram(clicked_program);
+            highlightProgram(clicked_program);
         }
     };
 }
