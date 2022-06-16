@@ -54,14 +54,31 @@
     margin-right: 5px;
     margin-bottom: 8px;
     font-size: 15px;
-    height: 30px;
+    height: fit-content;
     padding: 0px 4px;
+}
+
+.tagbutton {
+    margin-top: -18px;
+    margin-right: 5px;
+    margin-bottom: 8px;
+    font-size: 15px;
+    height: fit-content;
+    padding: 0px 4px;
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.tagbutton:hover, .tagbutton:focus{
+    background-color: var(--primary-color);
+    color: white;
 }
 
 #charttogglediv {
     margin-top: -18px;
     margin-right: 5px;
     margin-bottom: 8px;
+    height: 28px;
 }
 
 .chartselect {

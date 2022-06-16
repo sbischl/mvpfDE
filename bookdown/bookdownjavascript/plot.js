@@ -119,7 +119,6 @@ class barChartUpdater {
                     prices_year = getUnmodifiedProgram(barChart.program)["prices_year"];
                 }
                 let insgesamt_text = `Insgesamt: ${barChart.variable_to_plot == "government_net_costs" ? `${parseNumbers(changePriceLevel(from = 2010, to = prices_year) * getUnmodifiedProgram(barChart.program)["government_net_costs"])}` : `${parseNumbers(changePriceLevel(from = 2010, to = prices_year) * getUnmodifiedProgram(barChart.program)["willingness_to_pay"])}`}€ ⇒ MVPF: ${parseNumbers(getUnmodifiedProgram(barChart.program)["mvpf"], true)}`
-                console.log(barChart.assumption_key + barChart.variable_to_plot + "gesamttext");
                 document.getElementById(barChart.assumption_key + barChart.variable_to_plot + "gesamttext").innerHTML = insgesamt_text;
             }
         });
@@ -361,6 +360,29 @@ function updateProgramHeadLine(program = currently_displayed_program) {
     }
     let mvpf_to_print = mvpfToString(updated_mvpf_related_values.mvpf);
     document.querySelector("#mvpfDisplay").innerHTML = `MVPF = ${mvpf_to_print}${confidence_intervall}`;
+
+    let headline_tags = "";
+    let identification = {
+        RCT: ["Randomisierte kontrollierte Studie", "https://de.wikipedia.org/wiki/Randomisierte_kontrollierte_Studie"],
+        IV: ["Instrumentalvariablenschätzung", "https://de.wikipedia.org/wiki/Instrumentvariablensch%C3%A4tzung"],
+        RDD: ["Regressions-Diskontinuitäts-Analyse", "https://de.wikipedia.org/wiki/Regressions-Diskontinuit%C3%A4ts-Analyse"],
+        DiD: ["Differenz-von-Differenzen-Ansatz", "https://de.wikipedia.org/wiki/Differenz-von-Differenzen-Ansatz"],
+        CSR: ["Querschnittsdaten-Regression", "https://en.wikipedia.org/wiki/Cross-sectional_regression"],
+        SEM: ["Simultanes Gleichungsmodell", "https://de.wikipedia.org/wiki/Simultanes_Gleichungsmodell"],
+        PSM: ["Propensity Score Matching", "https://de.wikipedia.org/wiki/Propensity_score_matching"],
+        Other: ["Other", "https://mvpfde.de/book/"]
+    }
+    // Assign to identification "Other" if the value is somehow not defined or not known
+    let identification_method = unmodified_dataset[program]["identification"]
+    console.log(identification_method)
+    identification_method =  identification_method in identification ? identification_method : "Other"
+    console.log(identification_method)
+    headline_tags += `<a href=${identification[identification_method][1]} class="btn tagbutton" target="_blank">${identification[identification_method][0]}</a>`
+    headline_tags += `<a href="https://whatworksgrowth.org/public/files/Scoring-Guide.pdf" style="" class="btn tagbutton" target="_blank">Maryland SMS: ${unmodified_dataset[program]["maryland_scale"]}</a>`
+    headline_tags += unmodified_dataset[program]["peer_reviewed"] ? `<a href="" style="pointer-events: none;" class="btn tagbutton" target="_blank">Primäre Quelle peer reviewed</a>` : ""
+
+    document.querySelector("#headlineTags").innerHTML = headline_tags;
+
     loadMVPFText(program);
     loadWTPText(program);
     loadCostText(program);
@@ -1629,8 +1651,6 @@ function populatePrograms() {
 
     for (let key in unmodified_dataset) {
         program = unmodified_dataset[key];
-        console.log(disabled_programs.includes(program.program));
-        console.log(program.program);
         if (disabled_programs.includes(program.program)) continue;
         var option = document.createElement("option");
         option.value = program.program;
@@ -1711,7 +1731,7 @@ function read_assumptions(assumption_id) {
 }
 
 function loadDescription(program) {
-    document.getElementById("description").innerHTML = getUnmodifiedProgram(program)["short_description"] + ` Weitere Details zu diesem Regierungsprogramm als auch eine detaillierte Beschreibung der Berechnung des MVPFs sind <a href=${links[program]}>hier</a> zu finden.`;
+    document.getElementById("description").innerHTML = getUnmodifiedProgram(program)["short_description_de"] + ` Weitere Details zu diesem Regierungsprogramm als auch eine detaillierte Beschreibung der Berechnung des MVPFs sind <a href=${links[program]}>hier</a> zu finden.`;
 }
 
 function loadReformName(program) {
@@ -1824,7 +1844,7 @@ function parseNumbers(number, ismvpf = false, decimals = 2) {
 
 function jumpInDocument(location) {
     if (location = 'top') {
-        document.getElementById("überblick-über-alle-reformen").scrollIntoView({behavior: 'smooth'});
+        document.getElementById("alle-reformen").scrollIntoView({behavior: 'smooth'});
     }
 }
 
@@ -1852,6 +1872,5 @@ function elementInViewport(el) {
 function sleep(seconds) {
     return new Promise((resolve) => {
         setTimeout(resolve, seconds * 1000);
-        console.log("spelt");
     });
 }
