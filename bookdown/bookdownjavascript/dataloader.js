@@ -479,10 +479,15 @@ function generateBarChartProgramData(variable_to_plot, program, colorholder, adj
     barComponents = getVariableMapping(program)[variable_to_plot];
 
     for (let component in barComponents) {
+        let ci_upper = relevant_datapoint[component + "_95ci_upper"] ? relevant_datapoint[component + "_95ci_upper"] * multiplier : "";
+        let ci_lower = relevant_datapoint[component + "_95ci_lower"] ? relevant_datapoint[component + "_95ci_lower"] * multiplier : "";
         datasets.push({
             label: barComponents[component],
             effect_key: component,
+            ci_upper: ci_upper,
+            ci_lower: ci_lower,
             data: [relevant_datapoint[component] * multiplier],
+            hidden: false,
             backgroundColor: selectColor(colorholder.color, true),
             borderColor: selectColor(colorholder.color),
             borderRadius: 4

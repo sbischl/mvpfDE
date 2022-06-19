@@ -96,17 +96,20 @@ class barChartUpdater {
     updateAllCharts() {
         colorholder.color = 1;
         let adjust_prices = false;
-        if (barChart.assumption_key && barChart.assumption_key != "master_assumption") {
-            adjust_prices = true;
-        }
+        
         this.barChartsToUpdate.forEach(barChart => {
+            if (barChart.assumption_key && barChart.assumption_key != "master_assumption") {
+                adjust_prices = true;
+            }
             //chart: barChart, barChart.chart
             //program: program,
             //variable_to_plot: variable_to_plot
-            let range = getScalesMinMax(barChart.program);
+            let range = getScalesMinMax(barChart.program, adjust_prices);
             let updatedDatasets = generateBarChartProgramData(barChart.variable_to_plot, barChart.program, colorholder, adjust_prices);
             for (let i = 0; i < updatedDatasets.length; i++) {
                 barChart.chart.data.datasets[i].data = updatedDatasets[i].data;
+                barChart.chart.data.datasets[i]["ci_lower"] = updatedDatasets[i]["ci_lower"];
+                barChart.chart.data.datasets[i]["ci_upper"] = updatedDatasets[i]["ci_upper"];
             }
             barChart.chart.options.scales.x.min = -range;
             barChart.chart.options.scales.x.max = range;
@@ -968,8 +971,8 @@ function drawBarChart(variable_to_plot, program, chartDiv, shared_assumption_key
                         },
                         label: function (data) {
                             let confidence_intervall = ""
-                            if (unmodified_dataset[currently_displayed_program][data.dataset["effect_key"] + "_95ci_lower"]) {
-                                confidence_intervall = `\n95% CI: [${parseFloat(unmodified_dataset[currently_displayed_program][data.dataset["effect_key"] + "_95ci_lower"]).toFixed(2)}€, ${parseFloat(unmodified_dataset[currently_displayed_program][data.dataset["effect_key"] + "_95ci_upper"]).toFixed(2)}€]`
+                            if (data.dataset["ci_upper"]) {
+                                confidence_intervall = `\n95% CI: [${parseFloat(data.dataset["ci_lower"]).toFixed(2)}€, ${parseFloat(data.dataset["ci_upper"]).toFixed(2)}€]`
                                 return [`${data.dataset.label}: ${data.formattedValue}€`, confidence_intervall]
                             }
                             return [`${data.dataset.label}: ${data.formattedValue}€`];

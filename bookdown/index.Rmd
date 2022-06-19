@@ -8,12 +8,13 @@ bibliography: [book.bib, packages.bib]
 # url: your book url like https://bookdown.org/yihui/bookdown
 # cover-image: path to the social sharing image like images/cover.jpg
 description: |
-  Gibt einen Überblick und evaluiert 40+ Reformen und Regierungsprogramme hinsichtlich ihrer Effektivität.
+  Evaluiert 40+ Reformen und Regierungsprogramme hinsichtlich ihrer Effektivität.
 biblio-style: apalike
 link-citations: yes
 csl: chicago-fullnote-bibliography.csl
 ---
-# Der MVPF von deutschen Regierungsprogrammen
+# Überblick
+## Der MVPF als Wohlfahrtsmaß
 ```{r include=FALSE}
 # automatically create a bib database for R packages
 knitr::write_bib(c(
@@ -21,21 +22,20 @@ knitr::write_bib(c(
 ), 'packages.bib')
 ```
 
-Der deutsche Staat gibt je nach Definition der Staatsausgaben zwischen mehreren hundert Milliarden, wenn man nur den Bundeshaushalt berücksichtigt, bis zu etwa anderthalb Billionen Euro aus, wenn man die gesamte Staatsquote inklusive Sozialversicherungen betrachtet. Der Staat ist damit, wie in allen anderen Industireländern für sich genommen der mit Abstand größte Markteilnehmer seiner Volkswirtschaft. Doch welche Ausgaben des Staates lohnen sich eigentlich und wie kann man die Effektivität verschiedener Regierungsprogramme miteinander vergleichen?
+Der deutsche Staat gibt je nach Definition der Staatsausgaben zwischen mehreren hundert Milliarden, wenn man nur den Bundeshaushalt berücksichtigt, bis zu etwa anderthalb Billionen Euro aus, wenn man die gesamte Staatsquote inklusive Sozialversicherungen betrachtet. Der Staat ist damit, wie in allen anderen Industrieländern für sich genommen der mit Abstand größte Markteilnehmer seiner Volkswirtschaft. Doch welche Ausgaben des Staates lohnen sich eigentlich und wie kann man die Effektivität verschiedener Regierungsprogramme miteinander vergleichen?
 
 Zur Beantwortung dieser Frage werden im folgenden über 40 Regierungsprogramme anhand eines einfachen Kosten-Nutzen Verhältnisses, dem sogenannten Marginal Value of Public Funds, verglichen. Es wird damit die von Hendren und Sprung-Keyser (2020)[@hendren2020a] zur Analyse von einer Vielzahl an US Reformen und Regierungsprogrammen angewendete Methodik für Deutschland adaptiert.
 Der Marginal Value of Public Funds, kurz MVPF, gibt an wie viel Nutzen durch ein Regierungsprogramm pro netto ausgegebenen Euro Steuergeld erzielt wird. Der Nutzen wird dabei in Zahlungsbereitschaft für das Regierungsprogramm angeben. Der MVPF ist folglich definiert als das Verhältnis der Zahlungsbereitschaft zu den Nettokosten:
-$$\textrm{MVPF} = \frac{\textrm{Zahlungbereitschaft für Reform}}{\textrm{Nettokosten der Reform}}$$
-Die Zahlungsbereitschaft entspricht dem Betrag in Euro, den Begünstigte einer Reform oder eines anderen Regierungsprogramms maximal zahlen würden damit die Reform implementiert wird.
-Bei den Kosten der Reform werden die Nettokosten betrachtet. Das heißt, dass möglichst alle fiskalische Externalitäten die in Folge eines Regierungsprogramms auftreten berücksichtigt werden. Konkret bedeutet das beispielsweise für eine Ausweitung von Investitionen im Bildungssystem, dass nicht nur die sofort anfallenden Investitionskosten berücksichtigt werden, sondern auch weitere Effekte die den Staatshaushalt betreffen wie höheres Steueraufkommen in der Zukunft aufgrund höherer Einkommen und damit einhergende steigende Einkommenssteuereinnnahmen. Bei einigen Regierungsprogrammen übersteigen die fiskalischen Externalitäten die ursprünglichen Ausgaben. In diesem Fall sind Regierungsprogramme also selbst-finanzierend. Die Nettokosten sind negativ. Der MVPF ist dann als unendlich definiert.
+$$\textrm{MVPF} = \frac{\textrm{Zahlungsbereitschaft für Reform}}{\textrm{Nettokosten der Reform}}$$
+Die Zahlungsbereitschaft entspricht dem Betrag in Euro, den Begünstigte einer Reform oder eines anderen Regierungsprogramms maximal zahlen würden damit die Reform implementiert wird. Sie kann als der durch die Reform generierte Nutzen angesehen werden.
 
-Grundsätzlich sind Reformen und Regierungsprogramme mit höheren MVPFs vorzuziehen, wenn sie eine vergleichbare oder die gleiche Bevölkerungsgruppe betreffen. Beim Vergleich des MVPFs von Regierungsprogrammen, die stark unterschiedliche Personen betreffen (vor allem in Bezug auf Einkommen), wie etwa die Absenkung des Spitzensteuersatzes einerseits und das Arbeitslosengeld andererseits kann ohne weitere Annahmen über die Präferenzen des Staates nicht ausgesagt werden, dass ein Regierungsprogramm "besser" als das andere ist. Vielmehr gibt der MVPF ein Preisverhältnis an zu dem zwischen den Empfängern von Arbeitslosengeld und den Zahlern des Spitzensteuersatzes umverteilt werden kann. Bei $\textrm{MVPF}_{\textrm{Arbeitslosengeld}}= 1$ und $\textrm{MVPF}_{\textrm{Spitzensteuersatz}} = 4$ kann der Staat entscheiden, ob er mit einem zusätzlichen Euro Staatsausgaben lieber einen Euro an Arbeitslosgengeldempfänger oder 4 Euro an Spitzensteuersatzzahler geben möchte. Es kann ebenso eine für den Staat budgetneutrale Reform konstruiert werden, bei der Nutzen gemessen in Zahlungsbereitschaft im Verhältnis 4 zu 1 von Spitzensteuersatzzahlern hin zu Arbeitslosengeldempfängern umverteilt wird. Ein Staat der Interesse an Umverteilung hat, sollte bei ähnlichem MVPF immer die Reform implementieren, deren Begünstigte niedrigeres Einkommen und/oder Vermögen besitzen.
+Bei den Kosten der Reform werden die Nettokosten betrachtet. Das heißt, dass möglichst alle fiskalische Externalitäten die in Folge eines Regierungsprogramms auftreten berücksichtigt werden. Konkret bedeutet das beispielsweise für eine Ausweitung von Investitionen im Bildungssystem, dass nicht nur die sofort anfallenden Investitionskosten berücksichtigt werden, sondern auch weitere Effekte die den Staatshaushalt betreffen, wie zum Beispiel höheres Steueraufkommen in der Zukunft aufgrund höherer Einkommen und damit einhergehenden steigenden Einkommenssteuereinnnahmen. Bei einigen Regierungsprogrammen übersteigen die fiskalischen Externalitäten die ursprünglichen Ausgaben. In diesem Fall sind Regierungsprogramme also selbst-finanzierend. Die Nettokosten sind negativ. Der MVPF ist dann als unendlich definiert.
 
-Reformen mit negativem MVPF sind nie wünschenswert. Sie verursachen Kosten und haben negativen Nutzen. Reformen mit unendlichem MVPF stellen sowohl den Staatshaushalt als auch die Profiteure der Reform besser und sollten immer durchgeführt werden.
+Grundsätzlich sind Reformen und Regierungsprogramme mit höheren MVPFs vorzuziehen, wenn sie eine vergleichbare oder die gleiche Bevölkerungsgruppe betreffen. Beim Vergleich des MVPFs von Regierungsprogrammen, die stark unterschiedliche Personen betreffen (vor allem in Bezug auf Einkommen), wie etwa die Absenkung des Spitzensteuersatzes einerseits und das Arbeitslosengeld andererseits kann ohne weitere Annahmen über die Präferenzen des Staates nicht ausgesagt werden, dass ein Regierungsprogramm "besser" als das andere ist. Vielmehr gibt der MVPF ein Preisverhältnis an zu dem zwischen den Empfängern von Arbeitslosengeld und den Zahlern des Spitzensteuersatzes umverteilt werden kann. Bei $\textrm{MVPF}_{\textrm{Arbeitslosengeld}}= 1$ und $\textrm{MVPF}_{\textrm{Spitzensteuersatz}} = 4$ kann der Staat entscheiden, ob er mit einem zusätzlichen Euro Staatsausgaben lieber einen Euro an Arbeitslosengeldempfänger oder 4 Euro an Spitzensteuersatzzahler geben möchte. Es kann ebenso eine für den Staat budgetneutrale Reform konstruiert werden, bei der Nutzen gemessen in Zahlungsbereitschaft im Verhältnis 4 zu 1 von Spitzensteuersatzzahlern hin zu Arbeitslosengeldempfängern umverteilt wird. Ein Staat der Interesse an Umverteilung hat, sollte bei ähnlichem MVPF immer die Reform implementieren, deren Begünstigte niedrigeres Einkommen und/oder Vermögen besitzen.
 
+Reformen mit negativem MVPF sind nie wünschenswert. Sie verursachen Kosten und haben negativen Nutzen. Reformen mit unendlichem MVPF bieten Nutzen für die Profiteure der Reform und haben gleichzeitigen einen positiven Effekt auf den Staatshaushalt und sollten immer durchgeführt werden.
 
-
-## Überblick über Reformen
+## Übersichtsgrafik
 Im Folgenden sind alle enthaltenen Reformen und Regierungsprogramme übersichtlich dargestellt. Es kann rechts zwischen einer Listenansicht und einem Scatterplot umgeschaltet werden. Die Zusammensetzungen der Zahlungsbereitschaft und der fiskalischen Kosten, als auch eine kurze Beschreibung der Reform, werden unterhalb der Grafik angezeigt. Um eine Reform auszuwählen muss diese direkt in der Grafik angeklickt werden, oder über das "Reform hervorheben" Feld gesucht werden.
 
 Die Annahmen können <a href="" data-toggle="modal" data-target="#master_assumption">hier</a> eingesehen und geändert werden. Die Grafiken aktualisieren sich dann automatisch. Zur besseren Vergleichbarkeit ist das Preisniveau für alle Reformen und Regierungsprogramme auf das Jahr 2010 festgelegt.
